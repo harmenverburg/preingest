@@ -1,0 +1,443 @@
+[
+  {
+    "type": "Audio",
+    "extension": "WAV",
+    "version": "",
+    "description": "",
+    "puid": ""
+  },
+  {
+    "type": "Audio",
+    "extension": "WAVE",
+    "version": "",
+    "description": "",
+    "puid": ""
+  },
+  {
+    "type": "Audio",
+    "extension": "BWF",
+    "version": "",
+    "description": "",
+    "puid": ""
+  },
+  {
+    "type": "Audio",
+    "extension": "MP3",
+    "version": "",
+    "description": "MPEG 1/2 Audio Layer 3",
+    "puid": "fmt/134"
+  },
+  {
+    "type": "Audio",
+    "extension": "AAC",
+    "version": "",
+    "description": "",
+    "puid": ""
+  },
+  {
+    "type": "Audio",
+    "extension": "OGG",
+    "version": "",
+    "description": "",
+    "puid": ""
+  },
+  {
+    "type": "Database",
+    "extension": "SQL",
+    "version": "",
+    "description": "Structured Query Language Data",
+    "puid": "fmt/206"
+  },
+  {
+    "type": "Database",
+    "extension": "SIARD",
+    "version": 2.1,
+    "description": "Software Independent Archiving of Relational Databases",
+    "puid": "fmt/1196"
+  },
+  {
+    "type": "Database",
+    "extension": "SIARD",
+    "version": 2,
+    "description": "Software Independent Archiving of Relational Databases",
+    "puid": "fmt/995"
+  },
+  {
+    "type": "Database",
+    "extension": "ODB",
+    "version": 1.2,
+    "description": "OpenDocument Database Format",
+    "puid": "fmt/424"
+  },
+  {
+    "type": "Database",
+    "extension": "ODB",
+    "version": 1.1,
+    "description": "OpenDocument Database Format",
+    "puid": "fmt/444"
+  },
+  {
+    "type": "Database",
+    "extension": "ODB",
+    "version": 1,
+    "description": "OpenDocument Database Format",
+    "puid": "fmt/140"
+  },
+  {
+    "type": "Database",
+    "extension": "ACDB",
+    "version": 2007,
+    "description": "Access",
+    "puid": "fmt/275"
+  },
+  {
+    "type": "Database",
+    "extension": "MDB",
+    "version": 2002,
+    "description": "Access",
+    "puid": "x-fmt/241"
+  },
+  {
+    "type": "Database",
+    "extension": "MDB",
+    "version": 2000,
+    "description": "Access",
+    "puid": "x-fmt/240"
+  },
+  {
+    "type": "Database",
+    "extension": "MDB",
+    "version": 97,
+    "description": "Access",
+    "puid": "fmt/239"
+  },
+  {
+    "type": "Database",
+    "extension": "MDB",
+    "version": 95,
+    "description": "Access",
+    "puid": "fmt/238"
+  },
+  {
+    "type": "Document (tekst)",
+    "extension": "PDF",
+    "version": "A1",
+    "description": "PDF/ A",
+    "puid": "fmt/95"
+  },
+  {
+    "type": "Document (tekst)",
+    "extension": "PDF",
+    "version": "A2",
+    "description": "PDF/ A",
+    "puid": "fmt/476"
+  },
+  {
+    "type": "Document (tekst)",
+    "extension": "PDF",
+    "version": 1.7,
+    "description": "",
+    "puid": "fmt/276"
+  },
+  {
+    "type": "Document (tekst)",
+    "extension": "ODT",
+    "version": 1.2,
+    "description": "OpenDocument Text",
+    "puid": "fmt/291"
+  },
+  {
+    "type": "Document (tekst)",
+    "extension": "ODT",
+    "version": 1.1,
+    "description": "OpenDocument Text",
+    "puid": "fmt/290"
+  },
+  {
+    "type": "Document (tekst)",
+    "extension": "ODT",
+    "version": 1,
+    "description": "OpenDocument Text",
+    "puid": "fmt/136"
+  },
+  {
+    "type": "Document (tekst)",
+    "extension": "DOC",
+    "version": "97-2003",
+    "description": "Word",
+    "puid": "fmt/ 40"
+  },
+  {
+    "type": "Document (tekst)",
+    "extension": "DOCX",
+    "version": "",
+    "description": "Word",
+    "puid": "fmt/412"
+  },
+  {
+    "type": "E-mail",
+    "extension": "EML",
+    "version": "",
+    "description": "Mime Email",
+    "puid": "fmt/950"
+  },
+  {
+    "type": "E-mail",
+    "extension": "MSG",
+    "version": "97-2003",
+    "description": "Microsoft Outlook Email Message",
+    "puid": "x-fmt/430"
+  },
+  {
+    "type": "E-mail",
+    "extension": "PST",
+    "version": "Mar/07",
+    "description": "Microsoft Outlook Personal Folders",
+    "puid": "x-fmt/249"
+  },
+  {
+    "type": "E-mail",
+    "extension": "MBOX",
+    "version": "",
+    "description": "",
+    "puid": "fmt/720"
+  },
+  {
+    "type": "Afbeelding (raster)",
+    "extension": "TIFF",
+    "version": "",
+    "description": "Tagged Image File Format",
+    "puid": "fmt/353"
+  },
+  {
+    "type": "Afbeelding (raster)",
+    "extension": "PNG",
+    "version": 1.2,
+    "description": "Portable Network Graphics",
+    "puid": "fmt/13"
+  },
+  {
+    "type": "Afbeelding (raster)",
+    "extension": "PNG",
+    "version": 1.1,
+    "description": "Portable Network Graphics",
+    "puid": "fmt/12"
+  },
+  {
+    "type": "Afbeelding (raster)",
+    "extension": "PNG",
+    "version": 1,
+    "description": "Portable Network Graphics",
+    "puid": "fmt/11"
+  },
+  {
+    "type": "Afbeelding (raster)",
+    "extension": "JPEG",
+    "version": "",
+    "description": "",
+    "puid": ""
+  },
+  {
+    "type": "Afbeelding (raster)",
+    "extension": "JPG",
+    "version": "",
+    "description": "",
+    "puid": "fmt/41"
+  },
+  {
+    "type": "Afbeelding (raster)",
+    "extension": "JP2",
+    "version": "",
+    "description": "JPEG 2000 part 1",
+    "puid": "x-fmt/392"
+  },
+  {
+    "type": "Afbeelding (raster)",
+    "extension": "JPX",
+    "version": "",
+    "description": "JPEG 2000 part 2",
+    "puid": "fmt/151"
+  },
+  {
+    "type": "Afbeelding (raster)",
+    "extension": "GIF",
+    "version": "89a",
+    "description": "Graphics Interchange Format",
+    "puid": "fmt/4"
+  },
+  {
+    "type": "Afbeelding (raster)",
+    "extension": "GIF",
+    "version": "87a",
+    "description": "Graphics Interchange Format",
+    "puid": "fmt/3"
+  },
+  {
+    "type": "Vector afbeelding",
+    "extension": "SVG",
+    "version": 1.2,
+    "description": "Scalable Vector Graphics Tiny",
+    "puid": "fmt/413"
+  },
+  {
+    "type": "Vector afbeelding",
+    "extension": "SVG",
+    "version": 1.1,
+    "description": "Scalable Vector Graphics",
+    "puid": "fmt/92"
+  },
+  {
+    "type": "Vector afbeelding",
+    "extension": "SVG",
+    "version": 1,
+    "description": "Scalable Vector Graphics",
+    "puid": "fmt/91"
+  },
+  {
+    "type": "Presentatie",
+    "extension": "ODP",
+    "version": 1.2,
+    "description": "OpenDocument Presentation",
+    "puid": "fmt/293"
+  },
+  {
+    "type": "Presentatie",
+    "extension": "ODP",
+    "version": 1.1,
+    "description": "OpenDocument Presentation",
+    "puid": "fmt/292"
+  },
+  {
+    "type": "Presentatie",
+    "extension": "PDF",
+    "version": "A1",
+    "description": "PDF/ A",
+    "puid": "fmt/95"
+  },
+  {
+    "type": "Presentatie",
+    "extension": "PPT",
+    "version": "97-2003",
+    "description": "Powerpoint",
+    "puid": "fmt/126"
+  },
+  {
+    "type": "Presentatie",
+    "extension": "PPTX",
+    "version": "vanaf 2007",
+    "description": "Powerpoint",
+    "puid": "fmt/215"
+  },
+  {
+    "type": "Spreadsheet",
+    "extension": "ODS",
+    "version": 1.2,
+    "description": "OpenDocument Spreadsheet",
+    "puid": "fmt/295"
+  },
+  {
+    "type": "Spreadsheet",
+    "extension": "ODS",
+    "version": 1.1,
+    "description": "OpenDocument Spreadsheet",
+    "puid": "fmt/294"
+  },
+  {
+    "type": "Spreadsheet",
+    "extension": "ODS",
+    "version": 1,
+    "description": "OpenDocument Spreadsheet",
+    "puid": "fmt/137"
+  },
+  {
+    "type": "Spreadsheet",
+    "extension": "CSV",
+    "version": "",
+    "description": "Comma Separated Values",
+    "puid": "x-fmt/18"
+  },
+  {
+    "type": "Spreadsheet",
+    "extension": "PDF",
+    "version": "A1",
+    "description": "PDF/ A",
+    "puid": "fmt/95"
+  },
+  {
+    "type": "Spreadsheet",
+    "extension": "XLS",
+    "version": "97-2003",
+    "description": "Excel",
+    "puid": "fmt/61"
+  },
+  {
+    "type": "Spreadsheet",
+    "extension": "XLSX",
+    "version": "vanaf 2007",
+    "description": "Excel",
+    "puid": "fmt/214"
+  },
+  {
+    "type": "Video",
+    "extension": "MXF",
+    "version": "",
+    "description": "",
+    "puid": ""
+  },
+  {
+    "type": "Video",
+    "extension": "MP4",
+    "version": "",
+    "description": "MPEG-4 Media File",
+    "puid": "fmt/199"
+  },
+  {
+    "type": "Video",
+    "extension": "MKV",
+    "version": "v1-4",
+    "description": "Matroska",
+    "puid": "fmt/569"
+  },
+  {
+    "type": "Video",
+    "extension": "WebM",
+    "version": "",
+    "description": "",
+    "puid": "fmt/573"
+  },
+  {
+    "type": "Website",
+    "extension": "WARC",
+    "version": 1.1,
+    "description": "Web ARChive",
+    "puid": "fmt/1281"
+  },
+  {
+    "type": "Website",
+    "extension": "WARC",
+    "version": 1,
+    "description": "Web ARChive",
+    "puid": "fmt/289"
+  },
+  {
+    "type": "Website",
+    "extension": "ARC",
+    "version": 1.1,
+    "description": "Internet Archive",
+    "puid": "fmt/410"
+  },
+  {
+    "type": "Website",
+    "extension": "ARC",
+    "version": 1,
+    "description": "Internet Archive",
+    "puid": "x-fmt/219"
+  },
+  {
+    "type": "E-books",
+    "extension": "epub",
+    "version": "",
+    "description": "",
+    "puid": "fmt/483"
+  }
+]

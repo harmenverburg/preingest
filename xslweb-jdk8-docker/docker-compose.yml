@@ -1,0 +1,9 @@
+version: '3.0'
+services:
+    xslweb:
+        image: "pmasereeuwnha/xslweb"
+        container_name: "xslweb-jdk8"
+        ports:
+            - "8080:8080"
+        volumes:
+            - "/home/pieter/noord-hollandsarchief/data:/data"

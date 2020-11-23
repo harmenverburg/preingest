@@ -1,0 +1,14 @@
+----------------------------------------------------------------
+Tue Nov 10 21:56:11 UTC 2020:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.13.1.1 - (1765088): instance a816c00e-0175-b428-c389-0000064ba010 
+on database directory /root/.droid6/profiles/1605045371369/db with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@277050dc 
+Loaded from file:/droid/lib/derby-10.13.1.1.jar
+java.vendor=Oracle Corporation
+java.runtime.version=11.0.9+11
+user.dir=/usr/src/droid/droid-validation
+os.name=Linux
+os.arch=amd64
+os.version=5.4.39-linuxkit
+derby.system.home=null
+derby.stream.error.file=/root/.droid6/logs/derby.log
+Database Class Loader started - derby.database.classpath=''

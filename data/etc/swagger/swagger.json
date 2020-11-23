@@ -1,0 +1,376 @@
+{
+	"swagger": "2.0",
+	"info": {
+		"description": "Pre-Ingest Tool REST API met Swagger",
+		"version": "1.0.0",
+		"title": "Swagger Pre-Ingest"
+	},
+	"host": "localhost:8000",
+	"basePath": "/api/preingest",
+	"schemes": [
+		"http",
+		"https"
+	],
+	"paths": {
+		"/check": {
+			"get": {
+				"tags": [
+					"Eenvoudige status check"
+				],
+				"summary": "Pre-Ingest REST API status check.",
+				"description": "Controle check of de service beschikbaar is voor verzoeken.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/calculate/{checksum}/{collectionName}": {
+			"get": {
+				"tags": [
+					"Checksum calculeren voor een tar container (bestand)."
+				],
+				"summary": "Calculeren van een checksum waarde voor een tar container (bestand).",
+				"description": "Calculeren van een checksum waarde voor een tar container (bestand).",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+						"name": "checksum",
+						"in": "path",
+						"description": "Opties zijn : MD5, SHA1, SHA256, SHA512",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "collectionName",
+						"in": "path",
+						"description": "Naam van het bestand.",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/unpack/{collectionName}": {
+			"get": {
+				"tags": [
+					"Uitpakken van een tar container (bestand)."
+				],
+				"summary": "Uitpakken van een tar container (bestand).",
+				"description": "Uitpakken van een tar container (bestand).",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "collectionName",
+					"in": "path",
+					"description": "Naam van het bestand.",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/virusscan/{guid}": {
+			"post": {
+				"tags": [
+					"Scan uitvoeren voor het detecteren van virussen."
+				],
+				"summary": "Scan uitvoeren voor het detecteren van virussen.",
+				"description": "Scan uitvoeren voor het detecteren van virussen.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "Map ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesful Operation. OK."
+					}
+				}
+			}
+		},
+		"/naming/{guid}": {
+			"post": {
+				"tags": [
+					"Benamingen van mappen en bestanden controleren op ongewenste karakters, commando's en devices"
+				],
+				"summary": "Benamingen van mappen en bestanden controleren op ongewenste karakters, commando's en devices.",
+				"description": "Benamingen van mappen en bestanden controleren op ongewenste karakters, commando's en devices",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "Map ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesful Operation. OK."
+					}
+				}
+			}
+		},
+		"/sidecar/{guid}": {
+			"post": {
+				"tags": [
+					"Mappen en bestanden controlen op sidecar structuur."
+				],
+				"summary": "Mappen en bestanden controlen op sidecar structuur.",
+				"description": "Mappen en bestanden controlen op sidecar structuur.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "Map ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesful Operation. OK."
+					}
+				}
+			}
+		},
+		"/profiling/{guid}": {
+			"post": {
+				"tags": [
+					"Droid voorbereiden om een map (en onderliggende objecten) te scannen voor metagegevens."
+				],
+				"summary": "Droid voorbereiden om een map (en onderliggende objecten) te scannen voor metagegevens.",
+				"description": "Droid voorbereiden om een map (en onderliggende objecten) te scannen voor metagegevens.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "Map ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesful Operation. OK."
+					}
+				}
+			}
+		},
+		"/exporting/{guid}": {
+			"post": {
+				"tags": [
+					"Droid metagegevens exporteren naar een CSV bestand. Vereist eerst de actie '/droid/profiling/{guid}'."
+				],
+				"summary": "Droid metagegevens exporteren naar een CSV bestand. Vereist eerst de actie '/droid/profiling/{guid}'.",
+				"description": "Droid metagegevens exporteren naar een CSV bestand. Vereist eerst de actie '/droid/profiling/{guid}'.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "Map ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesful Operation. OK."
+					}
+				}
+			}
+		},
+		"/reporting/{type}/{guid}": {
+			"post": {
+				"tags": [
+					"Droid metagegevens exporteren naar een PDF of een XML bestand. Vereist eerst de actie '/droid/profiling/{guid}'."
+				],
+				"summary": "Droid metagegevens exporteren naar een PDF of een XML bestand. Vereist eerst de actie '/droid/profiling/{guid}'.",
+				"description": "Droid metagegevens exporteren naar een PDF of een XML bestand. Vereist eerst de actie '/droid/profiling/{guid}'.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+						"name": "type",
+						"in": "path",
+						"description": "Opties zijn : pdf, droid, planets",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "guid",
+						"in": "path",
+						"description": "Map ID",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Succesful Operation. OK."
+					}
+				}
+			}
+		},
+		"/greenlist/{guid}": {
+			"post": {
+				"tags": [
+					"Bestanden controleren of deze in de 'greenlist' voorkomen. Vereist eerst de actie '/droid/exporting/{guid}'."
+				],
+				"summary": "Bestanden controleren of deze in de 'greenlist' voorkomen. Vereist eerst de actie '/droid/exporting/{guid}'.",
+				"description": "Bestanden controleren of deze in de 'greenlist' voorkomen. Vereist eerst de actie '/droid/exporting/{guid}'.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "Map ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesful Operation. OK."
+					}
+				}
+			}
+		},
+		"/encoding/{guid}": {
+			"post": {
+				"tags": [
+					"Metadata bestanden controleren op de encoding."
+				],
+				"summary": "Metadata bestanden controleren op de encoding.",
+				"description": "Metadata bestanden controleren op de encoding.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "Map ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesful Operation. OK."
+					}
+				}
+			}
+		},
+		"/validate/{guid}": {
+			"post": {
+				"tags": [
+					"Metadata valideren op schema (XSD) en schema+ (XSD+)."
+				],
+				"summary": "Metadata valideren op schema (XSD) en schema+ (XSD+).",
+				"description": "Metadata valideren op schema (XSD) en schema+ (XSD+).",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "Map ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesful Operation. OK."
+					}
+				}
+			}
+		},
+		"/transform/{guid}": {
+			"post": {
+				"tags": [
+					"Metadata bestanden transformeren naar XIP bestandsformaat."
+				],
+				"summary": "Metadata bestanden transformeren naar XIP bestandsformaat.",
+				"description": "Metadata bestanden transformeren naar XIP bestandsformaat.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "Map ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesful Operation. OK."
+					}
+				}
+			}
+		}
+	}
+}
