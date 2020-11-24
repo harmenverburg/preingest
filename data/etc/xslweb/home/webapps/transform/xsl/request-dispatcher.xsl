@@ -15,10 +15,11 @@
 
   <xsl:variable name="TOPX2XIP" as="xs:string" select="'/topx2xip'"/>
   <xsl:variable name="TOPX2HTML" as="xs:string" select="'/topx2html'"/>
+  <xsl:variable name="DROID2HTML" as="xs:string" select="'/droid2html'"/>
   <xsl:variable name="TOPX2XIPFOLDER" as="xs:string" select="'/topx2xip-folder'"/>
   <xsl:variable name="SHOWREQUESTXML" as="xs:string" select="'/request'"/>
 
-  <xsl:variable name="conversions" as="xs:string+" select="($TOPX2XIP, $TOPX2HTML, $TOPX2XIPFOLDER, $SHOWREQUESTXML)"/>
+  <xsl:variable name="conversions" as="xs:string+" select="($TOPX2XIP, $TOPX2HTML, $DROID2HTML, $TOPX2XIPFOLDER, $SHOWREQUESTXML)"/>
   
   <xsl:template match="/">
     <xsl:sequence select="file:write('/tmp/request.xml', /)" xmlns:file="http://expath.org/ns/file" use-when="$DUMP_REQUEST"/>
@@ -35,6 +36,13 @@
     </xsl:call-template>
   </xsl:template>
   
+  <xsl:template match="/req:request[req:path eq $TOPX2XIPFOLDER]">
+    <xsl:call-template name="parameter-based-template">
+      <xsl:with-param name="paramname" select="'reluri'"/>
+      <xsl:with-param name="stylesheet" select="'topx2xip-folder.xslt'"></xsl:with-param>
+    </xsl:call-template>
+  </xsl:template>
+  
   <xsl:template match="/req:request[req:path eq $TOPX2HTML]">
     <pipeline:pipeline>
       <pipeline:transformer name="topx2html" xsl-path="topx2html.xslt"/>
@@ -42,11 +50,11 @@
     </pipeline:pipeline>
   </xsl:template>
   
-  <xsl:template match="/req:request[req:path eq $TOPX2XIPFOLDER]">
-    <xsl:call-template name="parameter-based-template">
-      <xsl:with-param name="paramname" select="'reluri'"/>
-      <xsl:with-param name="stylesheet" select="'topx2xip-folder.xslt'"></xsl:with-param>
-    </xsl:call-template>
+  <xsl:template match="/req:request[req:path eq $DROID2HTML]">
+    <pipeline:pipeline>
+      <pipeline:transformer name="topx2html" xsl-path="droid2html.xslt"/>
+      <pipeline:transformer name="html-response" xsl-path="html-response.xslt"/>
+    </pipeline:pipeline>
   </xsl:template>
   
   <xsl:template match="/req:request[req:path eq $SHOWREQUESTXML]">
