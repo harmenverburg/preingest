@@ -12,7 +12,8 @@
             <xsl:when test="/nha:error">
                 <resp:response status="400">
                     <resp:headers>                              
-                        <resp:header name="Content-Type">application/xml</resp:header> 
+                        <resp:header name="Content-Type">application/xml</resp:header>
+                        <resp:header name="x-clacks-overhead">GNU Terry Pratchett</resp:header>
                     </resp:headers>
                     <resp:body>
                         <message error-code="{nha:error/@code}" module="{nha:error/@module}" line-number="{nha:error/@line-number}">{nha:error/@description}</message>
@@ -22,7 +23,8 @@
             <xsl:otherwise>
                 <resp:response status="200">
                     <resp:headers>                              
-                        <resp:header name="Content-Type">application/xml</resp:header> 
+                        <resp:header name="Content-Type">application/xml</resp:header>
+                        <resp:header name="x-clacks-overhead">GNU Terry Pratchett</resp:header>
                     </resp:headers>
                     <resp:body>
                         <xsl:copy-of select="."/>

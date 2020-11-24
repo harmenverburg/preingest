@@ -15,7 +15,8 @@
     <xsl:template match="/">
         <resp:response status="{$status}">
             <resp:headers>                              
-                <resp:header name="Content-Type">text/xml</resp:header> 
+                <resp:header name="Content-Type">text/xml</resp:header>
+                <resp:header name="x-clacks-overhead">GNU Terry Pratchett</resp:header>
             </resp:headers>
             <resp:body>
                 <message error-code="{$error-code}">{$message}</message>

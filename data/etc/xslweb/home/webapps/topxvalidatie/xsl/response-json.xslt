@@ -16,6 +16,7 @@
         <resp:response status="200">
             <resp:headers>
                 <resp:header name="Content-Type">application/json</resp:header>
+                <resp:header name="x-clacks-overhead">GNU Terry Pratchett</resp:header>
             </resp:headers>
             <resp:body>
                 <xsl:sequence select="file:write('/tmp/json.xml', /)" xmlns:file="http://expath.org/ns/file" use-when="$DUMP_JSON_XML"/>
