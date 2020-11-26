@@ -15,10 +15,9 @@
     
     <xsl:variable name="reluri" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'reluri']/req:value)"/>
     
-    <xsl:template match="/">
+    <xsl:template match="/req:request">
         <xsl:try>
-            <!-- Bij een nieuwe versie van planetsReport.xsl niet vergeten mode="start" toe te voegen aan het template voor "/" -->
-            <xsl:apply-templates select="doc($data-uri-prefix || encode-for-uri($reluri))" mode="start"/>
+            <xsl:apply-templates select="doc($data-uri-prefix || encode-for-uri($reluri))"/>
             <xsl:catch>
                 <nha:error code="{$err:code}" description="{$err:description}" module="{$err:module}" line-number="{$err:line-number}"/>
             </xsl:catch>

@@ -15,7 +15,7 @@
     
     <xsl:variable name="reluri" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'reluri']/req:value)"/>
     
-    <xsl:template match="/">
+    <xsl:template match="/req:request">
         <xsl:try>
             <xsl:apply-templates select="doc($data-uri-prefix || encode-for-uri($reluri))/*"/>
             <xsl:catch>
