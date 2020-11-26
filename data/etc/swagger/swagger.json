@@ -18,7 +18,7 @@
 					"Eenvoudige status check"
 				],
 				"summary": "Pre-Ingest REST API status check.",
-				"description": "Controle check of de service beschikbaar is voor verzoeken.",
+				"description": "Controle check of de service beschikbaar is voor verzoeken",
 				"consumes": [
 					"application/json"
 				],
@@ -35,10 +35,10 @@
 		"/calculate/{checksum}/{collectionName}": {
 			"get": {
 				"tags": [
-					"Checksum calculeren voor een tar container (bestand)."
+					"Checksum calculeren voor een tarcontainer (bestand)."
 				],
-				"summary": "Calculeren van een checksum waarde voor een tar container (bestand).",
-				"description": "Calculeren van een checksum waarde voor een tar container (bestand).",
+				"summary": "Calculeren van een checksumwaarde voor een tarcontainer (bestand).",
+				"description": "Calculeren van een checksumwaarde voor een tarcontainer (bestand)",
 				"consumes": [
 					"application/json"
 				],
@@ -73,7 +73,7 @@
 					"Uitpakken van een tar container (bestand)."
 				],
 				"summary": "Uitpakken van een tar container (bestand).",
-				"description": "Uitpakken van een tar container (bestand).",
+				"description": "Uitpakken van een tar container (bestand)",
 				"consumes": [
 					"application/json"
 				],
@@ -100,7 +100,7 @@
 					"Scan uitvoeren voor het detecteren van virussen."
 				],
 				"summary": "Scan uitvoeren voor het detecteren van virussen.",
-				"description": "Scan uitvoeren voor het detecteren van virussen.",
+				"description": "Scan uitvoeren voor het detecteren van virussen",
 				"consumes": [
 					"application/json"
 				],
@@ -151,10 +151,10 @@
 		"/sidecar/{guid}": {
 			"post": {
 				"tags": [
-					"Mappen en bestanden controlen op sidecar structuur."
+					"Mappen en bestanden controlen op sidecarstructuur."
 				],
-				"summary": "Mappen en bestanden controlen op sidecar structuur.",
-				"description": "Mappen en bestanden controlen op sidecar structuur.",
+				"summary": "Mappen en bestanden controlen op sidecarstructuur.",
+				"description": "Mappen en bestanden controlen op sidecarstructuur",
 				"consumes": [
 					"application/json"
 				],
@@ -181,7 +181,7 @@
 					"Droid voorbereiden om een map (en onderliggende objecten) te scannen voor metagegevens."
 				],
 				"summary": "Droid voorbereiden om een map (en onderliggende objecten) te scannen voor metagegevens.",
-				"description": "Droid voorbereiden om een map (en onderliggende objecten) te scannen voor metagegevens.",
+				"description": "Droid voorbereiden om een map (en onderliggende objecten) te scannen voor metagegevens",
 				"consumes": [
 					"application/json"
 				],
@@ -205,10 +205,10 @@
 		"/exporting/{guid}": {
 			"post": {
 				"tags": [
-					"Droid metagegevens exporteren naar een CSV bestand. Vereist eerst de actie '/droid/profiling/{guid}'."
+					"Droid metagegevens exporteren naar een CSV-bestand. Vereist eerst de actie '/droid/profiling/{guid}'"
 				],
-				"summary": "Droid metagegevens exporteren naar een CSV bestand. Vereist eerst de actie '/droid/profiling/{guid}'.",
-				"description": "Droid metagegevens exporteren naar een CSV bestand. Vereist eerst de actie '/droid/profiling/{guid}'.",
+				"summary": "Droid metagegevens exporteren naar een CSV-bestand. Vereist eerst de actie '/droid/profiling/{guid}'.",
+				"description": "Droid metagegevens exporteren naar een CSV -estand. Vereist eerst de actie '/droid/profiling/{guid}'",
 				"consumes": [
 					"application/json"
 				],
@@ -232,10 +232,10 @@
 		"/reporting/{type}/{guid}": {
 			"post": {
 				"tags": [
-					"Droid metagegevens exporteren naar een PDF of een XML bestand. Vereist eerst de actie '/droid/profiling/{guid}'."
+					"Droid metagegevens exporteren naar een PDF- of een XML-bestand. Vereist eerst de actie '/droid/profiling/{guid}'."
 				],
-				"summary": "Droid metagegevens exporteren naar een PDF of een XML bestand. Vereist eerst de actie '/droid/profiling/{guid}'.",
-				"description": "Droid metagegevens exporteren naar een PDF of een XML bestand. Vereist eerst de actie '/droid/profiling/{guid}'.",
+				"summary": "Droid metagegevens exporteren naar een PDF- of een XML-bestand. Vereist eerst de actie '/droid/profiling/{guid}'.",
+				"description": "Droid metagegevens exporteren naar een PDF- of een XML-bestand. Vereist eerst de actie '/droid/profiling/{guid}'",
 				"consumes": [
 					"application/json"
 				],
@@ -294,10 +294,10 @@
 		"/encoding/{guid}": {
 			"post": {
 				"tags": [
-					"Metadata bestanden controleren op de encoding."
+					"Metadatabestanden controleren op de encoding."
 				],
-				"summary": "Metadata bestanden controleren op de encoding.",
-				"description": "Metadata bestanden controleren op de encoding.",
+				"summary": "Metadatabestanden controleren op de encoding.",
+				"description": "Metadatabestanden controleren op de encoding",
 				"consumes": [
 					"application/json"
 				],
@@ -321,10 +321,10 @@
 		"/validate/{guid}": {
 			"post": {
 				"tags": [
-					"Metadata valideren op schema (XSD) en schema+ (XSD+)."
+					"Metadata valideren op schema (XSD) en schema+ (schematron)."
 				],
-				"summary": "Metadata valideren op schema (XSD) en schema+ (XSD+).",
-				"description": "Metadata valideren op schema (XSD) en schema+ (XSD+).",
+				"summary": "Metadata valideren op schema (XSD) en schema+ (schematron).",
+				"description": "Metadata valideren op schema (XSD) en schema+ (schematron)",
 				"consumes": [
 					"application/json"
 				],
@@ -348,10 +348,10 @@
 		"/transform/{guid}": {
 			"post": {
 				"tags": [
-					"Metadata bestanden transformeren naar XIP bestandsformaat."
+					"Metadatabestanden transformeren naar XIP-bestandsformaat."
 				],
-				"summary": "Metadata bestanden transformeren naar XIP bestandsformaat.",
-				"description": "Metadata bestanden transformeren naar XIP bestandsformaat.",
+				"summary": "Metadatabestanden transformeren naar XIP-bestandsformaat.",
+				"description": "Metadatabestanden transformeren naar XIP-bestandsformaat",
 				"consumes": [
 					"application/json"
 				],
