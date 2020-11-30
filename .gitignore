@@ -6,3 +6,5 @@ data/testfiles/
 data/etc/SIP_Creator/
 
 data/etc/tomcat/logs/
+
+clamav-docker/test-urls.txt
