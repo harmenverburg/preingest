@@ -348,10 +348,10 @@
 		"/transform/{guid}": {
 			"post": {
 				"tags": [
-					"Metadatabestanden transformeren naar XIP-bestandsformaat."
+					"Metadatabestanden omvormen naar XIP-bestandsformaat."
 				],
-				"summary": "Metadatabestanden transformeren naar XIP-bestandsformaat.",
-				"description": "Metadatabestanden transformeren naar XIP-bestandsformaat",
+				"summary": "Metadatabestanden omvormen naar XIP-bestandsformaat.",
+				"description": "Metadatabestanden omvormen naar XIP-bestandsformaat",
 				"consumes": [
 					"application/json"
 				],
