@@ -8,3 +8,9 @@ data/etc/SIP_Creator/
 data/etc/tomcat/logs/
 
 clamav-docker/test-urls.txt
+
+*.tar
+
+clamav-docker/up.sh
+
+xslweb-jdk8-webservices-docker/up.sh
