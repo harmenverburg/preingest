@@ -1,11 +1,15 @@
 
-xslweb-jdk8-docker/xslweb-source/xslweb
+xslweb-jdk8-webservices-docker/xslweb-source/xslweb
+
+xslweb-jdk8-frontend-docker/xslweb-source/xslweb
 
 data/testfiles/
 
 data/etc/SIP_Creator/
 
 data/etc/tomcat/logs/
+
+data/etc/tomcatfrontend/logs/
 
 clamav-docker/test-urls.txt
 
@@ -14,3 +18,7 @@ clamav-docker/test-urls.txt
 clamav-docker/up.sh
 
 xslweb-jdk8-webservices-docker/up.sh
+
+xslweb-jdk8-frontend-docker/up.sh
+
+data/etc/xslwebfrontend/home/webapps/examples/

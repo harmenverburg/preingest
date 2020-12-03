@@ -1,0 +1,39 @@
+body {
+    font-family: arial, helvetica, sans-serif;
+    margin-left: 10em;
+    margin-right: 10em;
+}
+
+tr, td, th {
+    text-align: left;
+    vertical-align: top;
+    padding-right: 2em;
+}
+
+.xx-small {
+    font-size: xx-small;
+}
+
+.filesize-in-bytes:after {
+    content: ' (bytes)';
+    font-size: xx-small;
+}
+
+button {
+    width: 12em;
+}
+
+div.report {
+    background-color: lightgray;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+    font-family: monospace;
+    font-size: larger;
+    height: 12em;
+    overflow-y: auto;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 1em;
+}

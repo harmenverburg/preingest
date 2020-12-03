@@ -21,7 +21,18 @@ services:
     volumes:
         - "${DATAFOLDER}:/data" 
     expose:
-        - "8080"     
+        - "8080" 
+    networks :
+        - preingest-network
+  xslwebfrontend:
+    image: "pmasereeuwnha/xslwebfrontend"
+    container_name: "xslwebfrontend"
+    volumes:
+        - "${DATAFOLDER}:/data" 
+    expose:
+        - "8080" 
+    ports:
+        - "8888:8080"     
     networks :
         - preingest-network
   droid:
@@ -47,7 +58,8 @@ services:
     depends_on:
       - droid
       - clamav
-      - xslweb 
+      - xslweb
+      - xslwebfrontend
 networks:
     preingest-network:
         driver: bridge
