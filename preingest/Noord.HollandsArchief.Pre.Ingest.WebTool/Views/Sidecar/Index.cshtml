@@ -1,0 +1,146 @@
+﻿@{
+    ViewData["Title"] = "Sidecar Page";
+}
+<div class="text-body">
+    <div class="row">
+        <div class="col-sm">&nbsp;</div>
+        <div class="col-sm">&nbsp;</div>
+        <div class="col-sm">&nbsp;</div>
+    </div>
+    <div class="row"> 
+        <div class="col-sm">
+            <div class="btn-group">
+                <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
+                    Toon een GUID sessie
+                </button>
+                <div id="sessionDropdownList" class="dropdown-menu dropdown-menu-lg-left">
+                    @foreach (var guid in Model.Sessions)
+                    {<a class="dropdown-item" type="button" asp-area="" asp-controller="Sidecar" asp-action="Index" asp-route-id="@guid">@guid</a>}
+                </div>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
+                    Een sessie bijwerken
+                </button>
+                <div id="sessionDropdownList" class="dropdown-menu dropdown-menu-lg-left">
+                    @foreach (var guid in Model.Sessions)
+                    {<a class="dropdown-item" type="button" asp-area="" asp-controller="Sidecar" asp-action="UpdateBinary" asp-route-id="@guid">@guid</a>}
+                </div>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
+                    Kies een 'tar' collectie om uit te pakken.
+                </button>
+                <div id="collectionDropdownList" class="dropdown-menu dropdown-menu-lg-left">
+                    @foreach (var name in Model.Collections)
+                    {<a class="dropdown-item" type="button" asp-area="" asp-controller="Sidecar" asp-action="UnpackCollection" asp-route-name="@name">@name</a>}
+                </div>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
+                    Exporteer
+                </button>
+                <div id="sessionDropdownList" class="dropdown-menu dropdown-menu-lg-left">
+                    @foreach (var guid in Model.Sessions)
+                    {<a class="dropdown-item" type="button" asp-area="" asp-controller="Sidecar" asp-action="Export" asp-route-id="@guid">@guid</a>}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm">&nbsp;</div>
+        <div class="col-sm">&nbsp;</div>
+        <div class="col-sm">&nbsp;</div>
+    </div>
+    <div class="row">
+        <div class="mh-100 col-sm-4 overflow-auto"><div id="jstree"></div></div>
+        <div id="overview" class="mh-100 col-sm-8 d-none">
+            <ul class="nav nav-tabs mb-3" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="pills-summary-tab" data-toggle="pill" href="#pills-summary" role="tab" aria-controls="pills-summary" aria-selected="true">Samenvatting</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="pills-topx-tab" data-toggle="pill" href="#pills-topx" role="tab" aria-controls="pills-topx" aria-selected="false">ToPX</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="pills-property-tab" data-toggle="pill" href="#pills-property" role="tab" aria-controls="pills-property" aria-selected="false">Eigenschappen</a>
+                </li>
+            </ul>
+            <div class="tab-content" id="pills-tabContent">
+                <div class="tab-pane fade show active" id="pills-summary" role="tabpanel" aria-labelledby="pills-summary-tab">
+                    <div class="row">
+                        <div id="virusscan" class="col-12 mb-3 mb-md-0 mx-auto"></div>
+                    </div>
+                    <br />
+                    <div class="row">
+                        <div id="naming" class="col-12 mb-3 mb-md-0 mx-auto"></div>
+                    </div>
+                    <br />
+                    <div class="row">
+                        <div id="aggregation" class="col-12 mb-3 mb-md-0 mx-auto"></div>
+                    </div>
+                    <br />
+                    <div class="row">
+                        <div id="planets" class="col-12 mb-3 mb-md-0 mx-auto"></div>
+                    </div>
+                    <br />
+                    <div class="row">
+                        <div id="droid" class="col-12 mb-3 mb-md-0 mx-auto"></div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="pills-property" role="tabpanel" aria-labelledby="pills-property-tab">
+                    <div class="row">
+                        <div id="checksum" class="col-12 mb-3 mb-md-0 mx-auto"></div>
+                    </div>
+                    <br />
+                    <div class="row">
+                        <div id="pronom" class="col-12 mb-3 mb-md-0 mx-auto"></div>
+                    </div> 
+                </div>
+                <div class="tab-pane fade" id="pills-topx" role="tabpanel" aria-labelledby="pills-topx-tab">                    
+                    <div class="row">
+                        <div id="schema" class="col-12 mb-3 mb-md-0 mx-auto"></div>
+                    </div>
+                    <br />
+                    <div class="row">
+                        <div id="topx" class="col-12 mb-3 mb-md-0 mx-auto"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @if (ViewBag.CurrentSession != null)
+    {
+        <script type="text/javascript">
+            $("#overview").removeClass();
+            $("#overview").addClass("mh-100 col-sm-8");
+        </script>
+    }
+<script type="text/javascript">
+    $('#jstree').jstree({
+        "themes": {
+            "variant": "large"
+        },
+        "core": {
+            "multiple": false,
+            "animation": 0,
+            "data": @Html.Raw(ViewBag.JsonTree)
+        },
+        "plugins": ["wholerow"]
+    });
+    $("#virusscan").load("/sidecar/virusscansummary/@Html.Raw(ViewBag.CurrentSession)");
+    $("#naming").load("/sidecar/namingsummary/@Html.Raw(ViewBag.CurrentSession)");
+    $("#aggregation").load("/sidecar/aggregationsummary/@Html.Raw(ViewBag.CurrentSession)");
+    $("#droid").load("/sidecar/droidsummary/@Html.Raw(ViewBag.CurrentSession)");
+    $("#planets").load("/sidecar/planetsummary/@Html.Raw(ViewBag.CurrentSession)");
+
+    $('#jstree').on("select_node.jstree", function (e, data) {
+        $("#topx").load("/sidecar/topxcontent/@Html.Raw(ViewBag.CurrentSession)/" + data.selected);
+        $("#schema").load("/sidecar/schemaresult/@Html.Raw(ViewBag.CurrentSession)/" + data.selected);
+
+        $("#pronom").load("/sidecar/droidpronominfo/@Html.Raw(ViewBag.CurrentSession)/" + data.selected);
+        $("#checksum").load("/sidecar/checksums/@Html.Raw(ViewBag.CurrentSession)/" + data.selected);
+        $('#pills-topx-tab').trigger('click');
+    });
+</script>
+</div>

@@ -1,0 +1,38 @@
+version: '3.4'
+
+services:
+  noord.hollandsarchief.pre.ingest.webtool:
+    image: ${DOCKER_REGISTRY-}noordhollandsarchiefpreingestwebtool
+    build:
+      context: .
+      dockerfile: Noord.HollandsArchief.Pre.Ingest.WebTool/Dockerfile
+    volumes:
+        - "D:/data:/data"
+  noord.hollandsarchief.pre.ingest.webapi:
+    image: ${DOCKER_REGISTRY-}noordhollandsarchiefpreingestwebapi
+    build:
+      context: .
+      dockerfile: Noord.HollandsArchief.Pre.Ingest.WebApi/Dockerfile
+    volumes:
+        - "D:/data:/data"
+  clamav:
+    image: "mkodockx/docker-clamav"
+    container_name: "clamav"
+    volumes:
+        - "D:/data:/data"
+    expose :
+        - "3310"
+  xslweb:
+    image: "pmasereeuwnha/xslweb"
+    container_name: "xslweb"
+    volumes:
+        - "D:/data:/data" 
+    expose:
+        - "8080"  
+  droid:
+    image: "nhapreingest/noordhollandsarchiefdroidvalidationwebapi:development"
+    container_name: "droid"
+    volumes:
+        - "D:/data:/data" 
+    expose:
+        - "8080"

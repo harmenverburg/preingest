@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <CopyRefAssembliesToPublishDirectory>false</CopyRefAssembliesToPublishDirectory>
+    <UserSecretsId>aff1ee4a-b034-41bb-bc2a-892bd01fe5f5</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileRunArguments>-v "D:/data:/data" --network preingest_development_preingest-network</DockerfileRunArguments>
+    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Noord.HollandsArchief.Pre.Ingest.WebApi\Entities\JsTreeItem.cs" Link="Entities\JsTreeItem.cs" />
+    <Compile Include="..\Noord.HollandsArchief.Pre.Ingest.WebApi\Utilities\ChecksumHelper.cs" Link="Utilities\ChecksumHelper.cs" />
+    <Compile Include="..\Noord.HollandsArchief.Pre.Ingest.WebApi\Utilities\DeserializerHelper .cs" Link="Utilities\DeserializerHelper .cs" />
+    <Compile Include="..\Noord.HollandsArchief.Pre.Ingest.WebApi\Utilities\SchemaValidationHandler.cs" Link="Utilities\SchemaValidationHandler.cs" />
+    <Compile Include="..\Noord.HollandsArchief.Pre.Ingest.WebApi\Utilities\SerializerHelper.cs" Link="Utilities\SerializerHelper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="5.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Entities\Droid\" />
+    <Folder Include="Utilities\" />
+  </ItemGroup>
+
+</Project>
