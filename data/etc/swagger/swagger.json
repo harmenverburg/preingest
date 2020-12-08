@@ -6,13 +6,13 @@
 		"title": "Swagger Pre-Ingest"
 	},
 	"host": "localhost:8000",
-	"basePath": "/api/preingest",
+	"basePath": "/api",
 	"schemes": [
 		"http",
 		"https"
 	],
 	"paths": {
-		"/check": {
+		"/preingest/check": {
 			"get": {
 				"tags": [
 					"Eenvoudige status check"
@@ -32,7 +32,7 @@
 				}
 			}
 		},
-		"/calculate/{checksum}/{collectionName}": {
+		"/preingest/calculate/{checksum}/{collectionName}": {
 			"get": {
 				"tags": [
 					"Checksum calculeren voor een tarcontainer (bestand)."
@@ -67,7 +67,7 @@
 				}
 			}
 		},
-		"/unpack/{collectionName}": {
+		"/preingest/unpack/{collectionName}": {
 			"get": {
 				"tags": [
 					"Uitpakken van een tar container (bestand)."
@@ -94,7 +94,7 @@
 				}
 			}
 		},
-		"/virusscan/{guid}": {
+		"/preingest/virusscan/{guid}": {
 			"post": {
 				"tags": [
 					"Scan uitvoeren voor het detecteren van virussen."
@@ -121,7 +121,7 @@
 				}
 			}
 		},
-		"/naming/{guid}": {
+		"/preingest/naming/{guid}": {
 			"post": {
 				"tags": [
 					"Benamingen van mappen en bestanden controleren op ongewenste karakters, commando's en devices"
@@ -148,7 +148,7 @@
 				}
 			}
 		},
-		"/sidecar/{guid}": {
+		"/preingest/sidecar/{guid}": {
 			"post": {
 				"tags": [
 					"Mappen en bestanden controlen op sidecarstructuur."
@@ -175,7 +175,7 @@
 				}
 			}
 		},
-		"/profiling/{guid}": {
+		"/preingest/profiling/{guid}": {
 			"post": {
 				"tags": [
 					"Droid voorbereiden om een map (en onderliggende objecten) te scannen voor metagegevens."
@@ -202,7 +202,7 @@
 				}
 			}
 		},
-		"/exporting/{guid}": {
+		"/preingest/exporting/{guid}": {
 			"post": {
 				"tags": [
 					"Droid metagegevens exporteren naar een CSV-bestand. Vereist eerst de actie '/droid/profiling/{guid}'"
@@ -229,7 +229,7 @@
 				}
 			}
 		},
-		"/reporting/{type}/{guid}": {
+		"/preingest/reporting/{type}/{guid}": {
 			"post": {
 				"tags": [
 					"Droid metagegevens exporteren naar een PDF- of een XML-bestand. Vereist eerst de actie '/droid/profiling/{guid}'."
@@ -264,7 +264,7 @@
 				}
 			}
 		},
-		"/greenlist/{guid}": {
+		"/preingest/greenlist/{guid}": {
 			"post": {
 				"tags": [
 					"Bestanden controleren of deze in de 'greenlist' voorkomen. Vereist eerst de actie '/droid/exporting/{guid}'."
@@ -291,7 +291,7 @@
 				}
 			}
 		},
-		"/encoding/{guid}": {
+		"/preingest/encoding/{guid}": {
 			"post": {
 				"tags": [
 					"Metadatabestanden controleren op de encoding."
@@ -318,7 +318,7 @@
 				}
 			}
 		},
-		"/validate/{guid}": {
+		"/preingest/validate/{guid}": {
 			"post": {
 				"tags": [
 					"Metadata valideren op schema (XSD) en schema+ (schematron)."
@@ -345,7 +345,7 @@
 				}
 			}
 		},
-		"/transform/{guid}": {
+		"/preingest/transform/{guid}": {
 			"post": {
 				"tags": [
 					"Metadatabestanden omvormen naar XIP-bestandsformaat."
@@ -371,6 +371,486 @@
 					}
 				}
 			}
-		}
+		},
+		"/preingest/sipcreator/{guid}": {
+			"post": {
+				"tags": [
+					"Collectie omvormen met behulp van SIP Creator."
+				],
+				"summary": "Collectie omvormen met behulp van SIP Creator.",
+				"description": "Collectie omvormen met behulp van SIP Creator.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "Map ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesful Operation. OK."
+					}
+				}
+			}
+		},
+		"/preingest/updatebinary/{guid}": {
+			"post": {
+				"tags": [
+					"Binary bestand bijwerken met PRONOM, Greenlist en Encoding gegevens (indien deze data beschikbaar zijn)."
+				],
+				"summary": "Binary bestand bijwerken met PRONOM, Greenlist en Encoding gegevens (indien deze data beschikbaar zijn).",
+				"description": "Binary bestand bijwerken met PRONOM, Greenlist en Encoding gegevens (indien deze data beschikbaar zijn).",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "Map ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesful Operation. OK."
+					}
+				}
+			}
+		},
+		"/output/collections": {
+			"get": {
+				"tags": [
+					"Retourneer een lijst met tar/tar.gz bestanden in data map."
+				],
+				"summary": "Retourneer een lijst met tar/tar.gz bestanden in data map.",
+				"description": "Retourneer een lijst met tar/tar.gz bestanden in data map.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/output/sessions": {
+			"get": {
+				"tags": [
+					"Retourneer een lijst met sessies (GUID) in data map."
+				],
+				"summary": "Retourneer een lijst met sessies (GUID) in data map.",
+				"description": "Retourneer een lijst met sessies (GUID) in data map.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/output/results/{guid}": {
+			"get": {
+				"tags": [
+					"Retourneer een lijst met resultaten (bestanden *.json/*.xml/*.csv/*.pdf)."
+				],
+				"summary": "Retourneer een lijst met resultaten (bestanden *.json/*.xml/*.csv/*.pdf).",
+				"description": "Retourneer een lijst met resultaten (bestanden *.json/*.xml/*.csv/*.pdf).",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "GUID sessie referentie ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/output/json/{guid}/{json}": {
+			"get": {
+				"tags": [
+					"Retourneer een resultaat uit een JSON bestand in vorm van JSON verzoek."
+				],
+				"summary": "Retourneer een resultaat uit een JSON bestand in vorm van JSON verzoek.",
+				"description": "Retourneer een resultaat uit een JSON bestand in vorm van JSON verzoek.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "GUID sessie referentie ID",
+					"required": true,
+					"type": "string"
+				},
+				{
+					"name": "json",
+					"in": "path",
+					"description": "Bestandsnaam van JSON",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/output/report/{guid}/{file}": {
+			"get": {
+				"tags": [
+					"Download een report: *.xml, *.csv, *.pdf."
+				],
+				"summary": "Download een report: *.xml, *.csv, *.pdf.",
+				"description": "Download een report: *.xml, *.csv, *.pdf.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "GUID sessie referentie ID",
+					"required": true,
+					"type": "string"
+				},
+				{
+					"name": "file",
+					"in": "path",
+					"description": "Bestandsnaam: *.xml, *.csv, *.pdf",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/output/sidecartree/{guid}": {
+			"get": {
+				"tags": [
+					"Retourneer (sidecar) boomstructuur."
+				],
+				"summary": "Retourneer (sidecar) boomstructuur.",
+				"description": "Retourneer (sidecar) boomstructuur.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "GUID sessie referentie ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/output/aggregationsummary/{guid}": {
+			"get": {
+				"tags": [
+					"Samenvatting van alle aggregatie niveau's."
+				],
+				"summary": "Samenvatting van alle aggregatie niveau's.",
+				"description": "Samenvatting van alle aggregatie niveau's.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "GUID sessie referentie ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/output/droidsummary/{guid}": {
+			"get": {
+				"tags": [
+					"Samenvatting vanuit DROID gegenereerd."
+				],
+				"summary": "Samenvatting vanuit DROID gegenereerd",
+				"description": "Samenvatting vanuit DROID gegenereerd",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "guid",
+					"in": "path",
+					"description": "GUID sessie referentie ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/output/topxdata/{id}/{treeGuid}": {
+			"get": {
+				"tags": [
+					"ToPX van een aggregatie niveau."
+				],
+				"summary": "ToPX van een aggregatie niveau.",
+				"description": "ToPX van een aggregatie niveau.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "id",
+					"in": "path",
+					"description": "GUID sessie referentie ID",
+					"required": true,
+					"type": "string"
+				},
+				{
+					"name": "treeGuid",
+					"in": "path",
+					"description": "Sidecar boom node ID (GUID formaat)",
+					"required": true,
+					"type": "string"
+				}
+				],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/output/droidpronominfo/{id}/{treeGuid}": {
+			"get": {
+				"tags": [
+					"PRONOM informatie per aggregatie."
+				],
+				"summary": "PRONOM informatie per aggregatie.",
+				"description": "PRONOM informatie per aggregatie.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "id",
+					"in": "path",
+					"description": "GUID sessie referentie ID",
+					"required": true,
+					"type": "string"
+				},
+				{
+					"name": "treeGuid",
+					"in": "path",
+					"description": "Sidecar boom node ID (GUID formaat)",
+					"required": true,
+					"type": "string"
+				}
+				],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/output/metadataencoding/{id}/{treeGuid}": {
+			"get": {
+				"tags": [
+					"Encoding resultaat van een metadata bestand."
+				],
+				"summary": "Encoding resultaat van een metadata bestand.",
+				"description": "Encoding resultaat van een metadata bestand.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "id",
+					"in": "path",
+					"description": "GUID sessie referentie ID",
+					"required": true,
+					"type": "string"
+				},
+				{
+					"name": "treeGuid",
+					"in": "path",
+					"description": "Sidecar boom node ID (GUID formaat)",
+					"required": true,
+					"type": "string"
+				}
+				],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/output/greenliststatus/{id}/{treeGuid}": {
+			"get": {
+				"tags": [
+					"Greenlist status opvragen van aggregatie Bestand (m.b.v. PRONOM)."
+				],
+				"summary": "Greenlist status opvragen van aggregatie Bestand (m.b.v. PRONOM).",
+				"description": "Greenlist status opvragen van aggregatie Bestand (m.b.v. PRONOM).",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "id",
+					"in": "path",
+					"description": "GUID sessie referentie ID",
+					"required": true,
+					"type": "string"
+				},
+				{
+					"name": "treeGuid",
+					"in": "path",
+					"description": "Sidecar boom node ID (GUID formaat)",
+					"required": true,
+					"type": "string"
+				}
+				],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/output/calculatechecksum/{id}/{treeGuid}": {
+			"get": {
+				"tags": [
+					"Checksum uitrekenen met MD5, SHA1, SHA256 en SHA512."
+				],
+				"summary": "Checksum uitrekenen met MD5, SHA1, SHA256 en SHA512.",
+				"description": "Checksum uitrekenen met MD5, SHA1, SHA256 en SHA512.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "id",
+					"in": "path",
+					"description": "GUID sessie referentie ID",
+					"required": true,
+					"type": "string"
+				},
+				{
+					"name": "treeGuid",
+					"in": "path",
+					"description": "Sidecar boom node ID (GUID formaat)",
+					"required": true,
+					"type": "string"
+				}
+				],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		},
+		"/output/schemaresult/{id}/{treeGuid}": {
+			"get": {
+				"tags": [
+					"ToPX XSD schema en NHA schema+ validatie resultaten."
+				],
+				"summary": "Samenvatting van alle aggregatie niveau's.",
+				"description": "Samenvatting van alle aggregatie niveau's.",
+				"consumes": [
+					"application/json"
+				],
+				"produces": [
+					"application/json"
+				],
+				"parameters": [{
+					"name": "id",
+					"in": "path",
+					"description": "GUID sessie referentie ID",
+					"required": true,
+					"type": "string"
+				},
+				{
+					"name": "treeGuid",
+					"in": "path",
+					"description": "Sidecar boom node ID (GUID formaat)",
+					"required": true,
+					"type": "string"
+				}
+				],
+				"responses": {
+					"200": {
+						"description": "Succesvolle actie. OK."
+					}
+				}
+			}
+		}			
 	}
 }
