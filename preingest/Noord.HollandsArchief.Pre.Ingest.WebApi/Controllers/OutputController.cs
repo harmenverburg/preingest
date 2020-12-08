@@ -163,7 +163,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     Id = item.InternalId.ToString(),
                     Parent = item.Parent == null ? "#" : item.Parent.InternalId.ToString(),
                     Text = String.Format("{0} - {1}", item.GetType().Name, item.Name),
-                    Icon = "/img/series/png"
+                    Icon = "/img/series.png"
                 }).ToArray();
                 model.AddRange(series);
                 
@@ -282,7 +282,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 using (WebResponse response = planetsRequest.GetResponseAsync().Result)
                     planets = XDocument.Load(response.GetResponseStream());
 
-
                 result = new JsonResult(new { Droid = droid.ToString(), Planets = planets.ToString() });   
             });
 
@@ -349,6 +348,20 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 if (sidecarObject == null)
                 { return; }
 
+                if(sidecarObject.PronomMetadataInfo != null)
+                {
+                    var list = new List<PronomItem>();
+                    list.Add(sidecarObject.PronomMetadataInfo);
+                    if ((sidecarObject as Bestand) != null)
+                    {
+                        var pronomBinary = (sidecarObject as Bestand).PronomBinaryInfo;
+                        list.Add(pronomBinary);
+                    }
+
+                    result.AddRange(list);
+                    return;
+                }
+                
                 string droidCsvFile = DroidCsvOutputLocation(Path.Combine(_settings.DataFolderName, id.ToString()));
                 if (String.IsNullOrEmpty(droidCsvFile))
                 { return; }
@@ -359,8 +372,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     {
                         var records = csv.GetRecords<dynamic>();
                         
-                            var metadataFile = sidecarObject.MetadataFileLocation;
-                            var phyisicalFile = sidecarObject.MetadataFileLocation.Remove((sidecarObject.MetadataFileLocation.Length - ".metadata".Length), ".metadata".Length);
+                        var metadataFile = sidecarObject.MetadataFileLocation;
+                        var phyisicalFile = ((sidecarObject as Bestand) != null) ? (sidecarObject as Bestand).BinaryFileLocation : String.Empty; //sidecarObject.MetadataFileLocation.Remove((sidecarObject.MetadataFileLocation.Length - ".metadata".Length), ".metadata".Length);
 
                         var phyisicalFileProp = records.Where(item
                             => item.TYPE == "File"
@@ -389,7 +402,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                         result.AddRange(phyisicalFileProp);
                     }
                 }
+            
             });
+
             await Task.Run(action);
 
             return new JsonResult(result);
@@ -411,10 +426,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 if (fileinfo == null)
                     return;
 
-                var encoding = directory.GetFiles("EncodingHandler*.json").OrderByDescending(item => item.CreationTime).FirstOrDefault();
-                if (encoding == null)
-                    return;
-
                 PairNode<ISidecar> sidecar = Utilities.DeserializerHelper.DeSerializeObjectFromBinaryFile<PairNode<ISidecar>>(fileinfo.FullName);
                 var sidecarObjects = sidecar.Flatten().Select(item => item.Data).Reverse().ToList();
 
@@ -422,6 +433,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
                 if (sidecarObject == null)
                 { return; }
+
+                if (!String.IsNullOrEmpty(sidecarObject.MetadataEncoding))
+                {
+                    result = sidecarObject.MetadataEncoding;
+                    return;
+                }
+
+                var encoding = directory.GetFiles("EncodingHandler*.json").OrderByDescending(item => item.CreationTime).FirstOrDefault();
+                if (encoding == null)
+                    return;
 
                 var output = JsonConvert.DeserializeObject<List<ProcessResult>>(System.IO.File.ReadAllText(encoding.FullName));
                 if (output == null)
@@ -452,10 +473,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 if (fileinfo == null)
                     return;
 
-                var encoding = directory.GetFiles("GreenListHandler*.json").OrderByDescending(item => item.CreationTime).FirstOrDefault();
-                if (encoding == null)
-                    return;
-
                 PairNode<ISidecar> sidecar = Utilities.DeserializerHelper.DeSerializeObjectFromBinaryFile<PairNode<ISidecar>>(fileinfo.FullName);
                 var sidecarObjects = sidecar.Flatten().Select(item => item.Data).Reverse().ToList();
 
@@ -464,7 +481,17 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 if (sidecarObject == null)
                 { return; }
 
-                var output = JsonConvert.DeserializeObject<List<dynamic>>(System.IO.File.ReadAllText(encoding.FullName));
+                if((sidecarObject as Bestand).BinaryFileIsInGreenList.HasValue)
+                {
+                    json = new JsonResult(new { Greenlist = (sidecarObject as Bestand).BinaryFileIsInGreenList.Value });
+                    return;
+                }
+
+                var greenlist = directory.GetFiles("GreenListHandler*.json").OrderByDescending(item => item.CreationTime).FirstOrDefault();
+                if (greenlist == null)
+                    return;
+
+                var output = JsonConvert.DeserializeObject<List<dynamic>>(System.IO.File.ReadAllText(greenlist.FullName));
                 if (output == null)
                     return;
 
@@ -502,6 +529,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
                 if (sidecarObject == null)
                 { return; }
+
+                if((sidecarObject as Bestand) != null)
+                {
+                    if ( ((sidecarObject as Bestand).ChecksumResultCollection != null) && ((sidecarObject as Bestand).ChecksumResultCollection.Count > 0) )
+                    {
+                        var dic = (sidecarObject as Bestand).ChecksumResultCollection;
+                        json = new JsonResult(new { Md5 = dic["MD5"], Sha1 = dic["SHA1"], Sha256 = dic["SHA256"], Sha512 = dic["SHA512"] });
+                        return;
+                    }
+                }
 
                 string file = String.Format("{0}/{1}{2}", _settings.DataFolderName, id, sidecarObject.TitlePath);
                 if (System.IO.File.Exists(file))
@@ -545,6 +582,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 if (sidecarObject == null)
                 { return; }
 
+                var result = sidecarObject.ObjectExceptions();
+                if (result.Count > 0)
+                {
+                    var fromObject = new ProcessResult[] { new ProcessResult(id) { Messages = result.Select(item => item.Message).ToArray() } };
+                    json = new JsonResult(fromObject);
+                    return;
+                }
+
                 var schema = directory.GetFiles("MetadataValidationHandler*.json").OrderByDescending(item => item.CreationTime).FirstOrDefault();
                 if (schema == null)
                     return;
@@ -562,6 +607,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             return json;
         }
+
 
         private String DroidCsvOutputLocation(String targetFolder)
         {

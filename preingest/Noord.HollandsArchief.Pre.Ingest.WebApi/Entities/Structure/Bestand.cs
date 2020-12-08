@@ -18,7 +18,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure
             this._binary = binary;
         }
         public PronomItem PronomBinaryInfo { get; set; }
-        public Boolean BinaryFileIsInGreenList { get; set; }         
+        public Boolean? BinaryFileIsInGreenList { get; set; }         
         public String BinaryFileLocation { get;set; }
         public Dictionary<String, String> ChecksumResultCollection { get; set; }
         public override bool CompareAggregationLevel

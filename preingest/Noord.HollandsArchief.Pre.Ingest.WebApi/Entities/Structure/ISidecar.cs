@@ -24,5 +24,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure
         Boolean CompareAggregationLevel { get; }
         Boolean HasIdentification { get; }
         Boolean HasName { get; }
+        List<SidecarException> ObjectExceptions();
     }
 }

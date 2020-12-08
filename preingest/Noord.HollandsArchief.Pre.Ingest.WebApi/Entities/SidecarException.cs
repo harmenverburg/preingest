@@ -14,6 +14,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities
         private Exception _exception = null;
         public SidecarException(SerializationInfo info, StreamingContext context): base(info, context)
         {
+            if (info != null)
+            {
+                this._message = info.GetString("Message");
+            }
         }
 
         public SidecarException(String message) : base(message) { _message = message; }
@@ -25,6 +29,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities
                 _message = (exception.InnerException != null) ? exception.InnerException.Message : (exception.GetBaseException() != null) ? exception.GetBaseException().Message : exception.GetBaseException().StackTrace;
         }
 
+        public Exception OriginalException
+        {
+            get
+            {
+                return _exception;
+            }
+        }
+
         public override String Message
         {
             get
@@ -33,8 +45,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities
                 if (!isEmpty)
                     return this._message;
 
+                if (_exception == null)
+                    return String.Empty;
+
                 return _message = (_exception.InnerException != null) ? _exception.InnerException.Message : (_exception.GetBaseException() != null) ? _exception.GetBaseException().Message : _exception.GetBaseException().StackTrace;
-            }
+            } 
         }
     }
 }

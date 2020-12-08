@@ -13,7 +13,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities
         {
             id = guid;
         }
-        public Guid SessionId { get => id; }
+        public Guid SessionId { get => id; set => id = value; }
         public String Code { get; set; }
         public String ActionName { get; set; }
         public String CollectionItem { get; set; }
