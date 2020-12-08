@@ -86,29 +86,14 @@
         
         <xsl:variable name="identificatiekenmerk" as="element(topx:identificatiekenmerk)" select="$topxDoc/*/topx:aggregatie/topx:identificatiekenmerk"/>
         <xsl:variable name="naam" as="element(topx:naam)" select="$topxDoc/*/topx:aggregatie/topx:naam"/>
-        <xsl:variable name="omschrijvingBeperkingen" as="element(topx:omschrijvingBeperkingen)" select="$topxDoc/*/topx:aggregatie/topx:openbaarheid/topx:omschrijvingBeperkingen"/>        
-        <xsl:variable name="DigitalSurrogate" as="xs:string" select="'false'"/>
-        <xsl:variable name="omschrijving" as="element(topx:omschrijving)?" select="()"/> <!-- TODO -->
+        <xsl:variable name="omschrijvingBeperkingen" as="element(topx:omschrijvingBeperkingen)" select="$topxDoc/*/topx:aggregatie/topx:openbaarheid/topx:omschrijvingBeperkingen"/>
         
-        <XIP xmlns="http://www.tessella.com/XIP/v4">            
-            <Collections>
-                <Collection status="new">
-                    <CollectionRef>TODO</CollectionRef>
-                    <CollectionCode><xsl:apply-templates select="$identificatiekenmerk"/></CollectionCode>
-                    <Title><xsl:apply-templates select="$naam"/></Title>
-                    <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
-                    <Metadata><xsl:copy-of select="$topxDoc"/></Metadata>
-                </Collection>
-            </Collections>
-            <DeliverableUnits>
-                <DeliverableUnit status="new">
-                    <DigitalSurrogate>{$DigitalSurrogate}</DigitalSurrogate>
-                    <DeliverableUnitComponent status="new">
-                        <Description><xsl:apply-templates select="$omschrijving"/></Description>
-                    </DeliverableUnitComponent>
-                </DeliverableUnit>
-            </DeliverableUnits>
-        </XIP>
+        <Collection status="new">
+            <CollectionCode><xsl:apply-templates select="$identificatiekenmerk"/></CollectionCode>
+            <Title><xsl:apply-templates select="$naam"/></Title>
+            <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
+            <Metadata><xsl:copy-of select="$topxDoc"/></Metadata>
+        </Collection>
     </xsl:template>
     
     <xsl:template name="create-xip-aggregatie-serie-dossier-record">
@@ -120,22 +105,14 @@
         <xsl:variable name="DigitalSurrogate" as="xs:string" select="'false'"/>
         <xsl:variable name="omschrijving" as="element(topx:omschrijving)?" select="()"/> <!-- TODO -->
         
-        <XIP xmlns="http://www.tessella.com/XIP/v4">
-            <Collections>
-                <Collection status="new">
-                    <Title><xsl:apply-templates select="$naam"/></Title>
-                    <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
-                    <Metadata><xsl:copy-of select="$topxDoc"/></Metadata>
-                </Collection>
-            </Collections>
-            <DeliverableUnits>
-                <DeliverableUnit status="new">
-                    <DigitalSurrogate>{$DigitalSurrogate}</DigitalSurrogate>
-                    <CatalogueReference><xsl:apply-templates select="$identificatiekenmerk"/></CatalogueReference>
-                    <ScopeAndContent><xsl:apply-templates select="$omschrijving"/></ScopeAndContent>
-                </DeliverableUnit>
-            </DeliverableUnits>
-        </XIP>
+        <DeliverableUnit status="new">
+            <DigitalSurrogate>{$DigitalSurrogate}</DigitalSurrogate>
+            <CatalogueReference><xsl:apply-templates select="$identificatiekenmerk"/></CatalogueReference>
+            <ScopeAndContent><xsl:apply-templates select="$omschrijving"/></ScopeAndContent>
+            <Title><xsl:apply-templates select="$naam"/></Title>
+            <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
+            <Metadata><xsl:copy-of select="$topxDoc"/></Metadata>
+        </DeliverableUnit>
     </xsl:template>
     
     <xsl:template name="create-xip-aggregatie-bestand">
@@ -143,41 +120,23 @@
         
         <xsl:variable name="identificatiekenmerk" as="element(topx:identificatiekenmerk)" select="$topxDoc/*/topx:bestand/topx:identificatiekenmerk"/>
         <xsl:variable name="naam" as="element(topx:naam)" select="$topxDoc/*/topx:bestand/topx:naam"/>
-        <xsl:variable name="omschrijvingBeperkingen" as="element(topx:omschrijvingBeperkingen)?" select="$topxDoc/*/topx:bestand/topx:openbaarheid/topx:omschrijvingBeperkingen"/> <!-- TODO ontbreekt (soms?) in bron -->
-        <xsl:variable name="DigitalSurrogate" as="xs:string" select="'false'"/>
-        <xsl:variable name="ouderverwijzing" as="element(topx:ouderverwijzing)?" select="()"/> <!-- TODO -->
         <xsl:variable name="bestandsverwijzing" as="element(topx:bestandsverwijzing)?" select="()"/> <!-- TODO -->
         <xsl:variable name="algoritme" as="element(topx:algoritme)?" select="$topxDoc/*/topx:bestand/topx:formaat/topx:fysiekeIntegriteit/topx:algoritme"/>
         <xsl:variable name="algoritme-waarde" as="element(topx:waarde)?" select="$topxDoc/*/topx:bestand/topx:formaat/topx:fysiekeIntegriteit/topx:waarde"/>
-        <xsl:variable name="omvang" as="element(topx:omvang)?" select="$topxDoc/*/topx:bestand/topx:formaat/topx:omvang"/>
+        <!-- Tijdelijk fix vanwege foutieve levering als <omvang>123456 bytes</omvang>: neem alleen het getal over. -->
+        <xsl:variable name="omvang" as="xs:string" select="$topxDoc/*/topx:bestand/topx:formaat/topx:omvang => string() => replace('^\D*(\d+)\D*$', '$1')"/>
         
-        <XIP xmlns="http://www.tessella.com/XIP/v4">
-            <Collections>
-                <Collection status="new">
-                    <xsl:if test="exists($ouderverwijzing)"><ParentRef><xsl:apply-templates select="$ouderverwijzing"/></ParentRef></xsl:if>
-                    <Title><xsl:apply-templates select="$naam"/></Title>
-                    <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
-                    <Metadata><xsl:copy-of select="$topxDoc"/></Metadata>
-                    <Identifier><xsl:apply-templates select="$identificatiekenmerk"/></Identifier>
-                </Collection>
-            </Collections>
-            <DeliverableUnits>
-                <DeliverableUnit>
-                    <DigitalSurrogate>{$DigitalSurrogate}</DigitalSurrogate>
-                </DeliverableUnit>
-            </DeliverableUnits>
-            <Files>
-                <File status="new">
-                    <!-- TODO <FileRef> is in meerdere XML-conteksten toegestaan. Is dit wel de juiste plaats? Ook onder Manifestation/ManifestationFile kan het bijvoorbeeld. -->
-                    <xsl:if test="exists($bestandsverwijzing)"><FileRef><xsl:apply-templates select="$bestandsverwijzing"/></FileRef></xsl:if>
-                    <FileSize><xsl:apply-templates select="$omvang"/></FileSize>
-                    <FixityInfo>
-                        <FixityAlgorithmRef><xsl:apply-templates select="$algoritme"/></FixityAlgorithmRef>
-                        <FixityValue><xsl:apply-templates select="$algoritme-waarde"/></FixityValue>
-                    </FixityInfo>
-                </File>
-            </Files>
-        </XIP>
+        <File status="new">
+            <!-- TODO <FileRef> is in meerdere XML-conteksten toegestaan. Is dit wel de juiste plaats? Ook onder Manifestation/ManifestationFile kan het bijvoorbeeld. -->
+            <xsl:if test="exists($bestandsverwijzing)"><FileRef><xsl:apply-templates select="$bestandsverwijzing"/></FileRef></xsl:if>
+            <Metadata><xsl:copy-of select="$topxDoc"/></Metadata>
+            <FileSize><xsl:value-of select="$omvang"/></FileSize>
+            <FixityInfo>
+                <FixityAlgorithmRef><xsl:apply-templates select="$algoritme"/></FixityAlgorithmRef>
+                <FixityValue><xsl:apply-templates select="$algoritme-waarde"/></FixityValue>
+            </FixityInfo>
+            <Title><xsl:apply-templates select="$naam"/></Title>
+        </File>
     </xsl:template>
 
     <xsl:template match="topx:omschrijvingBeperkingen">
