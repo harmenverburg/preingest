@@ -11,13 +11,11 @@
     
     <xsl:variable name="nha:data-uri-prefix-key" as="xs:string" select="'data-uri-prefix'" static="yes"/>
     <xsl:variable name="nha:full-swagger-json-uri-key" as="xs:string" select="'full-swagger-json-uri'" static="yes"/>
-    <xsl:variable name="nha:sessionguid-key" as="xs:string" select="'sessionguid'" static="yes"/>
+    <xsl:variable name="nha:preingestguid-session-key" as="xs:string" select="'preingest-sessionguid'" static="yes"/>
     <xsl:variable name="nha:checksumtype-field" as="xs:string" select="'checksumtype'" static="yes"/>
     <xsl:variable name="nha:checksumvalue-field" as="xs:string" select="'checksumvalue'" static="yes"/>
     <xsl:variable name="nha:selectedfile-field" as="xs:string" select="'selectedfile'" static="yes"/>
     <xsl:variable name="nha:check-button" as="xs:string" select="'check'" static="yes"/>
     <xsl:variable name="nha:uncompress-button" as="xs:string" select="'uncompress'" static="yes"/>
-    <xsl:variable name="nha:checksum-condition" as="xs:string" select="'checksum-condition'" static="yes"/>
-    <xsl:variable name="nha:ongoing-action-key" as="xs:string" select="'ongoing-action'" static="yes"/>
-    <xsl:variable name="nha:refresh-value" as="xs:integer" select="10" static="yes"/>
+    <xsl:variable name="nha:refresh-value" as="xs:integer" select="5000" static="yes"/>
 </xsl:stylesheet>

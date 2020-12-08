@@ -57,13 +57,19 @@
     
     <xsl:function name="nha:get-jsonpath-for-selected-archive" as="xs:string">
         <xsl:param name="relative-path" as="xs:string?"/>
-        <xsl:param name="sessionid" as="xs:string?"/>
+        <xsl:param name="preingest-sessionid" as="xs:string?"/>
         <xsl:variable name="full-archive-path" as="xs:string" select="$archives-folder-path || file:dir-separator() || $relative-path"/>
-        <xsl:variable name="full-json-path" as="xs:string" select="$full-archive-path || '_' || $sessionid || '.json'"/>
-        
+        <xsl:variable name="full-json-path" as="xs:string" select="$full-archive-path || '_' || $preingest-sessionid || '.json'"/>
+
         <xsl:sequence select="$full-json-path"/>
     </xsl:function>
     
+    <!-- The parameter is a path with zero or more slashes. Each part of the path is passed to encode-for-uri() and the concatenated result (with slashes) is returned. -->
+    <xsl:function name="nha:encode-path-for-uri" as="xs:string">
+        <xsl:param name="path" as="xs:string"/>
+        <xsl:value-of select="string-join(for $f in tokenize($path, '/') return encode-for-uri($f), '/')"/>
+    </xsl:function>
+
     <xsl:function name="nha:jsonfile-for-selected-archive-exists" as="xs:boolean">
         <xsl:param name="relative-path" as="xs:string?"/>
         <xsl:param name="sessionid" as="xs:string?"/>
@@ -73,11 +79,11 @@
 
     <xsl:function name="nha:checksum-in-json-file-matches" as="xs:boolean">
         <xsl:param name="relative-path" as="xs:string?"/>
-        <xsl:param name="sessionid" as="xs:string?"/>
+        <xsl:param name="preingest-sessionid" as="xs:string?"/>
         <xsl:param name="required-checksum-type"/>
         <xsl:param name="required-checksum-value"/>
         
-        <xsl:variable name="json-uri" as="xs:anyURI" select="file:path-to-uri(nha:get-jsonpath-for-selected-archive($relative-path, $sessionid))"/>
+        <xsl:variable name="json-uri" as="xs:anyURI" select="file:path-to-uri(nha:get-jsonpath-for-selected-archive($relative-path, $preingest-sessionid))"/>
         <xsl:variable name="json" as="array(*)" select="json-doc($json-uri)"/>
         <xsl:variable name="message-from-json" as="xs:string" select="$json?1?message"/>
         <xsl:variable name="type-from-json" as="xs:string" select="$message-from-json => replace('^([^:]+):.*$', '$1') => normalize-space()"/>

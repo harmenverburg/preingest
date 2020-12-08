@@ -22,3 +22,11 @@ data/etc/xslwebfrontend/home/webapps/examples/
 up.sh
 
 test-urls.txt
+
+data/etc/xslwebfrontend/home/.cache/
+
+data/etc/xslweb/home/.cache/
+
+data/etc/tomcatfrontend/logs/
+
+data/etc/tomcat/logs/

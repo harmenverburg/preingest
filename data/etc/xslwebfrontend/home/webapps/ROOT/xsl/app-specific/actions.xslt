@@ -19,29 +19,68 @@
     <xsl:include href="commoncode.xslt"/>
     
     <xsl:template match="/">
-        <xsl:variable name="sessionid" as="xs:string?" select="session:get-attribute($nha:sessionguid-key)"/>
+        <xsl:variable name="action" as="xs:string" select="nha:get-parameter-value(/req:request, 'action')"/>
         
-        <!-- E.g., /actions/calculate/md5sum/myfile.xyz is split into (1) "", (2) "actions", (3) "calculate", (4) "md5sum" and (5) "myfile.xyz". Note the empty string and also note that slashes in the filename should be encoded. -->
-        <xsl:variable name="request-parts" as="xs:string+" select="tokenize(/*/req:path-info, '/')"/>
-        <!-- dit is niet goed: moet maar een keer gebeuren. -->
-        <xsl:variable name="dummy" select="json-doc($preingest-scheme-host-port || $preingest-api-basepath || '/' || string-join(subsequence($request-parts, 3), '/'))"/>
-        <xsl:sequence select="file:write-text('/dev/null', string($dummy?dummy))"/>
         <xsl:variable name="response" as="element(json:map)">
             <xsl:choose>
-                <xsl:when test="$request-parts[3] eq 'calculate'">
-                    <xsl:variable name="relative-path" as="xs:string" select="$request-parts[5]"/>
-                    <xsl:message select="'json-uri=' || $preingest-scheme-host-port || $preingest-api-basepath || '/' || string-join(subsequence($request-parts, 3), '/')"></xsl:message>
+                <xsl:when test="$action eq 'check-for-file-with-ok'">
+                    <xsl:variable name="relative-path" as="xs:string" select="nha:get-parameter-value(/req:request, 'relative-path')"/>
+                    <xsl:variable name="absolute-path" as="xs:string" select="$archives-folder-path || file:dir-separator() || $relative-path"/>
+                    
+                    <xsl:variable name="absolute-uri" as="xs:anyURI" select="file:path-to-uri($archives-folder-path || file:dir-separator() || nha:encode-path-for-uri($relative-path))"/>
+                    <xsl:message>absolute-uri={$absolute-uri}</xsl:message>
                     <xsl:choose>
-                        <xsl:when test="nha:jsonfile-for-selected-archive-exists($relative-path, $sessionid)">
+                        <xsl:when test="file:exists($absolute-path)">
+                            <xsl:variable name="json" as="map(*)" select="json:json-doc($absolute-uri)"/>
+                            <xsl:sequence select="session:set-attribute($nha:preingestguid-session-key, string($json?SessionId))"/>
                             <json:map>
-                                <json:string key="sessionId">{json-doc($preingest-scheme-host-port || $preingest-api-basepath || '/' || string-join(subsequence($request-parts, 3), '/'))?sessionId}</json:string>
+                                <json:string key="sessionId">{$json?SessionId}</json:string>
+                                <json:string key="code">{$json?Code}</json:string>
                             </json:map>
                         </xsl:when>
                         <xsl:otherwise>
-                            <xsl:message>jsonfile is er nog niet</xsl:message>
-                            <json:map><json:string key="sessionId">ff wachten</json:string></json:map>
+                            <json:map>
+                                <json:null key="sessionId"/>
+                            </json:map>
                         </xsl:otherwise>
                     </xsl:choose>
+                </xsl:when>
+                <xsl:when test="$action eq 'check-for-tar-json-file'">
+                    <xsl:variable name="relative-path" as="xs:string" select="nha:get-parameter-value(/req:request, 'relative-path')"/>
+                    <xsl:variable name="preingest-session-id" as="xs:string" select="nha:get-parameter-value(/req:request, 'preingest-session-id')"/>
+                    <xsl:choose>
+                        <xsl:when test="nha:jsonfile-for-selected-archive-exists($relative-path, $preingest-session-id)">
+                            <json:map>
+                                <!-- The json file has an array with one element as its top level structure -->
+                                <xsl:variable name="json" as="array(*)" select="json-doc(nha:get-jsonpath-for-selected-archive(encode-for-uri($relative-path), $preingest-session-id))"/>
+                                <json:string key="sessionId">{$json?1?sessionId}</json:string>
+                                <!-- Format of message, e.g. "message": "SHA256 : b46250879e806fe756e18b496d5679b1e3c56875dc012eebd5ae7e7d07f353cc" -->
+                                <xsl:variable name="message" as="xs:string" select="$json?1?message"/>
+                                <json:string key="checksumType">{replace($message, '^([^:]*):.*$', '$1') => normalize-space()}</json:string>
+                                <json:string key="checksumValue">{replace($message, '^[^:]*:(.*)$', '$1') => normalize-space()}</json:string>
+                            </json:map>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <json:map>
+                                <json:null key="sessionId"/>
+                            </json:map>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:when>
+                <xsl:when test="$action eq 'calculate'">
+                    <xsl:variable name="relative-path" as="xs:string" select="nha:get-parameter-value(/req:request, 'relative-path')"/>
+                    <xsl:variable name="checksum-type" as="xs:string" select="nha:get-parameter-value(/req:request, 'checksum-type')"/>
+                    <xsl:variable name="json-uri" as="xs:string" select="$preingest-scheme-host-port || $preingest-api-basepath || '/calculate/' || $checksum-type || '/' || encode-for-uri($relative-path)"/>
+                    <json:map>
+                        <json:string key="sessionId">{json-doc($json-uri)?sessionId}</json:string>
+                    </json:map>
+                </xsl:when>
+                <xsl:when test="$action eq 'unpack'">
+                    <xsl:variable name="relative-path" as="xs:string" select="nha:get-parameter-value(/req:request, 'relative-path')"/>
+                    <xsl:variable name="json-uri" as="xs:string" select="$preingest-scheme-host-port || $preingest-api-basepath || '/unpack/' || encode-for-uri($relative-path)"/>
+                    <json:map>
+                        <json:string key="sessionId">{json-doc($json-uri)?sessionId}</json:string>
+                    </json:map>
                 </xsl:when>
             </xsl:choose>
         </xsl:variable>

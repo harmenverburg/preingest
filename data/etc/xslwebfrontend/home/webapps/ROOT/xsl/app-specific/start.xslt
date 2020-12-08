@@ -21,62 +21,51 @@
     <xsl:include href="commoncode.xslt"/>
     
     <xsl:template match="/req:request">
-        <xsl:variable name="postresult" as="node()*">
-            <xsl:if test="nha:is-post(.)">
-                <xsl:call-template name="do-post"/>
-            </xsl:if>
-        </xsl:variable>
         <html>
             <head>
                 <title>Archiefselectie</title>
-                <xsl:message>1. ongoing="{session:get-attribute($nha:ongoing-action-key)}"</xsl:message>
-                <xsl:if test="exists(session:get-attribute($nha:ongoing-action-key))"><meta http-equiv="refresh" content="{$nha:refresh-value}" /></xsl:if>
                 <link rel="stylesheet" type="text/css" href="{$context-path}/css/gui.css" />
                 <script language="javascript" src="{$context-path}/js/gui.js" type="text/javascript"></script>
             </head>
             <body>
                 <h1>Archiefselectie</h1>
-                <xsl:if test="nha:is-post(.)">
-                    <xsl:copy-of select="$postresult"/>
-                </xsl:if>
-                <!--<form method="POST">-->
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Selectie</th>
-                                <th>Bestandsnaam</th>
-                                <th>Omvang</th>
-                                <th>Datum</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <xsl:call-template name="generate-container-file-table-rows"/>
-                        </tbody>
-                    </table>
-                    
-                    <h2>Verwerkingsgegevens voor het geselecteerde bestand:</h2>
-                    
-                    <xsl:variable name="checksumtype" as="xs:string" select="session:get-attribute($nha:checksumtype-field)"/>
-                    <p>Kies het type checksum:<br/>
-                        <select name="{$nha:checksumtype-field}"  id="{$nha:checksumtype-field}">
-                            <option value="">Type&#x2026;</option> <!-- Geen @value, toont dat de gebruiker keuze moet maken -->
-                            <option value="MD5">MD5</option>
-                            <option value="SHA1">SHA1</option>
-                            <option value="SHA256">SHA256</option>
-                            <option value="SHA512">SHA512</option>
-                        </select>
-                    </p>
-                    <p>Checksumwaarde, zoals verstrekt door de zorgdrager:<br/>
-                        <textarea name="{$nha:checksumvalue-field}" cols="50" rows="3" class="xx-small" placeholder="Plak hier de checksum van de zorgdrager"></textarea>
-                    </p>
-                    <xsl:if test="exists(session:get-attribute($nha:ongoing-action-key))">
-                        <p class="info">Deze pagina wordt om de {$nha:refresh-value} seconden ververst, tot de controle klaar is.</p>
-                    </xsl:if>
-                    <p>
-                        <button type="submit" name="{$nha:check-button}" onclick="doCheckButton('{$context-path}/actions/calculate/', '{$nha:checksumtype-field}', '{$nha:selectedfile-field}')">Check&#x2026;</button>&#160;
-                        <button data-enablecondition="{$nha:checksum-condition}" type="submit" name="{$nha:uncompress-button}">Uitpakken&#x2026;</button>
-                    </p>
-                <!--</form>-->
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Selectie</th>
+                            <th>Bestandsnaam</th>
+                            <th>Omvang</th>
+                            <th>Datum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <xsl:call-template name="generate-container-file-table-rows"/>
+                    </tbody>
+                </table>
+                
+                <h2>Verwerkingsgegevens voor het geselecteerde bestand:</h2>
+                
+                <xsl:variable name="checksumtype" as="xs:string" select="session:get-attribute($nha:checksumtype-field)"/>
+                <p>Kies het type checksum:<br/>
+                    <select name="{$nha:checksumtype-field}"  id="{$nha:checksumtype-field}">
+                        <option value="">Type&#x2026;</option> <!-- Geen @value, toont dat de gebruiker keuze moet maken -->
+                        <option value="MD5">MD5</option>
+                        <option value="SHA1">SHA1</option>
+                        <option value="SHA256">SHA256</option>
+                        <option value="SHA512">SHA512</option>
+                    </select>
+                </p>
+                <p>Checksumwaarde, zoals verstrekt door de zorgdrager:<br/>
+                    <textarea name="{$nha:checksumvalue-field}" id="{$nha:checksumvalue-field}" cols="50" rows="3" class="xx-small" placeholder="Plak hier de checksum van de zorgdrager"></textarea>
+                </p>
+                <p>
+                    <xsl:variable name="urlStart" as="xs:string" select="$context-path || '/actions'"/>
+                    <button type="submit" name="{$nha:check-button}" 
+                        onclick="doCheckButton(this, '{$nha:uncompress-button}', '{$urlStart}', '{$nha:checksumtype-field}', '{$nha:checksumvalue-field}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Check&#x2026;</button>&#160;
+                    <button disabled="disabled" type="submit" name="{$nha:uncompress-button}" id="{$nha:uncompress-button}"
+                        onclick="doUncompressButton(this, '{$urlStart}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Uitpakken&#x2026;</button>
+                </p>
                 
                 <p>Voor testen: <a href="operations">naar de operations-pagina</a>.</p>
             </body>
@@ -96,63 +85,6 @@
                 <td>{format-dateTime(file:last-modified($full-archive-path), '[Y]-[M01]-[D01] [H01]:[m01]')}</td> 
             </tr>
         </xsl:for-each>
-    </xsl:template>
-    
-    <xsl:function name="nha:is-correct-check-parameters" as="xs:boolean">
-        <xsl:param name="request" as="element(req:request)*"/>
-        
-        <xsl:sequence select="
-            count(nha:get-parameter-value($request, $nha:selectedfile-field)) eq 1 and
-            nha:get-parameter-value($request, $nha:checksumtype-field) = ('MD5', 'SHA1', 'SHA256', 'SHA512') and
-            normalize-space(nha:get-parameter-value($request, $nha:checksumvalue-field)) ne ''"/>
-    </xsl:function>
-    
-    <xsl:function name="nha:is-correct-uncompress-parameters" as="xs:boolean">
-        <xsl:param name="request" as="element(req:request)*"/>
-        
-        <xsl:sequence select="nha:is-correct-check-parameters($request)"/>
-    </xsl:function>
-    
-    <xsl:template name="do-post">
-        <xsl:try>
-            <xsl:variable name="sessionid" as="xs:string?" select="session:get-attribute($nha:sessionguid-key)"/>
-            <xsl:choose>
-                <!-- Calculate checksum -->
-                <xsl:when test="exists(nha:get-parameter-value(/req:request, $nha:check-button)) and nha:is-correct-check-parameters(/req:request)">
-                    <xsl:message>2a. do-post, calculate checksum"</xsl:message>
-                    <xsl:variable name="url" as="xs:string"
-                        select="$preingest-scheme-host-port || $preingest-api-basepath || '/calculate/' || nha:get-parameter-value(/req:request, $nha:checksumtype-field) || '/' || nha:get-parameter-value(/req:request, $nha:selectedfile-field)"/>
-                    <xsl:message>2b. do-post, url={$url}</xsl:message>
-                    <xsl:variable name="response-json" as="map(*)" select="json-doc($url)"/>
-                    <xsl:sequence select="session:set-attribute($nha:sessionguid-key, $response-json?sessionId)"/>
-                    <xsl:sequence select="session:set-attribute($nha:ongoing-action-key, $nha:check-button)"/>
-                    <xsl:message>2c. do-post, ongoing="{session:get-attribute($nha:ongoing-action-key)}"</xsl:message>
-                </xsl:when>
-                <!-- Uncompress tar -->
-                <xsl:when test="exists(nha:get-parameter-value(/req:request, $nha:uncompress-button)) and nha:is-correct-uncompress-parameters(/req:request)">
-                    <xsl:message>3a. do-post, uncompress tar"</xsl:message>
-                    <xsl:variable name="relative-path" as="xs:string?" select="nha:decode-uri(session:get-attribute($nha:selectedfile-field))"/>
-                    <xsl:variable name="checksum-type" as="xs:string" select="session:get-attribute($nha:checksumtype-field)"/>
-                    <xsl:variable name="checksum-value" as="xs:string" select="session:get-attribute($nha:checksumvalue-field)"/>
-                    <xsl:if test="nha:jsonfile-for-selected-archive-exists($relative-path, $sessionid) and
-                        nha:checksum-in-json-file-matches($relative-path, $sessionid, $checksum-type, $checksum-value)">
-                        <xsl:variable name="url" as="xs:string"
-                            select="$preingest-scheme-host-port || $preingest-api-basepath || '/unpack/' || nha:get-parameter-value(/req:request, $nha:selectedfile-field)"/>
-                        <xsl:variable name="response-json" as="map(*)" select="json-doc($url)"/>
-                        <xsl:sequence select="session:set-attribute($nha:sessionguid-key, $response-json?sessionId)"/>
-                        <xsl:sequence select="session:set-attribute($nha:ongoing-action-key, $nha:uncompress-button)"/>
-                        <xsl:message>3b. do-post, ongoing="{session:get-attribute($nha:ongoing-action-key)}"</xsl:message>
-                    </xsl:if>
-                </xsl:when>
-                <xsl:otherwise>
-                    <p class="input-error">De gegevens zijn niet correct ingevuld</p>
-                </xsl:otherwise>
-            </xsl:choose>
-            <xsl:catch>
-                <p class="application-error">Er is een fout opgetreden bij de verwerking. De fout is: {$err:code} - {$err:description}</p>
-                <xsl:comment>err:code="{$err:code}" err:description="{$err:description}" err:module="{$err:module}" err:line-number="{$err:line-number}"</xsl:comment>
-            </xsl:catch>
-        </xsl:try>
     </xsl:template>
     
 </xsl:stylesheet>

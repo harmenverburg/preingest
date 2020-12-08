@@ -34,8 +34,6 @@
       
       <pipeline:transformer name="start" xsl-path="app-specific/start.xslt"/>
       
-      <pipeline:transformer name="start-actions" xsl-path="app-specific/actions-for-start.xslt"/>
-      
       <pipeline:transformer name="session-to-fields" xsl-path="app-specific/session-to-fields.xslt"/>
       
       <pipeline:transformer name="html-response" xsl-path="app-specific/html-response.xslt"/>
@@ -46,14 +44,14 @@
     <pipeline:pipeline>
       <pipeline:transformer name="requestparameters-to-session" xsl-path="app-specific/requestparameters-to-session.xslt"/>
       
-      <pipeline:transformer name="archive-operations" xsl-path="app-specific/archive-operations.xslt"/>
+      <pipeline:transformer name="operations" xsl-path="app-specific/operations.xslt"/>
       
       <pipeline:transformer name="session-to-fields" xsl-path="app-specific/session-to-fields.xslt"/>
       <pipeline:transformer name="html-response" xsl-path="app-specific/html-response.xslt"/>
     </pipeline:pipeline>
   </xsl:template>
   
-  <xsl:template match="/req:request[starts-with(req:path, '/actions/')]">
+  <xsl:template match="/req:request[starts-with(req:path, '/actions')]">
     <pipeline:pipeline>
       <pipeline:transformer name="actions" xsl-path="app-specific/actions.xslt"/>
     </pipeline:pipeline>
