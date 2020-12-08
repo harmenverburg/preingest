@@ -23,7 +23,7 @@
     
     <xsl:template match="textarea">
         <xsl:variable name="textarea-name" as="xs:string?" select="@name"/>
-        <xsl:variable name="sessionvalue" as="xs:string" select="if ($textarea-name) then session:get-attribute($textarea-name) else ''"/>
+        <xsl:variable name="sessionvalue" as="xs:string?" select="if ($textarea-name) then session:get-attribute($textarea-name) else ()"/>
         <xsl:copy>
             <xsl:apply-templates select="@*"/>
             <xsl:value-of select="$sessionvalue"/>
@@ -56,47 +56,6 @@
             </xsl:if>
             <xsl:apply-templates/>
         </xsl:copy>
-    </xsl:template>
-    
-    <xsl:template name="disable-button">
-        <xsl:param name="new-label" as="xs:string?" select="()"/>
-        <xsl:copy>
-            <xsl:apply-templates select="@* except @data-enablecondition"/>
-            <xsl:attribute name="disabled" select="'disabled'"/>
-            <xsl:choose>
-                <xsl:when test="exists($new-label)"><xsl:value-of select="$new-label"/></xsl:when>
-                <xsl:otherwise><xsl:apply-templates/></xsl:otherwise>
-            </xsl:choose>
-        </xsl:copy>
-    </xsl:template>
-    
-    <xsl:template match="button[@data-enablecondition]">
-        <xsl:variable name="sessionid" as="xs:string?" select="session:get-attribute($nha:sessionguid-key)"/>
-        <xsl:choose>
-            <xsl:when test="exists($sessionid) and @data-enablecondition eq $nha:checksum-condition">
-                <xsl:variable name="relative-path" as="xs:string?" select="nha:decode-uri(session:get-attribute($nha:selectedfile-field))"/>
-                <xsl:variable name="checksum-type" as="xs:string" select="session:get-attribute($nha:checksumtype-field)"/>
-                <xsl:variable name="checksum-value" as="xs:string" select="session:get-attribute($nha:checksumvalue-field)"/>
-                
-                <xsl:choose>
-                    <xsl:when test="not(nha:jsonfile-for-selected-archive-exists($relative-path, $sessionid))">
-                        <xsl:call-template name="disable-button"/>
-                    </xsl:when>
-                    <xsl:when test="not(nha:checksum-in-json-file-matches($relative-path, $sessionid, $checksum-type, $checksum-value))">
-                        <xsl:call-template name="disable-button">
-                            <xsl:with-param name="new-label" select="'checksum mismatch'"/>
-                        </xsl:call-template>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <!-- checksum matches, enable button. -->
-                        <xsl:copy><xsl:apply-templates select="@* | node()"/></xsl:copy>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:call-template name="disable-button"/>
-            </xsl:otherwise>
-        </xsl:choose>
     </xsl:template>
     
 </xsl:stylesheet>

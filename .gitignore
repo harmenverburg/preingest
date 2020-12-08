@@ -7,10 +7,6 @@ data/testfiles/
 
 data/etc/SIP_Creator/
 
-data/etc/tomcat/logs/
-
-data/etc/tomcatfrontend/logs/
-
 clamav-docker/test-urls.txt
 
 *.tar
@@ -22,3 +18,7 @@ xslweb-jdk8-webservices-docker/up.sh
 xslweb-jdk8-frontend-docker/up.sh
 
 data/etc/xslwebfrontend/home/webapps/examples/
+
+up.sh
+
+test-urls.txt

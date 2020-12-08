@@ -7,6 +7,7 @@
     version="3.0">
     
     <xsl:param name="preingest-scheme-host-port" as="xs:string" required="yes"/>
+    <xsl:param name="preingest-api-basepath" as="xs:string" required="yes"/>
     
     <xsl:variable name="nha:data-uri-prefix-key" as="xs:string" select="'data-uri-prefix'" static="yes"/>
     <xsl:variable name="nha:full-swagger-json-uri-key" as="xs:string" select="'full-swagger-json-uri'" static="yes"/>
@@ -17,5 +18,6 @@
     <xsl:variable name="nha:check-button" as="xs:string" select="'check'" static="yes"/>
     <xsl:variable name="nha:uncompress-button" as="xs:string" select="'uncompress'" static="yes"/>
     <xsl:variable name="nha:checksum-condition" as="xs:string" select="'checksum-condition'" static="yes"/>
+    <xsl:variable name="nha:ongoing-action-key" as="xs:string" select="'ongoing-action'" static="yes"/>
     <xsl:variable name="nha:refresh-value" as="xs:integer" select="10" static="yes"/>
 </xsl:stylesheet>
