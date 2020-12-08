@@ -15,7 +15,8 @@
     <resource pattern="/images/.+\.png" media-type="image/png"/>
     <resource pattern="/images/.+\.gif" media-type="image/gif"/>
     <resource pattern="/images/.+\.(jpg|jpeg)" media-type="image/jpg"/>
-    <resource pattern="/scripts/.+\.js" media-type="text/javascript"/>
+    <resource pattern="/js/.+\.js" media-type="text/javascript"/>
+    <resource pattern="/json/.+\.json" media-type="text/css"/>
     <resource pattern="/css/.+\.css" media-type="text/css"/>
   </resources>
 
@@ -34,7 +35,11 @@
          as defined in the docker-compose yaml file.
     -->
     <parameter name="preingest-scheme-host-port" type="xs:string">
-      <value>http://preingest:80</value>
+      <value>http://Noord.HollandsArchief.Pre.Ingest.WebApi:80</value>
+    </parameter>
+    
+    <parameter name="preingest-api-basepath" type="xs:string">
+      <value>/api/preingest</value>
     </parameter>
     
     <!-- Swagger settings, also used by the gui. Relative to main data dir: -->

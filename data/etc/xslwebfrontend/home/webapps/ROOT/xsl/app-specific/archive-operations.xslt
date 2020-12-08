@@ -10,6 +10,7 @@
     
     <xsl:output method="html" version="5"/>
     
+    <xsl:include href="commonconstants.xslt"/>
     <xsl:include href="commoncode.xslt"/>
     
     <xsl:template match="/req:request">

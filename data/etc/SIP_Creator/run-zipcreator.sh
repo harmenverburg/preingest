@@ -36,24 +36,27 @@ function doIt {
     
     # Switches conform https://noordhollandsarchief.sharepoint.com/:x:/r/sites/ImplementatiePreserveringsvoorziening/Gedeelde%20documenten/General/2.%20Technische%20documentatie/Pre-ingest/CMD%20SIP%20creator%20settings.xlsx?d=w9e29f946e0624d7db2d1efeca5f3525b&csf=1&web=1&e=Z7CTt7
     # Let op: -excludedFileNames kan nuttig zijn, maar ondersteunt geen wildcards.
+    
+    # N.B. -ignoreparent is verwijderd omdat de klacht komt dat "Files are not allowed in the parent folder when not including the parent folder as a DU and not creating a DU per file"
+    
     if [ -z "$PRESERVICA_REFERENCE" ]
     then
         "$WHEREAMI/createsip" \
             -input "$INPUTFOLDER" \
-            -output "$OUTPUTFOLDER" \
             -status NEW \
             -securitytag open \
+            -sha512 \
             -export \
-            -sha512
+            -output "$OUTPUTFOLDER"
     else
         "$WHEREAMI/createsip" \
             -input "$INPUTFOLDER" \
-            -output "$OUTPUTFOLDER" \
             -status SAME \
             -colref "$PRESERVICA_REFERENCE" \
             -securitytag open \
+            -sha512 \
             -export \
-            -sha512
+            -output "$OUTPUTFOLDER"
     fi
     
     cd "$OUTPUTFOLDER"
