@@ -10,7 +10,6 @@
     <xsl:param name="preingest-api-basepath" as="xs:string" required="yes"/>
     
     <xsl:variable name="nha:data-uri-prefix-key" as="xs:string" select="'data-uri-prefix'" static="yes"/>
-    <xsl:variable name="nha:full-swagger-json-uri-key" as="xs:string" select="'full-swagger-json-uri'" static="yes"/>
     <xsl:variable name="nha:preingestguid-session-key" as="xs:string" select="'preingest-sessionguid'" static="yes"/>
     <xsl:variable name="nha:checksumtype-field" as="xs:string" select="'checksumtype'" static="yes"/>
     <xsl:variable name="nha:checksumvalue-field" as="xs:string" select="'checksumvalue'" static="yes"/>

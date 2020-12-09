@@ -10,7 +10,6 @@
   <xsl:param name="config:development-mode"/>
   <xsl:param name="data-uri-prefix" as="xs:string" required="yes"/>
   <xsl:param name="data-uri-prefix-devmode" as="xs:string" required="yes"/>
-  <xsl:param name="swagger-json-uri" as="xs:string" required="yes"/>
   
   <xsl:include href="app-specific/commonconstants.xslt"/>
   
@@ -21,9 +20,8 @@
     
     <xsl:variable name="data-uri-prefix" as="xs:string" select="if ($config:development-mode) then $data-uri-prefix-devmode else $data-uri-prefix"/>
 
-    <!-- These request attributes serve to prevent duplication of code: -->
+    <!-- This request attribute serves to prevent duplication of code: -->
     <xsl:sequence select="req:set-attribute($nha:data-uri-prefix-key, $data-uri-prefix)"/>
-    <xsl:sequence select="req:set-attribute($nha:full-swagger-json-uri-key, $data-uri-prefix || $swagger-json-uri)"/>
       
     <xsl:apply-templates/>
   </xsl:template>

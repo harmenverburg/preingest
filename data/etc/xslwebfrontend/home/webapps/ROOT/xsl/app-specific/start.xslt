@@ -28,6 +28,7 @@
                 <script language="javascript" src="{$context-path}/js/gui.js" type="text/javascript"></script>
             </head>
             <body>
+                <p><img src="img/logo.png" style="float: right; width: 10em"/></p>
                 <h1>Archiefselectie</h1>
                 
                 <table>

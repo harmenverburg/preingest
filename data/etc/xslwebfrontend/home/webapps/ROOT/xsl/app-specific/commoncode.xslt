@@ -14,35 +14,12 @@
     <xsl:variable name="context-path" select="/*/req:context-path || /*/req:webapp-path" as="xs:string"/>
 
     <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute($nha:data-uri-prefix-key)"/>
-    <xsl:variable name="full-swagger-json-uri" as="xs:string" select="req:get-attribute($nha:full-swagger-json-uri-key)"/>
     
     <!-- Folder below the data folder (relative path) where zorgdrager-specific archive files will be placed. Currently empty. -->
     <xsl:variable name="archives-folder" as="xs:string" select="''"/>
     
     <xsl:variable name="archives-folder-path" as="xs:string" select="file:path-to-native($data-uri-prefix || $archives-folder)"/>
 
-    <xsl:variable name="swagger.json" as="map(*)" select="json-doc($full-swagger-json-uri)"/>
-    <xsl:variable name="paths" as="map(*)" select="$swagger.json?paths"/>
-    
-    <xsl:function name="nha:get-from-swagger-paths" as="item()*">
-        <xsl:param name="keyprefix" as="xs:string"/>
-        <xsl:param name="get-or-post-key" as="xs:string"/>
-        <xsl:variable name="pathkey-map-key" as="xs:string" select="map:keys($paths)[starts-with(., $keyprefix)]"/>
-        <xsl:variable name="pathkey-map" as="map(*)" select="map:get($paths, $pathkey-map-key)"/>
-        <xsl:variable name="get-or-post-map" as="map(*)" select="if (exists(($pathkey-map?get))) then $pathkey-map?get else $pathkey-map?post"/>
-        <xsl:sequence select="map:get($get-or-post-map, $get-or-post-key)"/>
-    </xsl:function>
-    
-    <xsl:function name="nha:get-swagger-description" as="item()*">
-        <xsl:param name="keyprefix" as="xs:string"/>
-        <xsl:sequence select="nha:get-from-swagger-paths($keyprefix, 'description')"/>
-    </xsl:function>
-    
-    <xsl:function name="nha:is-post" as="xs:boolean">
-        <xsl:param name="request" as="element(req:request)"/>
-        <xsl:sequence select="$request/req:method eq 'POST'"/>
-    </xsl:function>
-    
     <xsl:function name="nha:get-parameter-value" as="xs:string*">
         <xsl:param name="request" as="element(req:request)"/>
         <xsl:param name="param-name" as="xs:string"/>
