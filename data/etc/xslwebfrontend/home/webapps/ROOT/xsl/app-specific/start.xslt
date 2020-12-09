@@ -67,7 +67,7 @@
                         onclick="doUncompressButton(this, '{$urlStart}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Uitpakken&#x2026;</button>
                 </p>
                 
-                <p>Voor testen: <a href="operations">naar de operations-pagina</a>.</p>
+                <p style="display: none" id="proceedmessage">Het tarbestand is uitgepakt, ga nu <a href="operations">naar de operations-pagina</a>.</p>
             </body>
         </html>
     </xsl:template>
