@@ -69,14 +69,16 @@ function doUncompressButton(uncompressButton, urlStart, selectedFileFieldId, pol
             
             let timer = setInterval(function () {
                 let pollURL = urlStart + '?action=check-for-file-with-ok&relative-path=' + preingestSessionId + "/UnpackTarHandler.json";
-                filePoller(timer, pollURL);
+                fileOKCheckPoller(timer, pollURL, function() {
+                document.getElementById('proceedmessage').style.display = "block";
+                });
             },
             pollIntervalMS);
         });
     }
 }
 
-function filePoller(timer, url) {
+function fileOKCheckPoller(timer, url, successFunction) {
     loadJSON(url, function () {
         if (this.response.sessionId != null) {
             console.log("json file has been loaded");
@@ -84,6 +86,11 @@ function filePoller(timer, url) {
             let code = this.response.code;
             if (code !== "OK") {
                 showError("De statuscode is niet OK maar " + code);
+            } else {
+                if (successFunction != undefined) {
+                    console.log("voor call, this=" + this);
+                    successFunction.call(this);
+                }
             }
         }
     });
