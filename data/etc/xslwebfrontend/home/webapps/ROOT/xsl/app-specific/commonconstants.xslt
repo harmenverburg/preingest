@@ -9,6 +9,9 @@
     <xsl:param name="preingest-scheme-host-port" as="xs:string" required="yes"/>
     <xsl:param name="preingest-api-basepath" as="xs:string" required="yes"/>
     
+    <xsl:variable name="nha:preingest-uri-prefix" as="xs:string" select="$preingest-scheme-host-port || $preingest-api-basepath"/>    
+    <xsl:variable name="nha:context-path-key" as="xs:string" select="'context-path'" static="yes"/>
+    <xsl:variable name="nha:actions-uri-prefix-key" as="xs:string" select="'actions-uri-prefix'"/>
     <xsl:variable name="nha:data-uri-prefix-key" as="xs:string" select="'data-uri-prefix'" static="yes"/>
     <xsl:variable name="nha:preingestguid-session-key" as="xs:string" select="'preingest-sessionguid'" static="yes"/>
     <xsl:variable name="nha:checksumtype-field" as="xs:string" select="'checksumtype'" static="yes"/>

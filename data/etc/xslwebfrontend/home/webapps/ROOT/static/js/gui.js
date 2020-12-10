@@ -22,6 +22,13 @@ function showError(msg) {
     alert(msg);
 }
 
+function ableButton(button, enabled, className) {
+    button.disabled = ! enabled;
+    if (className != undefined) {
+         button.className = className;
+    }
+}
+
 function loadJSON(url, onLoadFunction) {
     let request = new XMLHttpRequest();
     request.onload = onLoadFunction;
@@ -40,7 +47,7 @@ function doCheckButton(checkButton, uncompressButtonId, urlStart, checksumTypeFi
     let url = urlStart + '?action=calculate&checksum-type=' + checksumType + '&relative-path=' + selectedFile;
     
     if ((selectedFile != null) && (checksumType !== '') && checksumValue !== '') {
-        checkButton.disabled = true;
+        ableButton(checkButton, false, "opProgress");
         ableRadios(selectedFileFieldId, false);
         
         loadJSON(url, function () {
@@ -62,7 +69,7 @@ function doUncompressButton(uncompressButton, urlStart, selectedFileFieldId, pol
     
     if (selectedFile != null) {
         // TODO eigenlijk ook checken of de checksum werkelijk is berekend, zodat we niet van de gui afhankelijk zijn...
-        uncompressButton.disabled = true;
+        ableButton(uncompressButton, false, "opProgress");
         let url = urlStart + '?action=unpack&relative-path=' + selectedFile;
         loadJSON(url, function () {
             let preingestSessionId = this.response.sessionId;
@@ -70,7 +77,10 @@ function doUncompressButton(uncompressButton, urlStart, selectedFileFieldId, pol
             let timer = setInterval(function () {
                 let pollURL = urlStart + '?action=check-for-file-with-ok&relative-path=' + preingestSessionId + "/UnpackTarHandler.json";
                 fileOKCheckPoller(timer, pollURL, function() {
-                document.getElementById('proceedmessage').style.display = "block";
+                     ableButton(uncompressButton, true, "opSuccess");
+                     document.getElementById('proceedmessage').style.display = "block";
+                }, function() {
+                    ableButton(uncompressButton, true, "opFailure");
                 });
             },
             pollIntervalMS);
@@ -78,17 +88,36 @@ function doUncompressButton(uncompressButton, urlStart, selectedFileFieldId, pol
     }
 }
 
-function fileOKCheckPoller(timer, url, successFunction) {
+function doOperationsButton(clickedButton, urlStart, preingestSessionId, actionString, requiredJSONFile, pollIntervalMS) {
+    ableButton(clickedButton, false, "opProgress");
+    
+    let url = urlStart + "?action=" + actionString + "&sessionid=" + preingestSessionId;
     loadJSON(url, function () {
-        if (this.response.sessionId != null) {
-            console.log("json file has been loaded");
+        let timer = setInterval(function () {
+            let pollURL = urlStart + '?action=check-for-file&relative-path=' + preingestSessionId + "/" + requiredJSONFile;
+            fileOKCheckPoller(timer, pollURL, function() {
+                ableButton(clickedButton, true, "opSuccess");
+            }, function() {
+                    ableButton(clickedButton, true, "opFailure");
+            });
+        },
+        pollIntervalMS);
+    });
+}
+
+function fileOKCheckPoller(timer, url, successFunction, failFunction) {
+    loadJSON(url, function () {
+        let code = this.response.code;
+        if (code != null) {
             clearInterval(timer);
-            let code = this.response.code;
+            
             if (code !== "OK") {
                 showError("De statuscode is niet OK maar " + code);
+                if (failFunction != undefined) {
+                    failFunction.call(this);
+                }
             } else {
                 if (successFunction != undefined) {
-                    console.log("voor call, this=" + this);
                     successFunction.call(this);
                 }
             }
@@ -99,17 +128,19 @@ function fileOKCheckPoller(timer, url, successFunction) {
 function fileChecksumPoller(timer, url, requiredChecksumType, requiredChecksumValue, checkButton, uncompressButton) {
     loadJSON(url, function () {
         if (this.response.sessionId != null) {
-            console.log("json file with checksum has been loaded");
             clearInterval(timer);
             
             let checksumType = this.response.checksumType;
             let checksumValue = this.response.checksumValue;
             
             if ((checksumType !== requiredChecksumType) || (checksumValue !== requiredChecksumValue)) {
+                ableButton(checkButton, true, "opFailure");
                 showError("Het checksumtype en/of de checksumwaarde komen niet overeen; vereist/gevonden: " + requiredChecksumType + "/" + checksumType + ", " + requiredChecksumValue + "/" + checksumValue);
+            } else {
+                ableButton(checkButton, false, "opSuccess");
+                ableButton(uncompressButton, true);
             }
             
-            uncompressButton.disabled = false;
         }
     });
 }

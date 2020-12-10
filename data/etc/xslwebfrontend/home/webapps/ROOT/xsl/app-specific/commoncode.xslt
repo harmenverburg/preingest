@@ -11,14 +11,14 @@
     expand-text="yes"
     version="3.0">
     
-    <xsl:variable name="context-path" select="/*/req:context-path || /*/req:webapp-path" as="xs:string"/>
-
-    <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute($nha:data-uri-prefix-key)"/>
+    <xsl:variable name="nha:context-path" as="xs:string" select="req:get-attribute($nha:context-path-key)"/>
+    <xsl:variable name="nha:data-uri-prefix" as="xs:string" select="req:get-attribute($nha:data-uri-prefix-key)"/>
+    <xsl:variable name="nha:actions-uri-prefix" as="xs:string" select="req:get-attribute($nha:actions-uri-prefix-key)"/>
     
     <!-- Folder below the data folder (relative path) where zorgdrager-specific archive files will be placed. Currently empty. -->
-    <xsl:variable name="archives-folder" as="xs:string" select="''"/>
+    <xsl:variable name="nha:base-archives-folder" as="xs:string" select="''"/>
     
-    <xsl:variable name="archives-folder-path" as="xs:string" select="file:path-to-native($data-uri-prefix || $archives-folder)"/>
+    <xsl:variable name="nha:archives-folder-path" as="xs:string" select="file:path-to-native($nha:data-uri-prefix || $nha:base-archives-folder)"/>
 
     <xsl:function name="nha:get-parameter-value" as="xs:string*">
         <xsl:param name="request" as="element(req:request)"/>
@@ -35,7 +35,7 @@
     <xsl:function name="nha:get-jsonpath-for-selected-archive" as="xs:string">
         <xsl:param name="relative-path" as="xs:string?"/>
         <xsl:param name="preingest-sessionid" as="xs:string?"/>
-        <xsl:variable name="full-archive-path" as="xs:string" select="$archives-folder-path || file:dir-separator() || $relative-path"/>
+        <xsl:variable name="full-archive-path" as="xs:string" select="$nha:archives-folder-path || file:dir-separator() || $relative-path"/>
         <xsl:variable name="full-json-path" as="xs:string" select="$full-archive-path || '_' || $preingest-sessionid || '.json'"/>
 
         <xsl:sequence select="$full-json-path"/>

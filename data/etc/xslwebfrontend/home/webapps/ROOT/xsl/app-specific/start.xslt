@@ -24,8 +24,8 @@
         <html>
             <head>
                 <title>Archiefselectie</title>
-                <link rel="stylesheet" type="text/css" href="{$context-path}/css/gui.css" />
-                <script language="javascript" src="{$context-path}/js/gui.js" type="text/javascript"></script>
+                <link rel="stylesheet" type="text/css" href="{$nha:context-path}/css/gui.css" />
+                <script language="javascript" src="{$nha:context-path}/js/gui.js" type="text/javascript"></script>
             </head>
             <body>
                 <p><img src="img/logo.png" style="float: right; width: 10em"/></p>
@@ -61,11 +61,10 @@
                     <textarea name="{$nha:checksumvalue-field}" id="{$nha:checksumvalue-field}" cols="50" rows="3" class="xx-small" placeholder="Plak hier de checksum van de zorgdrager"></textarea>
                 </p>
                 <p>
-                    <xsl:variable name="urlStart" as="xs:string" select="$context-path || '/actions'"/>
                     <button type="submit" name="{$nha:check-button}" 
-                        onclick="doCheckButton(this, '{$nha:uncompress-button}', '{$urlStart}', '{$nha:checksumtype-field}', '{$nha:checksumvalue-field}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Check&#x2026;</button>&#160;
+                        onclick="doCheckButton(this, '{$nha:uncompress-button}', '{$nha:actions-uri-prefix}', '{$nha:checksumtype-field}', '{$nha:checksumvalue-field}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Check&#x2026;</button>&#160;
                     <button disabled="disabled" type="submit" name="{$nha:uncompress-button}" id="{$nha:uncompress-button}"
-                        onclick="doUncompressButton(this, '{$urlStart}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Uitpakken&#x2026;</button>
+                        onclick="doUncompressButton(this, '{$nha:actions-uri-prefix}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Uitpakken&#x2026;</button>
                 </p>
                 
                 <p style="display: none" id="proceedmessage">Het tarbestand is uitgepakt, ga nu <a href="operations">naar de operations-pagina</a>.</p>
@@ -76,9 +75,9 @@
     <xsl:template name="generate-container-file-table-rows">
         <xsl:variable name="recursive" as="xs:boolean" select="false()"/>
         
-        <xsl:for-each select="file:list($archives-folder-path, $recursive, $archives-file-glob)">
+        <xsl:for-each select="file:list($nha:archives-folder-path, $recursive, $archives-file-glob)">
             <xsl:variable name="relative-path" as="xs:string" select="."/>
-            <xsl:variable name="full-archive-path" as="xs:string" select="$archives-folder-path || file:dir-separator() || $relative-path"/>
+            <xsl:variable name="full-archive-path" as="xs:string" select="$nha:archives-folder-path || file:dir-separator() || $relative-path"/>
             <tr>
                 <td><input type="radio" name="{$nha:selectedfile-field}" title="Kies dit bestand voor verdere verwerking" value="{encode-for-uri($relative-path)}"/></td>
                 <td>{.}</td>
