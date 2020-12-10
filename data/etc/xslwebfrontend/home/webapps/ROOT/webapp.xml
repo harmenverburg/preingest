@@ -16,7 +16,7 @@
     <resource pattern="/img/.+\.gif" media-type="image/gif"/>
     <resource pattern="/img/.+\.(jpg|jpeg)" media-type="image/jpg"/>
     <resource pattern="/js/.+\.js" media-type="text/javascript"/>
-    <resource pattern="/json/.+\.json" media-type="text/css"/>
+    <resource pattern="/json/.+\.json" media-type="application/json"/>
     <resource pattern="/css/.+\.css" media-type="text/css"/>
   </resources>
 

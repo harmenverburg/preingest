@@ -18,11 +18,15 @@
   <xsl:template match="/">
     <xsl:sequence select="file:write('/tmp/request.xml', /)" xmlns:file="http://expath.org/ns/file" use-when="$DUMP_REQUEST"/>
     
+    <xsl:variable name="context-path" select="/*/req:context-path || /*/req:webapp-path" as="xs:string"/>
+    <xsl:variable name="actions-uri-prefix" as="xs:string" select="$context-path || '/actions'"/>      
+    
     <xsl:variable name="data-uri-prefix" as="xs:string" select="if ($config:development-mode) then $data-uri-prefix-devmode else $data-uri-prefix"/>
 
-    <!-- This request attribute serves to prevent duplication of code: -->
+    <!-- These request attributes serve to prevent duplication of code: -->
+    <xsl:sequence select="req:set-attribute($nha:context-path-key, $context-path)"/>
     <xsl:sequence select="req:set-attribute($nha:data-uri-prefix-key, $data-uri-prefix)"/>
-      
+    <xsl:sequence select="req:set-attribute($nha:actions-uri-prefix-key, $actions-uri-prefix)"/>
     <xsl:apply-templates/>
   </xsl:template>
   

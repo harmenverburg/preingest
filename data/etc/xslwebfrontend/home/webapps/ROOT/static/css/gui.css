@@ -4,6 +4,11 @@ body {
     margin-right: 10em;
 }
 
+tr {
+    outline: 1px solid #D3D3D3;
+    padding-bottom: 1em;
+}
+
 tr, td, th {
     text-align: left;
     vertical-align: top;
@@ -21,6 +26,20 @@ tr, td, th {
 
 button {
     width: 12em;
+    border-style: solid;
+    border-radius: 1em;
+}
+
+.opProgress {
+    border-color: orange;
+}
+
+.opSuccess {
+    border-color: green;
+}
+
+.opFailure {
+    border-color: red;
 }
 
 div.report {
