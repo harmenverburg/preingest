@@ -4,7 +4,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Entities
 {
     public class AppSettings
     {
-        public String DoUnpackCollection { get; set; }
         public String GetCollections { get; set; }
         public String GetResults { get; set; }
         public String GetJson { get; set; }
@@ -20,5 +19,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Entities
         public String GetSchemaResult { get; set; }
 
         public String UpdateBinary { get; set; }
+        public String GenerateExport { get; set; }
     }
 }

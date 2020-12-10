@@ -64,6 +64,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpGet("results/{guid}", Name = "Get results from a session.", Order = 2)]
         public IActionResult GetResults(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             var directory = new DirectoryInfo(Path.Combine(_settings.DataFolderName, guid.ToString()));
 
             if (!directory.Exists)
@@ -79,6 +82,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpGet("json/{guid}/{json}", Name = "Get json results from a session.", Order = 3)]
         public IActionResult GetJson(Guid guid, string json)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
+            if (String.IsNullOrEmpty(json))
+                return Problem("Json file name is empty.");
+
             var directory = new DirectoryInfo(Path.Combine(_settings.DataFolderName, guid.ToString()));
 
             if (!directory.Exists)
@@ -97,6 +106,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpGet("report/{guid}/{file}", Name = "Get a report as a file from a session.", Order = 4)]
         public IActionResult GetReport(Guid guid, string file)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
+            if (string.IsNullOrEmpty(file))
+                return Problem("File name is empty.");
+
             var directory = new DirectoryInfo(Path.Combine(_settings.DataFolderName, guid.ToString()));
             if (!directory.Exists)
                 return Problem(String.Format("Data folder with session guid '{0}' not found!", directory.FullName));
@@ -132,6 +147,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpGet("sidecartree/{guid}", Name = "Get sidecar structure from a session.", Order = 5)]
         public async Task<IActionResult> GetSidecar(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             var directory = new DirectoryInfo(Path.Combine(_settings.DataFolderName, guid.ToString()));
 
             if (!directory.Exists)
@@ -212,6 +230,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpGet("aggregationsummary/{guid}", Name = "Get sidecar structure summary from a session.", Order = 6)]
         public async Task<IActionResult> GetAggregationSummary(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             var directory = new DirectoryInfo(Path.Combine(_settings.DataFolderName, guid.ToString()));
 
             if (!directory.Exists)
@@ -246,6 +267,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpGet("droidsummary/{guid}", Name = "Get droid summary from a session.", Order = 7)]
         public async Task<IActionResult> GetDroidSummary(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             var directory = new DirectoryInfo(Path.Combine(_settings.DataFolderName, guid.ToString()));
 
             if (!directory.Exists)
@@ -293,6 +317,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpGet("topxdata/{id}/{treeGuid}", Name = "Get topx content from a session.", Order = 8)]
         public async Task<IActionResult> GetTopxData(Guid id, Guid treeGuid)
         {
+            if (id == Guid.Empty || treeGuid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             var directory = new DirectoryInfo(Path.Combine(_settings.DataFolderName, id.ToString()));
 
             if (!directory.Exists)
@@ -327,6 +354,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpGet("droidpronominfo/{id}/{treeGuid}", Name = "Get droid export file property information from a session.", Order = 9)]
         public async Task<IActionResult> GetDroidPronomInformation(Guid id, Guid treeGuid)
         {
+            if (id == Guid.Empty || treeGuid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             var directory = new DirectoryInfo(Path.Combine(_settings.DataFolderName, id.ToString()));
 
             if (!directory.Exists)
@@ -413,6 +443,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpGet("metadataencoding/{id}/{treeGuid}", Name = "Get the encoding from the metadata file.", Order = 10)]
         public async Task<IActionResult> GetMetadataEncoding(Guid id, Guid treeGuid)
         {
+            if (id == Guid.Empty || treeGuid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             var directory = new DirectoryInfo(Path.Combine(_settings.DataFolderName, id.ToString()));
 
             if (!directory.Exists)
@@ -460,6 +493,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpGet("greenliststatus/{id}/{treeGuid}", Name = "See if the file is in the greenlist.", Order = 11)]
         public async Task<IActionResult> GetGreenlistStatus(Guid id, Guid treeGuid)
         {
+            if (id == Guid.Empty || treeGuid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             var directory = new DirectoryInfo(Path.Combine(_settings.DataFolderName, id.ToString()));
 
             if (!directory.Exists)
@@ -509,6 +545,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpGet("calculatechecksum/{id}/{treeGuid}", Name = "Calculate checksum MD5, SHA1, SHA256 and SHA512.", Order = 12)]
         public async Task<IActionResult> GetChecksums(Guid id, Guid treeGuid)
         {
+            if (id == Guid.Empty || treeGuid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             var directory = new DirectoryInfo(Path.Combine(_settings.DataFolderName, id.ToString()));
 
             if (!directory.Exists)
@@ -561,6 +600,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpGet("schemaresult/{id}/{treeGuid}", Name = "Schema validation result.", Order = 13)]
         public async Task<IActionResult> GetSchemaValidation(Guid id, Guid treeGuid)
         {
+            if (id == Guid.Empty || treeGuid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             var directory = new DirectoryInfo(Path.Combine(_settings.DataFolderName, id.ToString()));
 
             if (!directory.Exists)
@@ -607,7 +649,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             return json;
         }
-
 
         private String DroidCsvOutputLocation(String targetFolder)
         {
