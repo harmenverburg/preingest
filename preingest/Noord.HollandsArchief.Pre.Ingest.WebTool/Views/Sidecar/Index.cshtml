@@ -29,20 +29,11 @@
             </div>
             <div class="btn-group">
                 <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
-                    Kies een 'tar' collectie om uit te pakken.
-                </button>
-                <div id="collectionDropdownList" class="dropdown-menu dropdown-menu-lg-left">
-                    @foreach (var name in Model.Collections)
-                    {<a class="dropdown-item" type="button" asp-area="" asp-controller="Sidecar" asp-action="UnpackCollection" asp-route-name="@name">@name</a>}
-                </div>
-            </div>
-            <div class="btn-group">
-                <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
                     Exporteer
                 </button>
                 <div id="sessionDropdownList" class="dropdown-menu dropdown-menu-lg-left">
                     @foreach (var guid in Model.Sessions)
-                    {<a class="dropdown-item" type="button" asp-area="" asp-controller="Sidecar" asp-action="Export" asp-route-id="@guid">@guid</a>}
+                    {<a class="dropdown-item" type="button" asp-area="" asp-controller="Sidecar" asp-action="GenerateExport" asp-route-id="@guid">@guid</a>}
                 </div>
             </div>
         </div>

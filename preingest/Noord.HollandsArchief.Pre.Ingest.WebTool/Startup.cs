@@ -55,9 +55,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool
                     name: "default",
                     pattern: "{controller=Sidecar}/{action=Index}/{id?}");
                 endpoints.MapControllerRoute(
-                  name: "unpack",
-                  pattern: "/{controller=Sidecar}/{action=UnpackCollection}/{name}");
-                endpoints.MapControllerRoute(
                   name: "planetsummary",
                   pattern: "/{controller=Sidecar}/{action=PlanetSummary}/{id}");
                 endpoints.MapControllerRoute(
@@ -94,8 +91,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool
                  name: "updatebinary",
                  pattern: "/{controller=Sidecar}/{action=UpdateBinary}/{id}");
                 endpoints.MapControllerRoute(
-                 name: "export",
-                 pattern: "/{controller=Sidecar}/{action=Export}/{id}");
+                 name: "generate",
+                 pattern: "/{controller=Sidecar}/{action=GenerateExport}/{id}");
             });
         }
     }

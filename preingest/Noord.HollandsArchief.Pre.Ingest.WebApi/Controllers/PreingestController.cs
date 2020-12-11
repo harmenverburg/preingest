@@ -53,12 +53,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             if (String.IsNullOrEmpty(collectionName))
                 return BadRequest("Missing collection name.");
+            
+            if (String.IsNullOrEmpty(checksum))
+                return BadRequest("Missing checksum name.");
 
             bool exists = System.IO.File.Exists(Path.Combine(_settings.DataFolderName, collectionName));
-            if(!exists)
-            {
-                return NotFound("Collection not found.");
-            }
+            if (!exists)
+                return NotFound("Collection not found.");            
 
             ContainerChecksumHandler handler = HttpContext.RequestServices.GetService(typeof(ContainerChecksumHandler)) as ContainerChecksumHandler;
             if (handler == null)
@@ -159,6 +160,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpPost("virusscan/{guid}", Name = "Virusscan check", Order = 3)]
         public IActionResult VirusScan(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             _logger.LogInformation("Enter VirusScan.");
 
             bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
@@ -208,6 +212,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpPost("naming/{guid}", Name = "Naming check", Order = 4)]
         public IActionResult Naming(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             _logger.LogInformation("Enter Naming.");
 
             bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
@@ -257,6 +264,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpPost("sidecar/{guid}", Name = "Sidecar check", Order = 5)]
         public IActionResult Sidecar(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             _logger.LogInformation("Enter Sidecar.");
 
             bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
@@ -304,6 +314,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpPost("profiling/{guid}", Name = "Droid create profile", Order = 6)]
         public IActionResult Profiling(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             _logger.LogInformation("Enter Profiling.");
 
             bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
@@ -356,6 +369,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpPost("exporting/{guid}", Name = "Droid exporting result (CSV)", Order = 7)]
         public IActionResult Exporting(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             _logger.LogInformation("Enter Exporting.");
 
             bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
@@ -407,6 +423,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpPost("reporting/{type}/{guid}", Name = "Droid reporting PDF/Droid (XML)/Planets (XML)", Order = 8)]
         public IActionResult Reporting(Guid guid, String type)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             _logger.LogInformation("Enter Reporting.");
 
             bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
@@ -520,6 +539,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpPost("greenlist/{guid}", Name = "Greenlist check", Order = 10)]
         public IActionResult GreenListCheck(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             _logger.LogInformation("Enter GreenListCheck.");
 
             bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
@@ -581,6 +603,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpPost("encoding/{guid}", Name = "Encoding check .metadata files", Order = 11)]
         public IActionResult EncodingCheck(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             _logger.LogInformation("Enter EncodingCheck.");
 
             bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
@@ -628,6 +653,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpPost("validate/{guid}", Name = "Validate .metadata files", Order = 12)]
         public IActionResult ValidateMetadata(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             _logger.LogInformation("Enter ValidateMetadata.");
 
             bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
@@ -675,6 +703,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpPost("transform/{guid}", Name = "Transform .metadata files to .xip", Order = 13)]
         public IActionResult TransformXip(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             _logger.LogInformation("Enter TransformXip.");
 
             bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
@@ -722,6 +753,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpPost("sipcreator/{guid}", Name = "Start to create sip", Order = 14)]
         public IActionResult CreateSip(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             _logger.LogInformation("Enter CreateSip.");
 
             bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
@@ -768,6 +802,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpPost("updatebinary/{guid}", Name = "Update binary data", Order = 15)]
         public IActionResult UpdateBinary(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             _logger.LogInformation("Enter UpdateBinary.");
 
             var processingFolder = Path.Combine(_settings.DataFolderName, guid.ToString());

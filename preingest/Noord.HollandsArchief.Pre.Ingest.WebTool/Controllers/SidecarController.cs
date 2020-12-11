@@ -51,6 +51,15 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Controllers
             return Redirect("~/Sidecar/Index");
         }
 
+        public IActionResult GenerateExport(Guid id)
+        {
+            var response = Model.GenerateExport(id);
+            ViewBag.CurrentSession = id;
+
+
+            return Redirect("~/Sidecar/Index");
+        }
+
         public IActionResult Export(Guid id)
         {
             return Redirect("~/Sidecar/Index");
@@ -124,16 +133,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Controllers
 
             ViewBag.CurrentSession = id;
             return PartialView("~/Views/Sidecar/Summary/Naming.cshtml", result);
-        }
-
-        public IActionResult UnpackCollection(string name)
-        {
-            if (!String.IsNullOrEmpty(name))
-            {
-                ApiResponseMessage result = Model.DoUnpackCollection(name);               
-            }
-
-            return Redirect("~/Sidecar/Index");
         }
 
         public IActionResult TopxContent(Guid sessionId, Guid treeId)

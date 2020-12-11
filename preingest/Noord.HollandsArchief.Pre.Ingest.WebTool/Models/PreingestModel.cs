@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Noord.HollandsArchief.Pre.Ingest.WebTool.Entities;
 using System;
 using System.Collections.Generic;
@@ -56,30 +57,15 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Models
 
         }
 
-        public ApiResponseMessage DoUnpackCollection(String name)
-        {
-            ApiResponseMessage result = null;
-
-            if (String.IsNullOrEmpty(Settings.DoUnpackCollection))
-                throw new ApplicationException("Appsettings is missing value for DoUnpackCollection.");
-
-            string url = String.Format("{0}/{1}", Settings.DoUnpackCollection, name);
-            using (HttpClient client = new HttpClient())
-            {
-                var httpResponse = client.GetAsync(url).Result;
-                result = JsonConvert.DeserializeObject<ApiResponseMessage>(httpResponse.Content.ReadAsStringAsync().Result);
-            }
-
-            return result;
-        }
-
         public dynamic GetSidecarTree(Guid sessionId)
         {
-            dynamic result = null;
+            if (sessionId == Guid.Empty)
+                throw new ApplicationException("Guid is empty!");
 
             if (String.IsNullOrEmpty(Settings.GetSidecarTree))
                 throw new ApplicationException("Appsettings is missing value for GetSidecarTree.");
 
+            dynamic result = null;
             String url = Path.Combine(Settings.GetSidecarTree, sessionId.ToString());
 
             using (HttpClient client = new HttpClient())
@@ -93,11 +79,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Models
 
         public dynamic GetAggregationSummary(Guid sessionId)
         {
-            dynamic result = null;
+            if (sessionId == Guid.Empty)
+                throw new ApplicationException("Guid is empty!");
 
             if (String.IsNullOrEmpty(Settings.GetAggregationSummary))
                 throw new ApplicationException("Appsettings is missing value for GetAggregationSummary.");
 
+            dynamic result = null;
             String url = Path.Combine(Settings.GetAggregationSummary, sessionId.ToString());
 
             using (HttpClient client = new HttpClient())
@@ -110,11 +98,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Models
         }
         
         public dynamic GetDroidAndPlanetSummary(Guid sessionId)
-        {
-            dynamic result = null;
-
+        {            
             if (String.IsNullOrEmpty(Settings.GetDroidSummary))
                 throw new ApplicationException("Appsettings is missing value for GetDroidSummary.");
+
+            if (sessionId == Guid.Empty)
+                throw new ApplicationException("Guid is empty!");
+
+            dynamic result = null;
 
             String url = Path.Combine(Settings.GetDroidSummary, sessionId.ToString());
 
@@ -129,13 +120,17 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Models
 
         public dynamic GetVirusscanResult(Guid sessionId)
         {
-            List<String> result = null;
-
             if (String.IsNullOrEmpty(Settings.GetResults))
                 throw new ApplicationException("Appsettings is missing value for GetResults.");
+
             if (String.IsNullOrEmpty(Settings.GetJson))
                 throw new ApplicationException("Appsettings is missing value for GetJson.");
 
+            if (sessionId == Guid.Empty)
+                throw new ApplicationException("Guid is empty!");
+
+            List<String> result = null;
+            
             String url = Path.Combine(Settings.GetResults, sessionId.ToString());
 
             using (HttpClient client = new HttpClient())
@@ -162,12 +157,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Models
 
         public dynamic GetNamingCheckResult(Guid sessionId)
         {
-            List<String> result = null;
-
             if (String.IsNullOrEmpty(Settings.GetResults))
                 throw new ApplicationException("Appsettings is missing value for GetResults.");
+
             if (String.IsNullOrEmpty(Settings.GetJson))
                 throw new ApplicationException("Appsettings is missing value for GetJson.");
+
+            if (sessionId == Guid.Empty)
+                throw new ApplicationException("Guid is empty!");
+
+            List<String> result = null;
 
             String url = Path.Combine(Settings.GetResults, sessionId.ToString());
 
@@ -194,11 +193,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Models
         }
 
         public dynamic GetTopxData(Guid sessionId, Guid treeId)
-        {
-            dynamic result = null;
-
+        {           
             if (String.IsNullOrEmpty(Settings.GetTopxData))
                 throw new ApplicationException("Appsettings is missing value for GetTopxData.");
+
+            if (sessionId == Guid.Empty || treeId == Guid.Empty)
+                throw new ApplicationException("Guid is empty!");
+
+            dynamic result = null;
 
             String url = Path.Combine(Settings.GetTopxData, sessionId.ToString(), treeId.ToString());
 
@@ -213,10 +215,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Models
 
         public List<dynamic> GetDroidPronomInfo(Guid sessionId, Guid treeId)
         {
-            List<dynamic> result = new List<dynamic>();
-
             if (String.IsNullOrEmpty(Settings.GetDroidPronomInfo))
                 throw new ApplicationException("Appsettings is missing value for GetDroidExportInfo.");
+            if (sessionId == Guid.Empty || treeId == Guid.Empty)
+                throw new ApplicationException("Guid is empty!");
+
+            List<dynamic> result = new List<dynamic>();
 
             String url = Path.Combine(Settings.GetDroidPronomInfo, sessionId.ToString(), treeId.ToString());
 
@@ -233,10 +237,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Models
 
         public dynamic GetMetadataEncoding(Guid sessionId, Guid treeId)
         {
-            dynamic result = null;
-
             if (String.IsNullOrEmpty(Settings.GetMetadataEncoding))
                 throw new ApplicationException("Appsettings is missing value for GetMetadataEncoding.");
+            if (sessionId == Guid.Empty || treeId == Guid.Empty)
+                throw new ApplicationException("Guid is empty!");
+            
+            dynamic result = null;
 
             String url = Path.Combine(Settings.GetMetadataEncoding, sessionId.ToString(), treeId.ToString());
 
@@ -250,11 +256,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Models
         }
 
         public dynamic GetGreenlistStatus(Guid sessionId, Guid treeId)
-        {
-            dynamic result = null;
-
+        { 
             if (String.IsNullOrEmpty(Settings.GetGreenlistStatus))
                 throw new ApplicationException("Appsettings is missing value for GetGreenlistStatus.");
+            if (sessionId == Guid.Empty || treeId == Guid.Empty)
+                throw new ApplicationException("Guid is empty!");
+            
+            dynamic result = null;
 
             String url = Path.Combine(Settings.GetGreenlistStatus, sessionId.ToString(), treeId.ToString());
 
@@ -271,6 +279,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Models
         {
             if (String.IsNullOrEmpty(Settings.GetChecksums))
                 throw new ApplicationException("Appsettings is missing value for GetChecksums.");
+            if (sessionId == Guid.Empty || treeId == Guid.Empty)
+                throw new ApplicationException("Guid is empty!");
 
             dynamic result = null;
 
@@ -289,6 +299,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Models
         {
             if (String.IsNullOrEmpty(Settings.GetSchemaResult))
                 throw new ApplicationException("Appsettings is missing value for GetSchemaResult.");
+            if (sessionId == Guid.Empty || treeId == Guid.Empty)
+                throw new ApplicationException("Guid is empty!");
 
             dynamic result = null;
 
@@ -304,12 +316,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Models
         }
 
         public dynamic UpdateBinary(Guid sessionId)
-        {
-            dynamic result = null;
+        {            
+            if (sessionId == Guid.Empty)
+                throw new ApplicationException("Guid is empty!");
 
             if (String.IsNullOrEmpty(Settings.UpdateBinary))
                 throw new ApplicationException("Appsettings is missing value for UpdateBinary.");
 
+            dynamic result = null;
             String url = Path.Combine(Settings.UpdateBinary, sessionId.ToString());
 
             using (HttpClient client = new HttpClient())
@@ -320,6 +334,45 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebTool.Models
             }
 
             return result;
+        }
+
+        public dynamic GenerateExport(Guid sessionId)
+        {
+            if (sessionId == Guid.Empty)
+                throw new ApplicationException("Guid is empty!");
+
+            if (String.IsNullOrEmpty(Settings.GenerateExport))
+                throw new ApplicationException("Appsettings is missing value for GenerateReport.");
+
+            using (HttpClient client = new HttpClient())
+            {
+                var httpResponse = client.GetAsync(Settings.GenerateExport + String.Format("/{0}", sessionId)).Result;
+                //var result = JsonConvert.DeserializeObject<Stream>(httpResponse.Content.ReadAsStreamAsync().Result);
+            }
+
+            return null;
+
+            var fileinfo = new FileInfo("");
+            string contentType = String.Empty;
+            switch (fileinfo.Extension)
+            {
+                case ".pdf":
+                    contentType = "application/pdf";
+                    break;
+                case ".xml":
+                    contentType = "text/xml";
+                    break;
+                case ".csv":
+                    contentType = "text/csv";
+                    break;
+                case ".json":
+                    contentType = "application/json";
+                    break;
+                default:
+                    contentType = "application/octet-stream";
+                    break;
+            }
+            return new PhysicalFileResult(fileinfo.FullName, contentType);
         }
 
     }

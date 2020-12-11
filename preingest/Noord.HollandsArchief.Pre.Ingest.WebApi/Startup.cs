@@ -50,6 +50,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
             services.Add(new ServiceDescriptor(typeof(MetadataValidationHandler), new MetadataValidationHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(TransformationHandler), new TransformationHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(UpdateBinaryHandler), new UpdateBinaryHandler(settings)));
+            services.Add(new ServiceDescriptor(typeof(SpreadSheetHandler), new SpreadSheetHandler(settings)));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
