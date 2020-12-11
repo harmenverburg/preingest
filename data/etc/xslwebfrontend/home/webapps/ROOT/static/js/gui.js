@@ -88,13 +88,12 @@ function doUncompressButton(uncompressButton, urlStart, selectedFileFieldId, pol
     }
 }
 
-function doOperationsButton(clickedButton, urlStart, preingestSessionId, actionString, requiredJSONFile, pollIntervalMS) {
+function doOperationsButton(clickedButton, pollIntervalMS) {
     ableButton(clickedButton, false, "opProgress");
-    
-    let url = urlStart + "?action=" + actionString + "&sessionid=" + preingestSessionId;
+    let url = clickedButton.dataset.prefix + "?action=" + clickedButton.dataset.action + "&sessionid=" + clickedButton.dataset.guid;
     loadJSON(url, function () {
         let timer = setInterval(function () {
-            let pollURL = urlStart + '?action=check-for-file&relative-path=' + preingestSessionId + "/" + requiredJSONFile;
+            let pollURL = clickedButton.dataset.prefix + '?action=check-for-file&relative-path=' + clickedButton.dataset.guid + "/" + clickedButton.dataset.waitforfile;
             fileOKCheckPoller(timer, pollURL, function() {
                 ableButton(clickedButton, true, "opSuccess");
             }, function() {

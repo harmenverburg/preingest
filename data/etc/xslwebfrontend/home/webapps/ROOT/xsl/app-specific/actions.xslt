@@ -75,13 +75,13 @@
                     
                     <xsl:choose>
                         <xsl:when test="file:exists($absolute-path)">
-                            <xsl:message>BESTAAT: absolute-path={$absolute-path}</xsl:message>
+                            <xsl:message>Check: absolute-path={$absolute-path} -- BESTAAT</xsl:message>
                             <json:map>
                                 <json:string key="code">OK</json:string>
                             </json:map>
                         </xsl:when>
                         <xsl:otherwise>
-                            <xsl:message>BESTAAT NIET: absolute-path={$absolute-path}</xsl:message>
+                            <xsl:message>Check: absolute-path={$absolute-path} -- BESTAAT NIET</xsl:message>
                             <json:map>
                                 <json:null key="code"/>
                             </json:map>
