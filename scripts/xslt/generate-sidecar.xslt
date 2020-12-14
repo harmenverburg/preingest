@@ -22,14 +22,16 @@
         <xsl:param name="dirlevel" as="xs:integer"/>
         <xsl:choose>
             <xsl:when test="$dirlevel eq 1">Archief</xsl:when>
-
+            
+            <!--<xsl:when test="$dirlevel eq 2">Record</xsl:when>-->
+            
+            <xsl:when test="$dirlevel eq 2">Dossier</xsl:when>
+            <xsl:when test="$dirlevel eq 3">Record</xsl:when>
+            
             <!--<xsl:when test="$dirlevel eq 2">Serie</xsl:when>
             <xsl:when test="$dirlevel eq 3">Dossier</xsl:when>
             <xsl:when test="$dirlevel eq 4">Record</xsl:when>-->
-
-            <xsl:when test="$dirlevel eq 2">Record</xsl:when>
-            
-            <xsl:otherwise>Fout</xsl:otherwise>
+            <xsl:otherwise>Onbekend</xsl:otherwise>
         </xsl:choose>
     </xsl:function>
     
