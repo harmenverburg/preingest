@@ -20,56 +20,72 @@
     <xsl:include href="commonconstants.xslt"/>
     <xsl:include href="commoncode.xslt"/>
     
+    <!-- Pass ?full to the url in order to get a full <html> page and not just a <div> -->
+    <xsl:variable name="full-html" as="xs:boolean" select="exists(/*/req:parameters/req:parameter[@name eq 'full'])"/>
+    
     <xsl:template match="/req:request">
-        <html>
-            <head>
-                <title>Archiefselectie</title>
-                <link rel="stylesheet" type="text/css" href="{$nha:context-path}/css/gui.css" />
-                <script language="javascript" src="{$nha:context-path}/js/gui.js" type="text/javascript"></script>
-            </head>
-            <body>
-                <p><img src="img/logo.png" style="float: right; width: 10em"/></p>
-                <h1>Archiefselectie</h1>
-                
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Selectie</th>
-                            <th>Bestandsnaam</th>
-                            <th>Omvang</th>
-                            <th>Datum</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <xsl:call-template name="generate-container-file-table-rows"/>
-                    </tbody>
-                </table>
-                
-                <h2>Verwerkingsgegevens voor het geselecteerde bestand:</h2>
-                
-                <xsl:variable name="checksumtype" as="xs:string" select="session:get-attribute($nha:checksumtype-field)"/>
-                <p>Kies het type checksum:<br/>
-                    <select name="{$nha:checksumtype-field}"  id="{$nha:checksumtype-field}">
-                        <option value="">Type&#x2026;</option> <!-- Geen @value, toont dat de gebruiker keuze moet maken -->
-                        <option value="MD5">MD5</option>
-                        <option value="SHA1">SHA1</option>
-                        <option value="SHA256">SHA256</option>
-                        <option value="SHA512">SHA512</option>
-                    </select>
-                </p>
-                <p>Checksumwaarde, zoals verstrekt door de zorgdrager:<br/>
-                    <textarea name="{$nha:checksumvalue-field}" id="{$nha:checksumvalue-field}" cols="50" rows="3" class="xx-small" placeholder="Plak hier de checksum van de zorgdrager"></textarea>
-                </p>
-                <p>
-                    <button type="submit" name="{$nha:check-button}" 
-                        onclick="doCheckButton(this, '{$nha:uncompress-button}', '{$nha:actions-uri-prefix}', '{$nha:checksumtype-field}', '{$nha:checksumvalue-field}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Check&#x2026;</button>&#160;
-                    <button disabled="disabled" type="submit" name="{$nha:uncompress-button}" id="{$nha:uncompress-button}"
-                        onclick="doUncompressButton(this, '{$nha:actions-uri-prefix}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Uitpakken&#x2026;</button>
-                </p>
-                
-                <p style="display: none" id="proceedmessage">Het tarbestand is uitgepakt, ga nu <a href="operations">naar de operations-pagina</a>.</p>
-            </body>
-        </html>
+        <xsl:choose>
+            <xsl:when test="$full-html">
+                <html>
+                    <head>
+                        <title>Archiefselectie</title>
+                        <link rel="stylesheet" type="text/css" href="{$nha:context-path}/css/gui.css" />
+                        <script language="javascript" src="{$nha:context-path}/js/gui.js" type="text/javascript"></script>
+                    </head>
+                    <body>
+                        <xsl:call-template name="body-content"/>
+                    </body>
+                </html>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:call-template name="body-content"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+    
+    <xsl:template name="body-content">
+        <div>
+            <p><img src="img/logo.png" style="float: right; width: 10em"/></p>
+            <h1>Archiefselectie</h1>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Selectie</th>
+                        <th>Bestandsnaam</th>
+                        <th>Omvang</th>
+                        <th>Datum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <xsl:call-template name="generate-container-file-table-rows"/>
+                </tbody>
+            </table>
+            
+            <h2>Verwerkingsgegevens voor het geselecteerde bestand:</h2>
+            
+            <xsl:variable name="checksumtype" as="xs:string" select="session:get-attribute($nha:checksumtype-field)"/>
+            <p>Kies het type checksum:<br/>
+                <select name="{$nha:checksumtype-field}"  id="{$nha:checksumtype-field}">
+                    <option value="">Type&#x2026;</option> <!-- Geen @value, toont dat de gebruiker keuze moet maken -->
+                    <option value="MD5">MD5</option>
+                    <option value="SHA1">SHA1</option>
+                    <option value="SHA256">SHA256</option>
+                    <option value="SHA512">SHA512</option>
+                </select>
+            </p>
+            <p>Checksumwaarde, zoals verstrekt door de zorgdrager:<br/>
+                <textarea name="{$nha:checksumvalue-field}" id="{$nha:checksumvalue-field}" cols="50" rows="3" class="xx-small" placeholder="Plak hier de checksum van de zorgdrager"></textarea>
+            </p>
+            <p>
+                <button type="submit" name="{$nha:check-button}" 
+                    onclick="doCheckButton(this, '{$nha:uncompress-button}', '{$nha:actions-uri-prefix}', '{$nha:checksumtype-field}', '{$nha:checksumvalue-field}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Check&#x2026;</button>&#160;
+                <button disabled="disabled" type="submit" name="{$nha:uncompress-button}" id="{$nha:uncompress-button}"
+                    onclick="doUncompressButton(this, '{$nha:actions-uri-prefix}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Uitpakken&#x2026;</button>
+            </p>
+            
+            <p style="display: none" id="proceedmessage">Het tarbestand is uitgepakt, ga nu <a href="operations{if ($full-html) then '?full' else ''}">naar de operations-pagina</a>.</p>
+        </div>
     </xsl:template>
 
     <xsl:template name="generate-container-file-table-rows">
