@@ -8,7 +8,7 @@ FROM openjdk:11
 
 WORKDIR /
 RUN mkdir droid
-COPY droid /droid/
+COPY bin /droid/
 
 ARG JAR_FILE=*.jar
 
