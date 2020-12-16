@@ -3,7 +3,9 @@
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xmlns:pipeline="http://www.armatiek.com/xslweb/pipeline"
   xmlns:config="http://www.armatiek.com/xslweb/configuration"
-  xmlns:req="http://www.armatiek.com/xslweb/request" xmlns:err="http://expath.org/ns/error"
+  xmlns:req="http://www.armatiek.com/xslweb/request"
+  xmlns:zip="http://www.armatiek.com/xslweb/zip-serializer"
+  xmlns:err="http://expath.org/ns/error"
   xmlns:nha="http://noord-hollandsarchief.nl/namespaces/1.0"
   exclude-result-prefixes="#all" version="3.0" expand-text="yes">
 
@@ -59,4 +61,13 @@
     </pipeline:pipeline>
   </xsl:template>
 
+  <xsl:template match="/req:request[starts-with(req:path, '/excel/')]">
+    <!-- After /excel/, place the guid of the directory containing the generated JSON files -->
+    <pipeline:pipeline>
+      <pipeline:transformer name="actions" xsl-path="app-specific/excel.xslt"/>
+      <pipeline:transformer name="xlsx-response" xsl-path="app-specific/xlsx-response.xslt"/>
+      <pipeline:zip-serializer name="zip"/>
+    </pipeline:pipeline>
+  </xsl:template>
+  
 </xsl:stylesheet>
