@@ -50,7 +50,10 @@ services:
     volumes:
         - "${DATAFOLDER}:/data"  
     expose:
-        - "80"     
+        - "80"
+    # Only (temporarily) mapped here for direct debugging access to the API's HTTP endpoints
+    ports:
+      - "8000:80"
     networks :
         - preingest-network          
     depends_on:
