@@ -1,8 +1,4 @@
-# Define the environment variable DATAFOLDER for the correct expandion of ${DATAFOLDER} below.
-# E.g.:
-# export DATAFOLDER=/home/pieter/noord-hollandsarchief/data
-# set DATAFOLDER=D:\data
-
+# See the project's README about setting DATAFOLDER and ETCFOLDER.
 version: '3.0'
 services:
     xslweb:
@@ -12,3 +8,4 @@ services:
             - "8080:8080"
         volumes:
             - "${DATAFOLDER}:/data"
+            - "${ETCFOLDER}:/data/etc"
