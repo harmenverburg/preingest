@@ -25,16 +25,17 @@
     
     <xsl:variable name="LETTERS" as="xs:string" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"/>
     
-    <xsl:variable name="workdir-guid" as="xs:string" select="replace(/*/req:path, '^.*/([-a-z0-9]+)$', '$1')"/>
+    <xsl:variable name="COLUMNKEYS1" as="xs:string*" select="('SessionId', 'Code', 'ActionName', 'CollectionItem', 'Message', 'Messages', 'CreationTimestamp')"/>
+    <xsl:variable name="COLUMNKEYS2" as="xs:string*" select="('sessionId', 'code', 'actionName', 'collectionItem', 'message', 'messages', 'creationTimestamp')"/>
     
-    <xsl:variable name="max-sheet-num" as="xs:integer" select="9"/>
+    <xsl:variable name="workdir-guid" as="xs:string" select="replace(/*/req:path, '^.*/([-a-z0-9]+)$', '$1')"/>
     
     <xsl:mode on-no-match="shallow-copy"/>
     
     <xsl:function name="nha:excel-rownum" as="xs:string">
         <!-- Excel row 1 is rownum 0 -->
-        <xsl:param name="rownum" as="xs:integer"/>
-        <xsl:value-of select="$rownum + 1"/>
+        <xsl:param name="excel-rownum" as="xs:integer"/>
+        <xsl:value-of select="$excel-rownum + 1"/>
     </xsl:function>
     
     <xsl:function name="nha:excel-colnum" as="xs:string">
@@ -55,22 +56,73 @@
     
     <xsl:function name="nha:cell-num" as="xs:string">
         <!-- Excel row 1 is rownum 0 -->
-        <xsl:param name="rownum" as="xs:integer"/>
+        <xsl:param name="excel-rownum" as="xs:integer"/>
         <!-- Excel col A is colnum 0 -->
         <xsl:param name="colnum" as="xs:integer"/>
         
-        <xsl:value-of select="nha:excel-colnum($colnum) || nha:excel-rownum($rownum)"/>
+        <xsl:value-of select="nha:excel-colnum($colnum) || nha:excel-rownum($excel-rownum)"/>
     </xsl:function>
     
     <xsl:function name="nha:row" as="element(row)">
         <!-- Excel row 1 is rownum 0 -->
-        <xsl:param name="rownum" as="xs:integer"/>
+        <xsl:param name="excel-rownum" as="xs:integer"/>
         <xsl:param name="colvalues" as="xs:string+"/>
-        <row r="{nha:excel-rownum($rownum)}" customFormat="false" ht="13.8" hidden="false" customHeight="false" outlineLevel="0" collapsed="false">
+        <row r="{nha:excel-rownum($excel-rownum)}" customFormat="false" ht="13.8" hidden="false" customHeight="false" outlineLevel="0" collapsed="false">
             <xsl:for-each select="$colvalues">
-                <c r="{nha:cell-num($rownum, position() - 1)}" s="0" t="inlineStr"><is><t>{.}</t></is></c>
+                <c r="{nha:cell-num($excel-rownum, position() - 1)}" s="0" t="inlineStr"><is><t>{.}</t></is></c>
             </xsl:for-each>
         </row>
+    </xsl:function>
+    
+    <xsl:function name="nha:worksheet-jsonmap" as="element(row)*">
+        <xsl:param name="excel-rownum" as="xs:integer"/>
+        <xsl:param name="json-rownum" as="xs:integer"/>
+        <xsl:param name="jsonMap" as="map(*)"/>
+        <xsl:param name="columnKeys" as="xs:string*"/>
+        
+        <xsl:variable name="columnValues" as="xs:string*">
+            <xsl:for-each select="$columnKeys">
+                <xsl:value-of select="$jsonMap => map:get(.)"/>
+            </xsl:for-each>
+        </xsl:variable>
+        <xsl:sequence select="nha:row($excel-rownum + $json-rownum, $columnValues)"/>
+    </xsl:function>
+    
+    <xsl:function name="nha:worksheet-jsonarray" as="element(row)*">
+        <xsl:param name="excel-rownum" as="xs:integer"/>
+        <xsl:param name="jsonArray" as="array(map(*))"/>
+        <xsl:param name="columnKeys" as="xs:string*"/>
+        
+        <xsl:choose>
+            <xsl:when test="array:size($jsonArray) eq 0">
+                <xsl:sequence select="nha:row($excel-rownum + 0, ('Geen bijzonderheden'))"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:for-each select="1 to array:size($jsonArray)">
+                    <xsl:variable name="json-rownum" as="xs:integer" select="."/>
+                    <xsl:variable name="jsonMap" as="map(*)" select="$jsonArray => array:get($json-rownum)"/>
+                    
+                    <xsl:sequence select="nha:worksheet-jsonmap($excel-rownum, $json-rownum, $jsonMap, $columnKeys)"/>
+                </xsl:for-each>
+                
+            </xsl:otherwise>
+        </xsl:choose>        
+    </xsl:function>
+    
+    <xsl:function name="nha:worksheet-commontype" as="element(row)*">
+        <xsl:param name="base-json-file" as="xs:string"/>
+        
+        <!-- TODO API call -->
+        <xsl:variable name="jsonArray" as="array(map(*))" select="json-doc($nha:data-uri-prefix || $workdir-guid || '/' || $base-json-file)"/>
+
+        <xsl:sequence select="nha:worksheet-jsonarray(0, $jsonArray, $COLUMNKEYS1)"/>        
+    </xsl:function>
+    
+    <xsl:function name="nha:worksheet-sidecartype" as="element(row)*">
+        <xsl:param name="excel-rownum" as="xs:integer"/>
+        <xsl:param name="jsonArray" as="array(map(*))"/>
+        
+        <xsl:sequence select="nha:worksheet-jsonarray(0, $jsonArray, $COLUMNKEYS2)"/>        
     </xsl:function>
     
     <xsl:function name="nha:worksheet-1" as="element(row)*">
@@ -89,50 +141,18 @@
         <!-- TODO API call -->
         <xsl:variable name="jsonMap" as="map(*)" select="json-doc($nha:data-uri-prefix || $workdir-guid || '/' || $base-json-file)"/>
         
-        <xsl:sequence select="nha:row(1, ('SessionId', string($jsonMap?SessionId)))"/>
-        <xsl:sequence select="nha:row(2, ('Code',  string($jsonMap?Code)))"/>
-        <xsl:sequence select="nha:row(3, ('ActionName', string($jsonMap?ActionName)))"/>
-        <xsl:sequence select="nha:row(4, ('CollectionItem', string($jsonMap?CollectionItem)))"/>
-        <xsl:sequence select="nha:row(5, ('Message', string($jsonMap?Message)))"/>
-        <xsl:sequence select="nha:row(6, ('Messages', string($jsonMap?Messages)))"/>
-        <xsl:sequence select="nha:row(7, ('CreationTimestamp', string($jsonMap?CreationTimestamp)))"/>
-    </xsl:function>
-    
-    <xsl:function name="nha:worksheet-commontype" as="element(row)*">
-        <xsl:param name="base-json-file" as="xs:string"/>
-        
-        <!-- TODO API call -->
-        <xsl:variable name="jsonArray" as="array(*)" select="json-doc($nha:data-uri-prefix || $workdir-guid || '/' || $base-json-file)"/>
-        
-        <xsl:for-each select="$jsonArray">
-            <xsl:variable name="rownum" as="xs:integer" select="position()"/>
-            <xsl:variable name="columnKeys" as="xs:string*" select="('SessionId', 'Code', 'ActionName', 'CollectionItem', 'Message', 'Messages', 'CreationTimestamp')"/>
-            <xsl:variable name="columnValues" as="xs:string*">
-                <xsl:for-each select="$columnKeys">{$jsonArray => array:get($rownum) => map:get(.)}</xsl:for-each>
-            </xsl:variable>
-            <xsl:sequence select="nha:row($rownum, $columnValues)"/>
-        </xsl:for-each>
-    </xsl:function>
-    
-    <xsl:function name="nha:worksheet-sidecartype" as="element(row)*">
-        <xsl:param name="excel-rownum" as="xs:integer"/>
-        <xsl:param name="jsonArray" as="array(map(*))"/>
-        
-        <xsl:for-each select="1 to array:size($jsonArray)">
-            <xsl:variable name="rownum" as="xs:integer" select="."/>
-            <xsl:variable name="jsonMap" as="map(*)" select="$jsonArray => array:get($rownum)"/>
-            <xsl:variable name="columnKeys" as="xs:string*" select="('sessionId', 'code', 'actionName', 'collectionItem', 'message', 'messages', 'creationTimestamp')"/>
-            <xsl:variable name="columnValues" as="xs:string*">
-                <xsl:for-each select="$columnKeys">
-                    <xsl:value-of select="$jsonMap => map:get(.)"/>
-                </xsl:for-each>
-            </xsl:variable>
-            <xsl:sequence select="nha:row($excel-rownum + $rownum, $columnValues)"/>
-        </xsl:for-each>
+        <xsl:sequence select="nha:row(1, ('SessionId', $jsonMap?SessionId))"/>
+        <xsl:sequence select="nha:row(2, ('Code', $jsonMap?Code))"/>
+        <xsl:sequence select="nha:row(3, ('ActionName', $jsonMap?ActionName))"/>
+        <xsl:sequence select="nha:row(4, ('CollectionItem', $jsonMap?CollectionItem))"/>
+        <xsl:sequence select="nha:row(5, ('Message', $jsonMap?Message))"/>
+        <xsl:sequence select="nha:row(6, ('Messages', $jsonMap?Messages))"/>
+        <xsl:sequence select="nha:row(7, ('CreationTimestamp', $jsonMap?CreationTimestamp))"/>
     </xsl:function>
     
     <xsl:function name="nha:worksheet-3" as="element(row)*">
         <xsl:variable name="base-json-file" as="xs:string" select="'ScanVirusValidationHandler.json'"/>
+        <!-- TODO test with real data -->
         <xsl:sequence select="nha:worksheet-commontype($base-json-file)"/>
     </xsl:function>
     
@@ -142,7 +162,11 @@
     </xsl:function>
     
     <xsl:function name="nha:worksheet-5" as="element(row)*">
-
+        <xsl:variable name="base-json-file" as="xs:string" select="'MetadataValidationHandler.json'"/>
+        <xsl:sequence select="nha:worksheet-commontype($base-json-file)"/>
+    </xsl:function>
+    
+    <xsl:function name="nha:worksheet-6" as="element(row)*">
         <xsl:iterate select="('SidecarValidationHandler_Archief.json',
             'SidecarValidationHandler_Bestand.json',
             'SidecarValidationHandler_Dossier.json',
@@ -159,6 +183,38 @@
                 <xsl:with-param name="start-rownum" select="$start-rownum + array:size($jsonArray)"/>
             </xsl:next-iteration>
         </xsl:iterate>
+    </xsl:function>
+    
+    <xsl:function name="nha:worksheet-7" as="element(row)*">
+        <xsl:variable name="csv-file" as="xs:string" select="$nha:data-uri-prefix || $workdir-guid || '/' || $workdir-guid || '.droid.csv'"/>
+        <!-- TODO API call -->
+        <xsl:variable name="csv-lines" as="xs:string" select="unparsed-text($csv-file)"/>
+        <xsl:for-each select="tokenize($csv-lines, '&#10;')[position() gt 1]">
+            <xsl:variable name="rownum" as="xs:integer" select="position()"/>
+            <xsl:variable name="csv-line" as="xs:string" select="."/>
+            <xsl:variable name="columnValues" as="xs:string*">
+                <xsl:analyze-string select="$csv-line" regex="&quot;([^&quot;]*)&quot;">
+                    <xsl:matching-substring>
+                        <xsl:value-of select="regex-group(1)"/>
+                    </xsl:matching-substring>
+                    <xsl:non-matching-substring/>
+                </xsl:analyze-string>
+            </xsl:variable>
+            
+            <xsl:if test="exists($columnValues)"><xsl:sequence select="nha:row($rownum, $columnValues)"/></xsl:if>
+        </xsl:for-each>
+    </xsl:function>
+    
+    <xsl:function name="nha:worksheet-8" as="element(row)*">
+        <xsl:variable name="base-json-file" as="xs:string" select="'GreenListHandler.json'"/>
+        <!-- TODO API call -->
+        <xsl:variable name="jsonArray" as="array(map(*))" select="json-doc($nha:data-uri-prefix || $workdir-guid || '/' || $base-json-file)"/>
+        <xsl:sequence select="nha:worksheet-jsonarray(0, $jsonArray, ('SessionId', 'Location', 'Name', 'Extension', 'FormatName', 'FormatVersion', 'Puid', 'InGreenList'))"/>
+    </xsl:function>
+    
+    <xsl:function name="nha:worksheet-9" as="element(row)*">
+        <xsl:variable name="base-json-file" as="xs:string" select="'EncodingHandler.json'"/>
+        <xsl:sequence select="nha:worksheet-commontype($base-json-file)"/>
     </xsl:function>
     
     <xsl:template match="/req:request">
@@ -200,11 +256,17 @@
             <xsl:apply-templates select="@*"/>
             <xsl:apply-templates select="row[1]"/>
             
+            <!--<xsl:message>Dealing with worksheet # {$sheetnum}</xsl:message>-->
             <xsl:choose>
                 <xsl:when test="$sheetnum eq 1"><xsl:copy-of select="nha:worksheet-1()"/></xsl:when>
                 <xsl:when test="$sheetnum eq 2"><xsl:copy-of select="nha:worksheet-2()"/></xsl:when>
                 <xsl:when test="$sheetnum eq 3"><xsl:copy-of select="nha:worksheet-3()"/></xsl:when>
+                <xsl:when test="$sheetnum eq 4"><xsl:copy-of select="nha:worksheet-4()"/></xsl:when>
                 <xsl:when test="$sheetnum eq 5"><xsl:copy-of select="nha:worksheet-5()"/></xsl:when>
+                <xsl:when test="$sheetnum eq 6"><xsl:copy-of select="nha:worksheet-6()"/></xsl:when>
+                <xsl:when test="$sheetnum eq 7"><xsl:copy-of select="nha:worksheet-7()"/></xsl:when>
+                <!--<xsl:when test="$sheetnum eq 8"><xsl:copy-of select="nha:worksheet-8()"/></xsl:when>-->
+                <xsl:when test="$sheetnum eq 9"><xsl:copy-of select="nha:worksheet-9()"/></xsl:when>
                 <xsl:otherwise>
                     <xsl:copy-of select="row[position() gt 1]"/>
                 </xsl:otherwise>
