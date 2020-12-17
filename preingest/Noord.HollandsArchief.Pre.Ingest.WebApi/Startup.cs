@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers;
 
@@ -37,6 +38,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
             services.Configure<AppSettings>(appSettingsSection);
 
             var settings = appSettingsSection.Get<AppSettings>();
+            services.AddDbContext<Model.PreIngestStatusContext>(options => options.UseSqlite(Configuration.GetConnectionString("Sqlite")));
 
             services.Add(new ServiceDescriptor(typeof(HealthCheckHandler), new HealthCheckHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(ContainerChecksumHandler), new ContainerChecksumHandler(settings)));
@@ -49,8 +51,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
             services.Add(new ServiceDescriptor(typeof(GreenListHandler), new GreenListHandler(settings)));            
             services.Add(new ServiceDescriptor(typeof(MetadataValidationHandler), new MetadataValidationHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(TransformationHandler), new TransformationHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(UpdateBinaryHandler), new UpdateBinaryHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(SpreadSheetHandler), new SpreadSheetHandler(settings)));
+            services.Add(new ServiceDescriptor(typeof(UpdateBinaryHandler), new UpdateBinaryHandler(settings)));            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

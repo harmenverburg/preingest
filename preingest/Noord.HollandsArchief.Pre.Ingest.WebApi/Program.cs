@@ -18,7 +18,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
         public static void Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
-                
+
+            Task.Run(() =>
+            {
+                CreateDbIfNotExists(host);
+            });
+
             var logger = host.Services.GetRequiredService<ILogger<Program>>();
             logger.LogInformation("Host created.");
                 
@@ -62,5 +67,24 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
                 {
                     webBuilder.UseStartup<Startup>();
                 });
+
+        private static void CreateDbIfNotExists(IHost host)
+        {
+            using (var scope = host.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<Model.PreIngestStatusContext>();
+                    context.Database.EnsureCreated();
+                    // DbInitializer.Initialize(context);
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred creating the DB.");
+                }
+            }
+        }
     }
 }

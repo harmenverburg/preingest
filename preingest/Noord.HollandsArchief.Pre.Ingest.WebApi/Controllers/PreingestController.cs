@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Model;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -16,6 +18,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
     {
         private readonly ILogger<PreingestController> _logger;
         private AppSettings _settings = null;
+
         public PreingestController(ILogger<PreingestController> logger, IOptions<AppSettings> settings)
         {
             _logger = logger;
@@ -41,7 +44,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     "preingest: available",
                     String.Format("clamav: {0}", handler.IsAliveClamAv ? "available" : "not available"),
                     String.Format("xslweb: {0}", handler.IsAliveXslWeb ? "available" : "not available"),
-                    String.Format("droid: {0}", handler.IsAliveDroid ? "available" : "not available")
+                    String.Format("droid: {0}", handler.IsAliveDroid ? "available" : "not available"),
+                    String.Format("database: {0}", handler.IsAliveDatabase ? "available" : "not available")
                 }
             });
         }
@@ -69,41 +73,49 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             handler.TarFilename = collectionName;
             handler.Checksum = checksum;
 
-            Guid guid = Guid.NewGuid();
-            handler.SetSessionGuid(guid);
-
+            //data map id
+            Guid sessionId = Guid.NewGuid();
+            handler.SetSessionGuid(sessionId);
+            //database process id
+            Guid processId = Guid.Empty;
             try
             {
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ContainerChecksumHandler).Name, guid.ToString());
+                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ContainerChecksumHandler).Name, sessionId.ToString());
+
+                processId = handler.AddProcessAction("Calculate", String.Format("Container file {0}", handler.TarFilename), String.Concat(handler.TarFilename, ".json"));
+
                 var task = Task.Run(() =>
                 {
                     try
                     {
+                        handler.AddStartState(processId);
                         handler.Execute();
                     }
                     catch (Exception innerExc)
                     {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(ContainerChecksumHandler).Name, innerExc.Message);
+                        string message = String.Format("An exception is throwned in {0}: '{1}'.", typeof(ContainerChecksumHandler).Name, innerExc.Message);
+                        _logger.LogError(innerExc, message);
                         //send notification
+                        handler.AddFailedState(processId, message);
                     }
                     finally
                     {
-                        //send notification
-                    }
+                        handler.AddCompleteState(processId);
+                    }                    
                 });
             }
-            catch (Exception e)
+            catch (Exception e )
             {
                 _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(ContainerChecksumHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(ContainerChecksumHandler).Name);
             }
 
             _logger.LogInformation("Exit CollectionChecksumCalculation.");
-            return new JsonResult(new { Message = String.Format("Container checksum calculation {0} is started", collectionName), SessionId = guid });
+            return new JsonResult(new { Message = String.Format("Container checksum calculation {0} is started", collectionName), SessionId = sessionId, ActionId = processId  });
         }
 
         //Voorbereiding  
-        [HttpGet("unpack/{collectionName}", Name = "Unpack tar Collection", Order = 2)]
+        [HttpGet("unpack/{collectionName}", Name = "Unpack tar collection", Order = 2)]
         public IActionResult Unpack(String collectionName)
         {
             _logger.LogInformation("Enter Unpack.");
@@ -123,26 +135,34 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             handler.Logger = _logger;
             handler.TarFilename = collectionName;
-            Guid guid = Guid.NewGuid();
-            handler.SetSessionGuid(guid);    
-            
+            //data map id
+            Guid sessionId = Guid.NewGuid();
+            handler.SetSessionGuid(sessionId);
+            Guid processId = Guid.Empty;
             try
             {
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(UnpackTarHandler).Name, guid.ToString());
+                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(UnpackTarHandler).Name, sessionId.ToString());
+
+                processId = handler.AddProcessAction("Unpack", String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(UnpackTarHandler).Name, ".json"));
+
                 var task = Task.Run(() =>
                 {
                     try
                     {
+                        handler.AddStartState(processId);
                         handler.Execute();
                     }
                     catch (Exception innerExc)
                     {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(UnpackTarHandler).Name, innerExc.Message);
+                        string message = String.Format("An exception is throwned in {0}: '{1}'.", typeof(UnpackTarHandler).Name, innerExc.Message);
+                        _logger.LogError(innerExc, message);
                         //send notification
+                        handler.AddFailedState(processId, message);
                     }
                     finally
                     {
                         //send notification
+                        handler.AddCompleteState(processId);
                     }
                 }); 
             }
@@ -153,7 +173,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
 
             _logger.LogInformation("Exit Unpack.");
-            return new JsonResult(new { Message = String.Format ("Unpack tar container '{0}' started", collectionName), SessionId = guid });
+            return new JsonResult(new { Message = String.Format ("Unpack tar container '{0}' started", collectionName), SessionId = sessionId, ActionId = processId });
         }
 
         //Check 1 : virus scannen
@@ -176,25 +196,35 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem("Object is not loaded.", typeof(ScanVirusValidationHandler).Name);
             
             handler.Logger = _logger;
+            //data map id
             handler.SetSessionGuid(guid);
-            
+            //database process id
+            Guid processId = Guid.Empty;
+
             try
             {
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ScanVirusValidationHandler).Name, guid.ToString());
+
+                processId = handler.AddProcessAction("Virusscan", String.Format("Scan for virussen on folder {0}", guid), String.Concat(typeof(ScanVirusValidationHandler).Name, ".json"));
+
                 var task = Task.Run(() =>
                 {
                     try
                     {
+                        handler.AddStartState(processId);
                         handler.Execute();
                     }
                     catch (Exception innerExc)
                     {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(ScanVirusValidationHandler).Name, innerExc.Message);
+                        string message = String.Format("An exception is throwned in {0}: '{1}'.", typeof(ScanVirusValidationHandler).Name, innerExc.Message);
+                        _logger.LogError(innerExc, message);
                         //send notification
+                        handler.AddFailedState(processId, message);
                     }
                     finally
                     {
                         //send notification
+                        handler.AddCompleteState(processId);
                     }
                 });
             }
@@ -205,7 +235,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
 
             _logger.LogInformation("Exit VirusScan.");
-            return new JsonResult(new { Message = String.Format("Virusscan started."), SessionId = guid });
+            return new JsonResult(new { Message = String.Format("Virusscan started."), SessionId = guid, ActionId = processId });
         }
                 
         //Check 3 : bestandsnamen en mapnamen 
@@ -219,34 +249,41 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
             if (!exists)
-            {
                 return NotFound(String.Format("Session {0} not found.", guid));
-            }
+            
 
             NamingValidationHandler handler = HttpContext.RequestServices.GetService(typeof(NamingValidationHandler)) as NamingValidationHandler;
             if (handler == null)
                 return Problem("Object is not loaded.", typeof(NamingValidationHandler).Name);
 
             handler.Logger = _logger;
-            handler.SetSessionGuid(guid);
-
+            //data map id
+            handler.SetSessionGuid(guid);           
+            //database process id
+            Guid processId = Guid.Empty;
             try
             {
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(NamingValidationHandler).Name, guid.ToString());
+                processId = handler.AddProcessAction("Naming", String.Format("Name check on directories, sub-directories and files : folder {0}", guid), String.Concat(typeof(NamingValidationHandler).Name, ".json"));
+
                 var task = Task.Run(() =>
                 {
                     try
                     {
+                        handler.AddStartState(processId);
                         handler.Execute();
                     }
                     catch (Exception innerExc)
                     {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(NamingValidationHandler).Name, innerExc.Message);
+                        string message = string.Format("An exception is throwned in {0}: '{1}'.", typeof(NamingValidationHandler).Name, innerExc.Message);
+                        _logger.LogError(innerExc, message);
                         //send notification
+                        handler.AddFailedState(processId, message);
                     }
                     finally
                     {
                         //send notification
+                        handler.AddCompleteState(processId);
                     }
                 });
             }
@@ -257,7 +294,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
 
             _logger.LogInformation("Exit Naming.");
-            return new JsonResult(new { Message = String.Format("Folder(s) and file(s) naming check started."), SessionId = guid });
+            return new JsonResult(new { Message = String.Format("Folder(s) and file(s) naming check started."), SessionId = guid, ActionId = processId });
         }
        
         //Check 4 : sidecar structuur
@@ -281,24 +318,31 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             handler.Logger = _logger;
             handler.SetSessionGuid(guid);
-
+            //database process id
+            Guid processId = Guid.Empty;
             try
             {
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SidecarValidationHandler).Name, guid.ToString());
+                processId = handler.AddProcessAction("Sidecar", String.Format("Sidecar structure check for aggregation and metadata : folder {0}", guid), String.Concat(typeof(SidecarValidationHandler).Name, ".json"));
+
                 var task = Task.Run(() =>
                 {
                     try
                     {
+                        handler.AddStartState(processId);
                         handler.Execute();
                     }
                     catch (Exception innerExc)
                     {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(SidecarValidationHandler).Name, innerExc.Message);
+                        string message = string.Format("An exception is throwned in {0}: '{1}'.", typeof(SidecarValidationHandler).Name, innerExc.Message);
+                        _logger.LogError(innerExc, message);
                         //send notification
+                        handler.AddFailedState(processId, message);
                     }
                     finally
                     {
                         //send notification
+                        handler.AddCompleteState(processId);
                     }
                 });
             }
@@ -308,7 +352,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return ValidationProblem(e.Message, typeof(SidecarValidationHandler).Name);
             }
             _logger.LogInformation("Exit Sidecar.");
-            return new JsonResult(new { Message = String.Format("Structure sidecar check started."), SessionId = guid });
+            return new JsonResult(new { Message = String.Format("Structure sidecar check started."), SessionId = guid, ActionId = processId });
         }              
  
         [HttpPost("profiling/{guid}", Name = "Droid create profile", Order = 6)]
@@ -571,23 +615,33 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem("Droid CSV result not found/available. Please run Droid first.", typeof(GreenListHandler).Name);
             }
 
+            //database process id
+            Guid processId = Guid.Empty;
+
             try
             { 
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(GreenListHandler).Name, guid.ToString());
+
+                processId = handler.AddProcessAction("Greenlist", String.Format("Compare file extensions generated from Droid with greenlist : folder {0}", guid), String.Concat(typeof(GreenListHandler).Name, ".json"));
+
                 var task = Task.Run(() =>
                 {
                     try
                     {
+                        handler.AddStartState(processId);
                         handler.Execute();
                     }
                     catch (Exception innerExc)
                     {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(GreenListHandler).Name, innerExc.Message);
+                        string message = string.Format("An exception is throwned in {0}: '{1}'.", typeof(GreenListHandler).Name, innerExc.Message);
+                        _logger.LogError(innerExc, message);
                         //send notification
+                        handler.AddFailedState(processId, message);
                     }
                     finally
                     {
                         //send notification
+                        handler.AddCompleteState(processId);
                     }
                 });
             }
@@ -619,25 +673,36 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem("Object is not loaded.", typeof(EncodingHandler).Name);
 
             handler.Logger = _logger;
+            //data map id
             handler.SetSessionGuid(guid);
+
+            //database process id
+            Guid processId = Guid.Empty;
 
             try
             {
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(EncodingHandler).Name, guid.ToString());
+
+                processId = handler.AddProcessAction("Encoding", String.Format("Retrieve the encoding for all metadata files : folder {0}", guid), String.Concat(typeof(EncodingHandler).Name, ".json"));
+
                 var task = Task.Run(() =>
                 {
                     try
                     {
+                        handler.AddStartState(processId);
                         handler.Execute();
                     }
                     catch (Exception innerExc)
                     {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(EncodingHandler).Name, innerExc.Message);
+                        string message = string.Format("An exception is throwned in {0}: '{1}'.", typeof(EncodingHandler).Name, innerExc.Message);
+                        _logger.LogError(innerExc, message);
                         //send notification
+                        handler.AddFailedState(processId, message);
                     }
                     finally
                     {
                         //send notification
+                        handler.AddCompleteState(processId);
                     }
                 });
             }
@@ -647,7 +712,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return ValidationProblem(e.Message, typeof(EncodingHandler).Name);
             }
             _logger.LogInformation("Exit EncodingCheck.");
-            return new JsonResult(new { Message = String.Format("Encoding UTF-8 .metadata files check is started."), SessionId = guid });
+            return new JsonResult(new { Message = String.Format("Encoding UTF-8 .metadata files check is started."), SessionId = guid, ActionId = processId });
         }
 
         [HttpPost("validate/{guid}", Name = "Validate .metadata files", Order = 12)]
@@ -671,23 +736,33 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             handler.Logger = _logger;
             handler.SetSessionGuid(guid);
 
+            //database process id
+            Guid processId = Guid.Empty;
+
             try
             {
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(MetadataValidationHandler).Name, guid.ToString());
+
+                processId = handler.AddProcessAction("Metadata", String.Format("Validate all metadata files with XSD schema and schema+ : folder {0}", guid), String.Concat(typeof(MetadataValidationHandler).Name, ".json"));
+
                 var task = Task.Run(() =>
                 {
                     try
                     {
+                        handler.AddStartState(processId);
                         handler.Execute();
                     }
                     catch (Exception innerExc)
                     {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(MetadataValidationHandler).Name, innerExc.Message);
+                        string message = String.Format("An exception is throwned in {0}: '{1}'.", typeof(MetadataValidationHandler).Name, innerExc.Message);
+                        _logger.LogError(innerExc, message);
                         //send notification
+                        handler.AddFailedState(processId, message);
                     }
                     finally
                     {
                         //send notification
+                        handler.AddCompleteState(processId);
                     }
                 });
             }
@@ -697,7 +772,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return ValidationProblem(e.Message, typeof(MetadataValidationHandler).Name);
             }
             _logger.LogInformation("Exit ValidateMetadata.");
-            return new JsonResult(new { Message = String.Format("Validate metadata files is started."), SessionId = guid });
+            return new JsonResult(new { Message = String.Format("Validate metadata files is started."), SessionId = guid, ActionId = processId });
         }
 
         [HttpPost("transform/{guid}", Name = "Transform .metadata files to .xip", Order = 13)]
@@ -721,23 +796,33 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             handler.Logger = _logger;
             handler.SetSessionGuid(guid);
 
+            //database process id
+            Guid processId = Guid.Empty;
+
             try
             {
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(TransformationHandler).Name, guid.ToString());
+
+                processId = handler.AddProcessAction("TransformXIP", String.Format("Transform metadata files to XIP files : folder {0}", guid), String.Concat(typeof(TransformationHandler).Name, ".json"));
+
                 var task = Task.Run(() =>
                 {
                     try
                     {
+                        handler.AddStartState(processId);
                         handler.Execute();
                     }
                     catch (Exception innerExc)
                     {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(TransformationHandler).Name, innerExc.Message);
+                        string message = String.Format("An exception is throwned in {0}: '{1}'.", typeof(TransformationHandler).Name, innerExc.Message);
+                        _logger.LogError(innerExc, message);
                         //send notification
+                        handler.AddFailedState(processId, message);
                     }
                     finally
                     {
                         //send notification
+                        handler.AddCompleteState(processId);
                     }
                 });
             }
@@ -747,7 +832,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return ValidationProblem(e.Message, typeof(TransformationHandler).Name);
             }
             _logger.LogInformation("Exit TransformXip.");
-            return new JsonResult(new { Message = String.Format("Transforming to XIP started."), SessionId = guid });
+            return new JsonResult(new { Message = String.Format("Transforming to XIP started."), SessionId = guid, ActionId = processId });
         }
         
         [HttpPost("sipcreator/{guid}", Name = "Start to create sip", Order = 14)]
@@ -769,23 +854,33 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             handler.Logger = _logger;
             handler.SetSessionGuid(guid);
 
+            //database process id
+            Guid processId = Guid.Empty;
+
             try
             {
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SipCreatorHandler).Name, guid.ToString());
+
+                processId = handler.AddProcessAction("CreateSip", String.Format("Create SIP for Preservica : folder {0}", guid), String.Concat(typeof(SipCreatorHandler).Name, ".json"));
+
                 var task = Task.Run(() =>
                 {
                     try
                     {
+                        handler.AddStartState(processId);
                         handler.Execute();
                     }
                     catch (Exception innerExc)
                     {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(SipCreatorHandler).Name, innerExc.Message);
+                        string message = String.Format("An exception is throwned in {0}: '{1}'.", typeof(SipCreatorHandler).Name, innerExc.Message);
+                        _logger.LogError(innerExc, message);
                         //send notification
+                        handler.AddFailedState(processId, message);
                     }
                     finally
                     {
                         //send notification
+                        handler.AddCompleteState(processId);
                     }
                 });
             }
@@ -796,7 +891,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
 
             _logger.LogInformation("Exit CreateSip.");
-            return new JsonResult(new { Message = String.Format("Sip Creator is started."), SessionId = guid });
+            return new JsonResult(new { Message = String.Format("Sip Creator is started."), SessionId = guid, ActionId = processId });
         }
 
         [HttpPost("updatebinary/{guid}", Name = "Update binary data", Order = 15)]
@@ -819,23 +914,33 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             handler.Logger = _logger;
             handler.SetSessionGuid(guid);
 
+            //database process id
+            Guid processId = Guid.Empty;
+
             try
             {
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(UpdateBinaryHandler).Name, guid.ToString());
+
+                processId = handler.AddProcessAction("CreateSip", String.Format("Create SIP for Preservica : folder {0}", guid), String.Concat(typeof(SipCreatorHandler).Name, ".json"));
+
                 var task = Task.Run(() =>
                 {
                     try
                     {
+                        handler.AddStartState(processId);
                         handler.Execute();
                     }
                     catch (Exception innerExc)
                     {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(UpdateBinaryHandler).Name, innerExc.Message);
+                        string message = String.Format("An exception is throwned in {0}: '{1}'.", typeof(UpdateBinaryHandler).Name, innerExc.Message);
+                        _logger.LogError(innerExc, message);
                         //send notification
+                        handler.AddFailedState(processId, message);
                     }
                     finally
                     {
                         //send notification
+                        handler.AddCompleteState(processId);
                     }
                 });
             }
@@ -846,7 +951,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
 
             _logger.LogInformation("Exit UpdateBinary.");
-            return new JsonResult(new { Message = String.Format("Update binary is started."), SessionId = guid });
+            return new JsonResult(new { Message = String.Format("Update binary is started."), SessionId = guid, ActionId = processId });
         }
 
     }

@@ -1,4 +1,5 @@
 ﻿using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,11 +47,24 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             catch
             {
                 IsAliveDroid = false;
-            }            
+            }
+            
+            try
+            {
+                using (var context = new PreIngestStatusContext())
+                {
+                    IsAliveDatabase = context.Database.CanConnect();   
+                }
+            }
+            catch
+            {
+                IsAliveDatabase = false;
+            }
         }
 
         public bool IsAliveDroid { get; set; }
         public bool IsAliveXslWeb { get; set; }
         public bool IsAliveClamAv { get; set; }
+        public bool IsAliveDatabase { get; set; }
     }
 }

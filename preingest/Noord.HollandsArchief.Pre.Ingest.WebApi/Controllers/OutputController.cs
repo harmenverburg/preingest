@@ -39,6 +39,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
 
             var files = directory.GetFiles("*.*").Where(s => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz"));
+                                    
             return new JsonResult(files.OrderByDescending(item 
                 => item.CreationTime).Select(item 
                     => item.Name).ToArray());           
@@ -648,6 +649,21 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             await Task.Run(action);
 
             return json;
+        }
+
+        [HttpGet("genereateexcel/{guid}", Name = "Get the total report for this current guid session.", Order = 0)]
+        public IActionResult GenerateReportExport(Guid guid)
+        {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
+            _logger.LogInformation("Enter GenerateReportExport.");
+
+            //TODO execute call to XSL Web for final report in Excel      
+
+            _logger.LogInformation("Exit GenerateReportExport.");
+
+            return new JsonResult(new { });
         }
 
         private String DroidCsvOutputLocation(String targetFolder)
