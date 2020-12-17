@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ToPX xmlns="http://www.nationaalarchief.nl/ToPX/v2.3">
+   <aggregatie>
+      <identificatiekenmerk>/home/pieter/noord-hollandsarchief/tmp/IM-overleg/Dossier/Stukken IM overleg 20171120</identificatiekenmerk>
+      <aggregatieniveau>Record</aggregatieniveau>
+      <naam>Stukken IM overleg 20171120</naam>
+      <omschrijving>omschrijving-Stukken IM overleg 20171120</omschrijving>
+      <dekking>
+         <inTijd>
+            <begin>
+               <jaar>2010</jaar>
+            </begin>
+            <eind>
+               <jaar>2020</jaar>
+            </eind>
+         </inTijd>
+         <geografischGebied>geografischGebied-Stukken IM overleg 20171120</geografischGebied>
+      </dekking>
+      <eventGeschiedenis>
+         <datumOfPeriode>
+            <datum>2020-12-09</datum>
+         </datumOfPeriode>
+         <type>eventGeschiedenis-type-Stukken IM overleg 20171120</type>
+         <verantwoordelijkeFunctionaris>eventGeschiedenis-verantwoordelijkeFunctionaris-Stukken IM overleg 20171120</verantwoordelijkeFunctionaris>
+      </eventGeschiedenis>
+      <relatie>
+         <relatieID>relatieID-Stukken IM overleg 20171120</relatieID>
+         <typeRelatie>typeRelatie-Stukken IM overleg 20171120</typeRelatie>
+      </relatie>
+      <context>
+         <actor>
+            <identificatiekenmerk>context-actor-identificatiekenmerk-Stukken IM overleg 20171120</identificatiekenmerk>
+            <geautoriseerdeNaam>context-actor-geautoriseerdeNaam-Stukken IM overleg 20171120</geautoriseerdeNaam>
+         </actor>
+      </context>
+      <gebruiksrechten>
+         <omschrijvingVoorwaarden>gebruiksrechten-omschrijvingVoorwaarden-Stukken IM overleg 20171120</omschrijvingVoorwaarden>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </gebruiksrechten>
+      <vertrouwelijkheid>
+         <classificatieNiveau>Zeer geheim</classificatieNiveau>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </vertrouwelijkheid>
+      <openbaarheid>
+         <omschrijvingBeperkingen>openbaarheid-omschrijvingBeperkingen-Stukken IM overleg 20171120</omschrijvingBeperkingen>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </openbaarheid>
+      <vorm>
+         <redactieGenre>redactieGenre-Stukken IM overleg 20171120</redactieGenre>
+      </vorm>
+   </aggregatie>
+</ToPX>

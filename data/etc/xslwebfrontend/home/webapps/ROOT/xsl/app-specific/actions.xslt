@@ -96,7 +96,6 @@
                     <xsl:choose>
                         <xsl:when test="file:exists($absolute-path)">
                             <xsl:variable name="json" as="map(*)" select="json:json-doc($absolute-uri)"/>
-                            <xsl:sequence select="session:set-attribute($nha:preingestguid-session-key, string($json?SessionId))"/>
                             <json:map>
                                 <json:string key="sessionId">{$json?SessionId}</json:string>
                                 <json:string key="code">{$json?Code}</json:string>

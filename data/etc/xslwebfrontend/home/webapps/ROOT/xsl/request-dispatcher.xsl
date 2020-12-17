@@ -44,7 +44,8 @@
     </pipeline:pipeline>
   </xsl:template>
 
-  <xsl:template match="/req:request[req:path eq '/operations']">
+  <xsl:template match="/req:request[starts-with(req:path, '/operations/')]">
+    <!-- After /operations/, place the guid of the directory containing the generated JSON files -->
     <pipeline:pipeline>
       <pipeline:transformer name="requestparameters-to-session" xsl-path="app-specific/requestparameters-to-session.xslt"/>
       

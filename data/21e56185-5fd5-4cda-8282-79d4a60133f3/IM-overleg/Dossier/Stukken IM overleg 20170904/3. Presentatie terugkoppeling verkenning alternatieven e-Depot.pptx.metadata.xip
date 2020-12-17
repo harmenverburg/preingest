@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<File xmlns:err="http://www.w3.org/2005/xqt-errors" xmlns:nha="http://noord-hollandsarchief.nl/namespaces/1.0" xmlns:saxon="http://saxon.sf.net/" xmlns:topx="http://www.nationaalarchief.nl/ToPX/v2.3" xmlns:xip="http://www.tessella.com/XIP/v4" xmlns:xs="http://www.w3.org/2001/XMLSchema" status="new">
+  <Metadata>
+    <ToPX xmlns="http://www.nationaalarchief.nl/ToPX/v2.3">
+      <bestand>
+        <identificatiekenmerk>/home/pieter/noord-hollandsarchief/tmp/IM-overleg/Dossier/Stukken IM overleg 20170904/3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</identificatiekenmerk>
+        <aggregatieniveau>Bestand</aggregatieniveau>
+        <naam>3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</naam>
+        <omschrijving>omschrijving-3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</omschrijving>
+        <dekking>
+          <inTijd>
+            <begin>
+              <jaar>2010</jaar>
+            </begin>
+            <eind>
+              <jaar>2020</jaar>
+            </eind>
+          </inTijd>
+          <geografischGebied>geografischGebied-3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</geografischGebied>
+        </dekking>
+        <eventGeschiedenis>
+          <datumOfPeriode>
+            <datum>2020-12-09</datum>
+          </datumOfPeriode>
+          <type>eventGeschiedenis-type-3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</type>
+          <verantwoordelijkeFunctionaris>eventGeschiedenis-verantwoordelijkeFunctionaris-3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</verantwoordelijkeFunctionaris>
+        </eventGeschiedenis>
+        <relatie>
+          <relatieID>relatieID-3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</relatieID>
+          <typeRelatie>typeRelatie-3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</typeRelatie>
+        </relatie>
+        <context>
+          <actor>
+            <identificatiekenmerk>context-actor-identificatiekenmerk-3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</identificatiekenmerk>
+            <geautoriseerdeNaam>context-actor-geautoriseerdeNaam-3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</geautoriseerdeNaam>
+          </actor>
+        </context>
+        <gebruiksrechten>
+          <omschrijvingVoorwaarden>gebruiksrechten-omschrijvingVoorwaarden-3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</omschrijvingVoorwaarden>
+          <datumOfPeriode>
+            <jaar>2020</jaar>
+          </datumOfPeriode>
+        </gebruiksrechten>
+        <vertrouwelijkheid>
+          <classificatieNiveau>Zeer geheim</classificatieNiveau>
+          <datumOfPeriode>
+            <jaar>2020</jaar>
+          </datumOfPeriode>
+        </vertrouwelijkheid>
+        <openbaarheid>
+          <omschrijvingBeperkingen>openbaarheid-omschrijvingBeperkingen-3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</omschrijvingBeperkingen>
+          <datumOfPeriode>
+            <jaar>2020</jaar>
+          </datumOfPeriode>
+        </openbaarheid>
+        <vorm>
+          <redactieGenre>redactieGenre-3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</redactieGenre>
+        </vorm>
+        <formaat>
+          <identificatiekenmerk>identificatiekenmerk-3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</identificatiekenmerk>
+          <bestandsnaam>
+            <naam>3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</naam>
+          </bestandsnaam>
+          <omvang>69093</omvang>
+          <creatieapplicatie>
+            <naam>creatieapplicatie-naam-3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</naam>
+          </creatieapplicatie>
+          <fysiekeIntegriteit>
+            <algoritme>SHA512</algoritme>
+            <waarde>/*/sha512sum</waarde>
+            <datumEnTijd>2017-07-21T13:11:52.000000000+02:00</datumEnTijd>
+          </fysiekeIntegriteit>
+        </formaat>
+      </bestand>
+    </ToPX>
+  </Metadata>
+  <FileSize>69093</FileSize>
+  <FixityInfo>
+    <FixityAlgorithmRef>4</FixityAlgorithmRef>
+    <FixityValue>/*/sha512sum</FixityValue>
+  </FixityInfo>
+  <Title>3. Presentatie terugkoppeling verkenning alternatieven e-Depot.pptx</Title>
+</File>

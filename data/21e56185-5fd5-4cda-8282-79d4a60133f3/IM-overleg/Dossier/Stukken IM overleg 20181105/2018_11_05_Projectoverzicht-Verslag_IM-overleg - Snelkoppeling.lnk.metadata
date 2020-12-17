@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ToPX xmlns="http://www.nationaalarchief.nl/ToPX/v2.3">
+   <bestand>
+      <identificatiekenmerk>/home/pieter/noord-hollandsarchief/tmp/IM-overleg/Dossier/Stukken IM overleg 20181105/2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</identificatiekenmerk>
+      <aggregatieniveau>Bestand</aggregatieniveau>
+      <naam>2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</naam>
+      <omschrijving>omschrijving-2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</omschrijving>
+      <dekking>
+         <inTijd>
+            <begin>
+               <jaar>2010</jaar>
+            </begin>
+            <eind>
+               <jaar>2020</jaar>
+            </eind>
+         </inTijd>
+         <geografischGebied>geografischGebied-2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</geografischGebied>
+      </dekking>
+      <eventGeschiedenis>
+         <datumOfPeriode>
+            <datum>2020-12-09</datum>
+         </datumOfPeriode>
+         <type>eventGeschiedenis-type-2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</type>
+         <verantwoordelijkeFunctionaris>eventGeschiedenis-verantwoordelijkeFunctionaris-2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</verantwoordelijkeFunctionaris>
+      </eventGeschiedenis>
+      <relatie>
+         <relatieID>relatieID-2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</relatieID>
+         <typeRelatie>typeRelatie-2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</typeRelatie>
+      </relatie>
+      <context>
+         <actor>
+            <identificatiekenmerk>context-actor-identificatiekenmerk-2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</identificatiekenmerk>
+            <geautoriseerdeNaam>context-actor-geautoriseerdeNaam-2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</geautoriseerdeNaam>
+         </actor>
+      </context>
+      <gebruiksrechten>
+         <omschrijvingVoorwaarden>gebruiksrechten-omschrijvingVoorwaarden-2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</omschrijvingVoorwaarden>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </gebruiksrechten>
+      <vertrouwelijkheid>
+         <classificatieNiveau>Zeer geheim</classificatieNiveau>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </vertrouwelijkheid>
+      <openbaarheid>
+         <omschrijvingBeperkingen>openbaarheid-omschrijvingBeperkingen-2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</omschrijvingBeperkingen>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </openbaarheid>
+      <vorm>
+         <redactieGenre>redactieGenre-2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</redactieGenre>
+      </vorm>
+      <formaat>
+         <identificatiekenmerk>identificatiekenmerk-2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</identificatiekenmerk>
+         <bestandsnaam>
+            <naam>2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</naam>
+         </bestandsnaam>
+         <omvang>2098</omvang>
+         <creatieapplicatie>
+            <naam>creatieapplicatie-naam-2018_11_05_Projectoverzicht-Verslag_IM-overleg - Snelkoppeling.lnk</naam>
+         </creatieapplicatie>
+         <fysiekeIntegriteit>
+            <algoritme>SHA512</algoritme>
+            <waarde>/*/sha512sum</waarde>
+            <datumEnTijd>2018-11-05T11:30:47.000000000+01:00</datumEnTijd>
+         </fysiekeIntegriteit>
+      </formaat>
+   </bestand>
+</ToPX>

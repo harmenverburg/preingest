@@ -45,7 +45,7 @@
     
     <xsl:template name="body-content">
         <div>
-            <p><img src="img/logo.png" style="float: right; width: 10em"/></p>
+            <p><img src="/img/logo.png" style="float: right; width: 10em"/></p>
             <h1>Archiefselectie</h1>
             
             <table>
@@ -83,8 +83,7 @@
                 <button disabled="disabled" type="submit" name="{$nha:uncompress-button}" id="{$nha:uncompress-button}"
                     onclick="doUncompressButton(this, '{$nha:actions-uri-prefix}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Uitpakken&#x2026;</button>
             </p>
-            
-            <p style="display: none" id="proceedmessage">Het tarbestand is uitgepakt, ga nu <a href="operations{if ($full-html) then '?full' else ''}">naar de operations-pagina</a>.</p>
+            <p style="display: none" id="proceedmessage">Het tarbestand is uitgepakt, ga nu <a id="proceedlink" href="operations/{if ($full-html) then '?full' else ''}">naar de operations-pagina</a>.</p>
         </div>
     </xsl:template>
 

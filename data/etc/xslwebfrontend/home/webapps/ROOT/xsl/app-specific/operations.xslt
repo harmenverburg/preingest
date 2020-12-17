@@ -17,8 +17,9 @@
     <!-- Pass ?full to the url in order to get a full <html> page and not just a <div> -->
     <xsl:variable name="full-html" as="xs:boolean" select="exists(/*/req:parameters/req:parameter[@name eq 'full'])"/>
     
-    <xsl:template match="/req:request">
-        <xsl:variable name="preingestguid" as="xs:string?" select="session:get-attribute($nha:preingestguid-session-key)"/>
+    <xsl:variable name="preingestguid" as="xs:string?" select="replace(/*/req:path, '^.*/([-a-z0-9]+)$', '$1')"/>
+    
+    <xsl:template match="/req:request">        
         <xsl:choose>
             <xsl:when test="$full-html">
                 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -39,9 +40,8 @@
     </xsl:template>
     
     <xsl:template name="body-content">
-        <xsl:variable name="preingestguid" as="xs:string?" select="session:get-attribute($nha:preingestguid-session-key)"/>
         <div>
-            <p><img src="img/logo.png" style="float: right; width: 10em"/></p>
+            <p><img src="/img/logo.png" style="float: right; width: 10em"/></p>
             <xsl:choose>
                 <xsl:when test="exists($preingestguid)">
                     <xsl:call-template name="normal-body">

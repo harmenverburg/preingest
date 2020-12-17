@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ToPX xmlns="http://www.nationaalarchief.nl/ToPX/v2.3">
+   <bestand>
+      <identificatiekenmerk>/home/pieter/noord-hollandsarchief/tmp/IM-overleg/Dossier/Stukken IM overleg 20191118/Eerste afweging scanstraat.pdf</identificatiekenmerk>
+      <aggregatieniveau>Bestand</aggregatieniveau>
+      <naam>Eerste afweging scanstraat.pdf</naam>
+      <omschrijving>omschrijving-Eerste afweging scanstraat.pdf</omschrijving>
+      <dekking>
+         <inTijd>
+            <begin>
+               <jaar>2010</jaar>
+            </begin>
+            <eind>
+               <jaar>2020</jaar>
+            </eind>
+         </inTijd>
+         <geografischGebied>geografischGebied-Eerste afweging scanstraat.pdf</geografischGebied>
+      </dekking>
+      <eventGeschiedenis>
+         <datumOfPeriode>
+            <datum>2020-12-09</datum>
+         </datumOfPeriode>
+         <type>eventGeschiedenis-type-Eerste afweging scanstraat.pdf</type>
+         <verantwoordelijkeFunctionaris>eventGeschiedenis-verantwoordelijkeFunctionaris-Eerste afweging scanstraat.pdf</verantwoordelijkeFunctionaris>
+      </eventGeschiedenis>
+      <relatie>
+         <relatieID>relatieID-Eerste afweging scanstraat.pdf</relatieID>
+         <typeRelatie>typeRelatie-Eerste afweging scanstraat.pdf</typeRelatie>
+      </relatie>
+      <context>
+         <actor>
+            <identificatiekenmerk>context-actor-identificatiekenmerk-Eerste afweging scanstraat.pdf</identificatiekenmerk>
+            <geautoriseerdeNaam>context-actor-geautoriseerdeNaam-Eerste afweging scanstraat.pdf</geautoriseerdeNaam>
+         </actor>
+      </context>
+      <gebruiksrechten>
+         <omschrijvingVoorwaarden>gebruiksrechten-omschrijvingVoorwaarden-Eerste afweging scanstraat.pdf</omschrijvingVoorwaarden>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </gebruiksrechten>
+      <vertrouwelijkheid>
+         <classificatieNiveau>Zeer geheim</classificatieNiveau>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </vertrouwelijkheid>
+      <openbaarheid>
+         <omschrijvingBeperkingen>openbaarheid-omschrijvingBeperkingen-Eerste afweging scanstraat.pdf</omschrijvingBeperkingen>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </openbaarheid>
+      <vorm>
+         <redactieGenre>redactieGenre-Eerste afweging scanstraat.pdf</redactieGenre>
+      </vorm>
+      <formaat>
+         <identificatiekenmerk>identificatiekenmerk-Eerste afweging scanstraat.pdf</identificatiekenmerk>
+         <bestandsnaam>
+            <naam>Eerste afweging scanstraat.pdf</naam>
+         </bestandsnaam>
+         <omvang>172492</omvang>
+         <creatieapplicatie>
+            <naam>creatieapplicatie-naam-Eerste afweging scanstraat.pdf</naam>
+         </creatieapplicatie>
+         <fysiekeIntegriteit>
+            <algoritme>SHA512</algoritme>
+            <waarde>/*/sha512sum</waarde>
+            <datumEnTijd>2019-10-07T16:09:18.000000000+02:00</datumEnTijd>
+         </fysiekeIntegriteit>
+      </formaat>
+   </bestand>
+</ToPX>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ToPX xmlns="http://www.nationaalarchief.nl/ToPX/v2.3">
+   <bestand>
+      <identificatiekenmerk>/home/pieter/noord-hollandsarchief/tmp/IM-overleg/Dossier/Stukken IM overleg 20191118/Notitie Rechteninfrastructuur.docx</identificatiekenmerk>
+      <aggregatieniveau>Bestand</aggregatieniveau>
+      <naam>Notitie Rechteninfrastructuur.docx</naam>
+      <omschrijving>omschrijving-Notitie Rechteninfrastructuur.docx</omschrijving>
+      <dekking>
+         <inTijd>
+            <begin>
+               <jaar>2010</jaar>
+            </begin>
+            <eind>
+               <jaar>2020</jaar>
+            </eind>
+         </inTijd>
+         <geografischGebied>geografischGebied-Notitie Rechteninfrastructuur.docx</geografischGebied>
+      </dekking>
+      <eventGeschiedenis>
+         <datumOfPeriode>
+            <datum>2020-12-09</datum>
+         </datumOfPeriode>
+         <type>eventGeschiedenis-type-Notitie Rechteninfrastructuur.docx</type>
+         <verantwoordelijkeFunctionaris>eventGeschiedenis-verantwoordelijkeFunctionaris-Notitie Rechteninfrastructuur.docx</verantwoordelijkeFunctionaris>
+      </eventGeschiedenis>
+      <relatie>
+         <relatieID>relatieID-Notitie Rechteninfrastructuur.docx</relatieID>
+         <typeRelatie>typeRelatie-Notitie Rechteninfrastructuur.docx</typeRelatie>
+      </relatie>
+      <context>
+         <actor>
+            <identificatiekenmerk>context-actor-identificatiekenmerk-Notitie Rechteninfrastructuur.docx</identificatiekenmerk>
+            <geautoriseerdeNaam>context-actor-geautoriseerdeNaam-Notitie Rechteninfrastructuur.docx</geautoriseerdeNaam>
+         </actor>
+      </context>
+      <gebruiksrechten>
+         <omschrijvingVoorwaarden>gebruiksrechten-omschrijvingVoorwaarden-Notitie Rechteninfrastructuur.docx</omschrijvingVoorwaarden>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </gebruiksrechten>
+      <vertrouwelijkheid>
+         <classificatieNiveau>Zeer geheim</classificatieNiveau>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </vertrouwelijkheid>
+      <openbaarheid>
+         <omschrijvingBeperkingen>openbaarheid-omschrijvingBeperkingen-Notitie Rechteninfrastructuur.docx</omschrijvingBeperkingen>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </openbaarheid>
+      <vorm>
+         <redactieGenre>redactieGenre-Notitie Rechteninfrastructuur.docx</redactieGenre>
+      </vorm>
+      <formaat>
+         <identificatiekenmerk>identificatiekenmerk-Notitie Rechteninfrastructuur.docx</identificatiekenmerk>
+         <bestandsnaam>
+            <naam>Notitie Rechteninfrastructuur.docx</naam>
+         </bestandsnaam>
+         <omvang>54150</omvang>
+         <creatieapplicatie>
+            <naam>creatieapplicatie-naam-Notitie Rechteninfrastructuur.docx</naam>
+         </creatieapplicatie>
+         <fysiekeIntegriteit>
+            <algoritme>SHA512</algoritme>
+            <waarde>/*/sha512sum</waarde>
+            <datumEnTijd>2019-10-22T14:50:04.000000000+02:00</datumEnTijd>
+         </fysiekeIntegriteit>
+      </formaat>
+   </bestand>
+</ToPX>

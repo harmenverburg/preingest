@@ -13,7 +13,6 @@
     <xsl:variable name="nha:context-path-key" as="xs:string" select="'context-path'" static="yes"/>
     <xsl:variable name="nha:actions-uri-prefix-key" as="xs:string" select="'actions-uri-prefix'"/>
     <xsl:variable name="nha:data-uri-prefix-key" as="xs:string" select="'data-uri-prefix'" static="yes"/>
-    <xsl:variable name="nha:preingestguid-session-key" as="xs:string" select="'preingest-sessionguid'" static="yes"/>
     <xsl:variable name="nha:checksumtype-field" as="xs:string" select="'checksumtype'" static="yes"/>
     <xsl:variable name="nha:checksumvalue-field" as="xs:string" select="'checksumvalue'" static="yes"/>
     <xsl:variable name="nha:selectedfile-field" as="xs:string" select="'selectedfile'" static="yes"/>

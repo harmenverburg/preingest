@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ToPX xmlns="http://www.nationaalarchief.nl/ToPX/v2.3">
+   <bestand>
+      <identificatiekenmerk>/home/pieter/noord-hollandsarchief/tmp/IM-overleg/Dossier/Stukken IM overleg 20200518/NHA - Zaaktypen en selectielijst 2012.xlsx</identificatiekenmerk>
+      <aggregatieniveau>Bestand</aggregatieniveau>
+      <naam>NHA - Zaaktypen en selectielijst 2012.xlsx</naam>
+      <omschrijving>omschrijving-NHA - Zaaktypen en selectielijst 2012.xlsx</omschrijving>
+      <dekking>
+         <inTijd>
+            <begin>
+               <jaar>2010</jaar>
+            </begin>
+            <eind>
+               <jaar>2020</jaar>
+            </eind>
+         </inTijd>
+         <geografischGebied>geografischGebied-NHA - Zaaktypen en selectielijst 2012.xlsx</geografischGebied>
+      </dekking>
+      <eventGeschiedenis>
+         <datumOfPeriode>
+            <datum>2020-12-09</datum>
+         </datumOfPeriode>
+         <type>eventGeschiedenis-type-NHA - Zaaktypen en selectielijst 2012.xlsx</type>
+         <verantwoordelijkeFunctionaris>eventGeschiedenis-verantwoordelijkeFunctionaris-NHA - Zaaktypen en selectielijst 2012.xlsx</verantwoordelijkeFunctionaris>
+      </eventGeschiedenis>
+      <relatie>
+         <relatieID>relatieID-NHA - Zaaktypen en selectielijst 2012.xlsx</relatieID>
+         <typeRelatie>typeRelatie-NHA - Zaaktypen en selectielijst 2012.xlsx</typeRelatie>
+      </relatie>
+      <context>
+         <actor>
+            <identificatiekenmerk>context-actor-identificatiekenmerk-NHA - Zaaktypen en selectielijst 2012.xlsx</identificatiekenmerk>
+            <geautoriseerdeNaam>context-actor-geautoriseerdeNaam-NHA - Zaaktypen en selectielijst 2012.xlsx</geautoriseerdeNaam>
+         </actor>
+      </context>
+      <gebruiksrechten>
+         <omschrijvingVoorwaarden>gebruiksrechten-omschrijvingVoorwaarden-NHA - Zaaktypen en selectielijst 2012.xlsx</omschrijvingVoorwaarden>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </gebruiksrechten>
+      <vertrouwelijkheid>
+         <classificatieNiveau>Zeer geheim</classificatieNiveau>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </vertrouwelijkheid>
+      <openbaarheid>
+         <omschrijvingBeperkingen>openbaarheid-omschrijvingBeperkingen-NHA - Zaaktypen en selectielijst 2012.xlsx</omschrijvingBeperkingen>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </openbaarheid>
+      <vorm>
+         <redactieGenre>redactieGenre-NHA - Zaaktypen en selectielijst 2012.xlsx</redactieGenre>
+      </vorm>
+      <formaat>
+         <identificatiekenmerk>identificatiekenmerk-NHA - Zaaktypen en selectielijst 2012.xlsx</identificatiekenmerk>
+         <bestandsnaam>
+            <naam>NHA - Zaaktypen en selectielijst 2012.xlsx</naam>
+         </bestandsnaam>
+         <omvang>84157</omvang>
+         <creatieapplicatie>
+            <naam>creatieapplicatie-naam-NHA - Zaaktypen en selectielijst 2012.xlsx</naam>
+         </creatieapplicatie>
+         <fysiekeIntegriteit>
+            <algoritme>SHA512</algoritme>
+            <waarde>/*/sha512sum</waarde>
+            <datumEnTijd>2020-05-13T16:17:15.000000000+02:00</datumEnTijd>
+         </fysiekeIntegriteit>
+      </formaat>
+   </bestand>
+</ToPX>

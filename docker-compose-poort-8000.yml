@@ -1,0 +1,77 @@
+version: "3.8"
+
+# Define the environment variable DATAFOLDER for the correct expandion of ${DATAFOLDER} below.
+# E.g.:
+# export DATAFOLDER=/home/pieter/noord-hollandsarchief/data
+# set DATAFOLDER=D:\data
+
+services:
+  clamav:
+    image: "mkodockx/docker-clamav"
+    container_name: "clamav"
+    volumes:
+        - "${DATAFOLDER}:/data"
+    expose :
+        - "3310"        
+    networks :
+        - preingest-network        
+  xslweb:
+    image: "pmasereeuwnha/xslweb"
+    container_name: "xslweb"
+    volumes:
+        - "${DATAFOLDER}:/data" 
+    expose:
+        - "8080" 
+    networks :
+        - preingest-network
+  xslwebfrontend:
+    image: "pmasereeuwnha/xslwebfrontend"
+    container_name: "xslwebfrontend"
+    volumes:
+        - "${DATAFOLDER}:/data" 
+    expose:
+        - "8080" 
+    ports:
+        - "8888:8080"     
+    networks :
+        - preingest-network
+  droid:
+    image: "nhapreingest/noordhollandsarchiefdroidvalidationwebapi:development"
+    container_name: "droid"
+    volumes:
+        - "${DATAFOLDER}:/data" 
+    expose:
+        - "8080"     
+    networks :
+        - preingest-network        
+  preingest:
+    image: "nhapreingest/noordhollandsarchiefpreingestwebapi:development"
+    container_name: "Noord.HollandsArchief.Pre.Ingest.WebApi"
+    volumes:
+        - "${DATAFOLDER}:/data"  
+    expose:
+        - "80"
+    ports:
+        - "8000:80"
+    networks :
+        - preingest-network          
+    depends_on:
+      - droid
+      - clamav
+      - xslweb 
+  webtool:
+    image: "nhapreingest/noordhollandsarchiefpreingestwebtool:development"
+    container_name: "Noord.HollandsArchief.Pre.Ingest.WebTool"
+    volumes:
+        - "${DATAFOLDER}:/data"  
+    expose:
+        - "80"      
+    ports:
+        - "8080:80"     
+    networks :
+        - preingest-network
+    depends_on:
+        - preingest
+networks:
+    preingest-network:
+        driver: bridge

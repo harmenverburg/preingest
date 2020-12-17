@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<File xmlns:err="http://www.w3.org/2005/xqt-errors" xmlns:nha="http://noord-hollandsarchief.nl/namespaces/1.0" xmlns:saxon="http://saxon.sf.net/" xmlns:topx="http://www.nationaalarchief.nl/ToPX/v2.3" xmlns:xip="http://www.tessella.com/XIP/v4" xmlns:xs="http://www.w3.org/2001/XMLSchema" status="new">
+  <Metadata>
+    <ToPX xmlns="http://www.nationaalarchief.nl/ToPX/v2.3">
+      <bestand>
+        <identificatiekenmerk>/home/pieter/noord-hollandsarchief/tmp/IM-overleg/Dossier/Stukken IM overleg 20171011/2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</identificatiekenmerk>
+        <aggregatieniveau>Bestand</aggregatieniveau>
+        <naam>2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</naam>
+        <omschrijving>omschrijving-2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</omschrijving>
+        <dekking>
+          <inTijd>
+            <begin>
+              <jaar>2010</jaar>
+            </begin>
+            <eind>
+              <jaar>2020</jaar>
+            </eind>
+          </inTijd>
+          <geografischGebied>geografischGebied-2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</geografischGebied>
+        </dekking>
+        <eventGeschiedenis>
+          <datumOfPeriode>
+            <datum>2020-12-09</datum>
+          </datumOfPeriode>
+          <type>eventGeschiedenis-type-2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</type>
+          <verantwoordelijkeFunctionaris>eventGeschiedenis-verantwoordelijkeFunctionaris-2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</verantwoordelijkeFunctionaris>
+        </eventGeschiedenis>
+        <relatie>
+          <relatieID>relatieID-2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</relatieID>
+          <typeRelatie>typeRelatie-2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</typeRelatie>
+        </relatie>
+        <context>
+          <actor>
+            <identificatiekenmerk>context-actor-identificatiekenmerk-2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</identificatiekenmerk>
+            <geautoriseerdeNaam>context-actor-geautoriseerdeNaam-2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</geautoriseerdeNaam>
+          </actor>
+        </context>
+        <gebruiksrechten>
+          <omschrijvingVoorwaarden>gebruiksrechten-omschrijvingVoorwaarden-2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</omschrijvingVoorwaarden>
+          <datumOfPeriode>
+            <jaar>2020</jaar>
+          </datumOfPeriode>
+        </gebruiksrechten>
+        <vertrouwelijkheid>
+          <classificatieNiveau>Zeer geheim</classificatieNiveau>
+          <datumOfPeriode>
+            <jaar>2020</jaar>
+          </datumOfPeriode>
+        </vertrouwelijkheid>
+        <openbaarheid>
+          <omschrijvingBeperkingen>openbaarheid-omschrijvingBeperkingen-2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</omschrijvingBeperkingen>
+          <datumOfPeriode>
+            <jaar>2020</jaar>
+          </datumOfPeriode>
+        </openbaarheid>
+        <vorm>
+          <redactieGenre>redactieGenre-2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</redactieGenre>
+        </vorm>
+        <formaat>
+          <identificatiekenmerk>identificatiekenmerk-2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</identificatiekenmerk>
+          <bestandsnaam>
+            <naam>2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</naam>
+          </bestandsnaam>
+          <omvang>789894</omvang>
+          <creatieapplicatie>
+            <naam>creatieapplicatie-naam-2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</naam>
+          </creatieapplicatie>
+          <fysiekeIntegriteit>
+            <algoritme>SHA512</algoritme>
+            <waarde>/*/sha512sum</waarde>
+            <datumEnTijd>2017-10-11T16:52:13.000000000+02:00</datumEnTijd>
+          </fysiekeIntegriteit>
+        </formaat>
+      </bestand>
+    </ToPX>
+  </Metadata>
+  <FileSize>789894</FileSize>
+  <FixityInfo>
+    <FixityAlgorithmRef>4</FixityAlgorithmRef>
+    <FixityValue>/*/sha512sum</FixityValue>
+  </FixityInfo>
+  <Title>2017-10-9 PSD MLO implementatie - Noord Hollands Archief(1.3829).pdf</Title>
+</File>

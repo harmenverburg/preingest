@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ToPX xmlns="http://www.nationaalarchief.nl/ToPX/v2.3">
+   <bestand>
+      <identificatiekenmerk>/home/pieter/noord-hollandsarchief/tmp/IM-overleg/Dossier/Stukken IM overleg 20201102/Vraagstelling Inrichting MS365.msg</identificatiekenmerk>
+      <aggregatieniveau>Bestand</aggregatieniveau>
+      <naam>Vraagstelling Inrichting MS365.msg</naam>
+      <omschrijving>omschrijving-Vraagstelling Inrichting MS365.msg</omschrijving>
+      <dekking>
+         <inTijd>
+            <begin>
+               <jaar>2010</jaar>
+            </begin>
+            <eind>
+               <jaar>2020</jaar>
+            </eind>
+         </inTijd>
+         <geografischGebied>geografischGebied-Vraagstelling Inrichting MS365.msg</geografischGebied>
+      </dekking>
+      <eventGeschiedenis>
+         <datumOfPeriode>
+            <datum>2020-12-09</datum>
+         </datumOfPeriode>
+         <type>eventGeschiedenis-type-Vraagstelling Inrichting MS365.msg</type>
+         <verantwoordelijkeFunctionaris>eventGeschiedenis-verantwoordelijkeFunctionaris-Vraagstelling Inrichting MS365.msg</verantwoordelijkeFunctionaris>
+      </eventGeschiedenis>
+      <relatie>
+         <relatieID>relatieID-Vraagstelling Inrichting MS365.msg</relatieID>
+         <typeRelatie>typeRelatie-Vraagstelling Inrichting MS365.msg</typeRelatie>
+      </relatie>
+      <context>
+         <actor>
+            <identificatiekenmerk>context-actor-identificatiekenmerk-Vraagstelling Inrichting MS365.msg</identificatiekenmerk>
+            <geautoriseerdeNaam>context-actor-geautoriseerdeNaam-Vraagstelling Inrichting MS365.msg</geautoriseerdeNaam>
+         </actor>
+      </context>
+      <gebruiksrechten>
+         <omschrijvingVoorwaarden>gebruiksrechten-omschrijvingVoorwaarden-Vraagstelling Inrichting MS365.msg</omschrijvingVoorwaarden>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </gebruiksrechten>
+      <vertrouwelijkheid>
+         <classificatieNiveau>Zeer geheim</classificatieNiveau>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </vertrouwelijkheid>
+      <openbaarheid>
+         <omschrijvingBeperkingen>openbaarheid-omschrijvingBeperkingen-Vraagstelling Inrichting MS365.msg</omschrijvingBeperkingen>
+         <datumOfPeriode>
+            <jaar>2020</jaar>
+         </datumOfPeriode>
+      </openbaarheid>
+      <vorm>
+         <redactieGenre>redactieGenre-Vraagstelling Inrichting MS365.msg</redactieGenre>
+      </vorm>
+      <formaat>
+         <identificatiekenmerk>identificatiekenmerk-Vraagstelling Inrichting MS365.msg</identificatiekenmerk>
+         <bestandsnaam>
+            <naam>Vraagstelling Inrichting MS365.msg</naam>
+         </bestandsnaam>
+         <omvang>231936</omvang>
+         <creatieapplicatie>
+            <naam>creatieapplicatie-naam-Vraagstelling Inrichting MS365.msg</naam>
+         </creatieapplicatie>
+         <fysiekeIntegriteit>
+            <algoritme>SHA512</algoritme>
+            <waarde>/*/sha512sum</waarde>
+            <datumEnTijd>2020-09-15T11:32:59.000000000+02:00</datumEnTijd>
+         </fysiekeIntegriteit>
+      </formaat>
+   </bestand>
+</ToPX>

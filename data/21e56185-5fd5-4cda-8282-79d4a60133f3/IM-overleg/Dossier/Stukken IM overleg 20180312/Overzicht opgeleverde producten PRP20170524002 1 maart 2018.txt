@@ -1,0 +1,182 @@
+: 
+Oplevering werkzaamhedenPRP20170524002 
+Datum: 
+1 maart 2018 
+Van: 
+Jeroen Wittink, Factor50 Informatieveiligheid 
+Aan: 
+Roomyla Choenni, Maarten Brock, Ed Sewalt 
+Status: 
+Vertrouwelijk 
+
+
+Inleiding
+
+Het Noord-Hollands Archief heeft de afgelopenmaanden verschillende stappengezet om (1) informatieveiligheid naar een hoger niveau te brengen en tehouden en (2) compliant te worden aan de nieuwe Europese privacywetgeving,de Algemene verordening gegevensbescherming (Avg). 
+
+
+De opdracht aan Factor50was om het Noord-Hollands archief te begeleiden bijhet opstellen van informatiebeveiligingsbeleid en het inrichten van een 
+Information 
+Security Management 
+System 
+(ISMS),om risico’s voor de organisatie 
+in kaart te brengen enbij te houden. 
+
+
+Het Noord-Hollands archief heeft onder begeleiding van Factor50 verschillendeproducten opgeleverd.In samenhang vormen ze de strategie van het NoordHollands 
+archief op het gebied van informatieveiligheiden privacy. Het gaat omde volgende producten: informatiebeveiligingsbeleid, privacy statement, Avgregister, 
+verwerkersovereenkomst, ISMS. 
+
+
+In de bijlage van deze memo hebben we een overzicht gemaakt van eentop8vanconcrete risico’s voorhet Noord-Hollands Archief, op basis van de gesprekken enhet ingevulde ISMS. 
+
+
+Opgeleverdeproducten
+
+Hieronder beschrijven we deopgeleverdedocumenten. De afgelopen maandenzijn zeopgesteld en ingevuld, op basis van de situatie bij het Noord-Hollands 
+Archief. De documenten worden ter goedkeuring aangeboden aan de directie.Werkenaan informatieveiligheid en privacy is een continu proces. Daarom moethet blijvende aandachtspunten blijven binnen de bedrijfsvoering.Het ISMS ishierbij een belangrijk hulpmiddel. 
+
+
+Informatiebeveiligingsbeleid
+
+In hetinformatiebeveiligingsbeleidstaatbeschreven wat de overkoepelendestrategie is van het Noord-Hollands Archief ominformatieveiligheid binnen deorganisatie ophet gewenste niveau te krijgen en te behouden.Hetinformatiebeveiligingsbeleidisintern 
+gericht.In het beleid staat beschrevenwatde doelstellingen zijnop het gebied van informatieveiligheid en privacy,uitgangspunten, PDCA-cyclus (waaronder het gebruik van het ISMS), en hoeinformatieveiligheid enprivacy is georganiseerd (overlegstructuur, rollen,documenten, processen). 
+
+
+
+Oplevering werkzaamhedenPRP20170524002 
+
+
+
+Avgverwerkingsregister
+
+Avgverwerkingsregister. 
+
+
+PrivacyStatement
+
+In een privacy statement staat beschreven hoe een organisatie omgaat metprivacygevoelige data van haar klanten. Een privacy statement (ofprivacyverklaring) isextern 
+gericht, en moet bijvoorbeeld gepubliceerd wordenop de website en eventueel op andere uitingen. Factor50heeft een templateaangeleverd vaneen privacy statement enaangegeven welkeelementenopgenomen moeten worden, waaronder de rechten van de bezoekers en eenadres voor vragen, opmerkingen en verzoeken. Het Noord-Hollands Archiefheefthet statement aangepast aan de eigen situatie. 
+
+
+Verwerkersovereenkomst 
+
+Het Noord-Hollands Archief blijft verantwoordelijk voor de veiligheid van dedata die verzameld wordt, ook alsdeze door een andere partij wordt verwerkt.In dat geval moet een verwerkersovereenkomst worden aangegaan. Factor50heeft een templateaangeleverd vaneen verwerkersovereenkomst. RoomylaChoenni heeft de verwerkersovereenkomst aangepast en naar de externeverwerkers verstuurd. In de verwerkersoverkomststaat naast de algemenebepalingen beschreven welke verwerkingen door de externe partij wordenuitgevoerd. Deze verwerkingen staan beschreven in het Avg-register. Hierinstaat ook vermeld dat er een externe verwerker is. Het Noord-Hollands Archief 
+voldoetmet het afsluiten van verwerkersovereenkomsten aan een wettelijkeverplichtingonder de Avg. 
+
+
+InformationSecurityManagementSystem(ISMS)
+
+In het ISMS staat beschreven wat de stand van zaken is op het gebied vaninformatieveiligheid binnenhet Noord-Hollands Archief. Dit is beschreven aande hand van de verschillende onderdelen van de ISO 27001. In het ISMS isde 
+GAP-analyse verwerkt die het Noord-HollandsArchief heeft laten uitvoeren.Factor50heeft een template voor een ISMS aangeleverd. 
+
+
+Ed Sewalt heeft samen met Ko Groen het ISMS ingevuld. Het ISMS geeft eenrisicobeeld voorhet Noord-Hollands Archief inde vorm van stoplichten, op deverschillendeterreinen. Per onderdeel zijn de specifieke risico’s ingevuld doorEdSewalt. Dit leidt tot een risicobeeld, waarbij rekening wordtgehouden met destand van zaken op een bepaaldaandachtsgebied, maar ook met de importantievan het gebiedvoor het Noord-Hollands archief.Per kwartaal wordt op via hetISMS gerapporteerd aan het MT. 
+
+
+
+Oplevering werkzaamhedenPRP20170524002 
+
+
+
+Bijlage:Risicotop10
+
+Bijlage:Risicotop10: 
+
+
+
+In het ISMS is peronderdeel een onderbouwing gegeven van de classificatie vande risico’s, op basis van concrete voorbeelden. 
+
+
+Aandachtspunten
+
+Op basis van de gesprekken en het ISMS, zien we de volgende concrete risico’s 
+voor het Noord-Hollands Archief. Dit zijn risico’s ophet gebied van 
+informatieveiligheid. Er zijn ook andere risico’sop het gebied van debedrijfsvoering en de uitvoering van de wettelijke taak, in samenwerking metandere instellingenwaaronder het nationaal archief. Ed Sewalt heeft hiervooreen aantal risico’s in kaart gebracht. 
+
+
+Risico top8informatieveiligheid
+
+Hieronder de opzet van een top 8 risico’s ophet gebied van informatieveiligheiden privacy.De inschatting is gemaakt op basis van het ISMS en de gesprekken.Een nadere uitwerking door het Noord-Hollands Archief is aan te bevelen. 
+
+
+1. 
+Datalek door verkeerd mailen 
+a. 
+Automatisch aanvullen mailadressen 
+b. 
+Fouten en slordigheden met mail
+c. 
+Ontvangen van privacygevoelige informatie 
+Oplevering werkzaamhedenPRP20170524002 
+
+
+3 
+
+
+
+2. 
+Onvoldoende compliant aan Avg
+a. 
+Avg-registers onvoldoende en/ of onvolledig ingevuld;
+b. 
+Niet kunnen voldoen aan hetrecht op vergetenworden uit hetarchief(zie uitspraak Raad van State);
+c. 
+Privacy by design en default niet genoeg geïncorporeerd bijchanges en projecten;
+d. 
+Niet toepassen van dataminimalisatie;
+3. 
+Verkeerde afhandeling datalekken
+a. 
+Ontbreken standaardcommunicatie;
+b. 
+Incidentregistratie en protocol afhandeling incident onvoldoende;
+4. 
+Incidenten door fysieke oorzaken
+a. 
+(Uitleen)laptops raken kwijt, mogelijk met ingevulde credentialsen/ of geen wachtwoord;
+b. 
+niet locken computers, met name in publiektoegankelijke ruimten;
+c. 
+Afvoer van (privacy-)gevoelige informatie op papier
+5. 
+Geen privacy impact assessments gehoudenopsystemen met informatiein de hoogste categorie vertrouwelijkheid
+6. 
+Uitvallen dienstverlening
+7. 
+Cybercriminaliteit
+a. 
+Infrastructuurmisbruikt voor crypto-mining
+b. 
+Identiteitsfraude 
+8. 
+IT-leveranciers (beheerders) kunnen bij te veelinformatie 
+Oplevering werkzaamhedenPRP20170524002 
+
+
+
+Oplevering werkzaamheden PRP20170524002 5 
+Colofon 
+Organisatie 
+Factor50 
+Factor50 Informatieveiligheid B.V. 
+Kamer van Koophandel 64896722 
+Bankrelatie NL90INGB0007168446 
+Btw-indentificatienummer NL855892274B01 
+E-mail: contact@factor50.eu 
+Telefoon: +31 (0)85 8000 245 
+Adres: Zijlweg 148b 
+2015 BJ, Haarlem 
+Nederland 
+Handelsmerken en geheimhouding 
+Verstrekking van informatie ten behoeve van deze memo: 
+Noord-Hollands Arcief en Factor50 Informatieveiligheid B.V. verplichten zich als 
+partijen de aan elkaar gedeelde informatie geheim te zullen houden, noch te 
+doen verspreiden. Factor50 heeft de benodigde informatie uitsluitend gebruikt 
+ten behoeve van deze memo en beperkt tot deze memo. 
+Alle informatie, handelsmerken, namen, logo’s, beeltenissen, tabellen of andere 
+zaken waar eigendomsrechten op van toepassing zijn, gebruikt in dit document 
+zijn eigendom van de desbetreffende rechtmatige eigenaar. 
+Factor50 informatieveiligheid B.V. Kamer van Koophandel 64896722. 
+© 2018 Factor50. Alle rechten voorbehouden. 
+

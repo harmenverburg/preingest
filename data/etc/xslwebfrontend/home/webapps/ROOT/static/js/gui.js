@@ -78,6 +78,9 @@ function doUncompressButton(uncompressButton, urlStart, selectedFileFieldId, pol
                 let pollURL = urlStart + '?action=check-for-file-with-ok&relative-path=' + preingestSessionId + "/UnpackTarHandler.json";
                 fileOKCheckPoller(timer, pollURL, function() {
                      ableButton(uncompressButton, true, "opSuccess");
+                     let a = document.getElementById('proceedlink');
+                     let href = a.href;
+                     a.href = href.replace("operations/", "operations/" + preingestSessionId);
                      document.getElementById('proceedmessage').style.display = "block";
                 }, function() {
                     ableButton(uncompressButton, true, "opFailure");
