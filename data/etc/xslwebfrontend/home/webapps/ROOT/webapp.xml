@@ -45,5 +45,9 @@
     <parameter name="archives-file-glob" type="xs:string">
       <value>*.tar</value>
     </parameter>
+    
+    <parameter name="excel-preingest-dir" type="xs:string">
+      <value>static/excel/preingest_resultaten</value>
+    </parameter>
   </parameters>
 </webapp>

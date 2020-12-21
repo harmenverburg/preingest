@@ -14,28 +14,45 @@
     <xsl:include href="commonconstants.xslt"/>
     <xsl:include href="commoncode.xslt"/>
     
-    <xsl:template match="/req:request">
-        <xsl:variable name="preingestguid" as="xs:string?" select="session:get-attribute($nha:preingestguid-session-key)"/>
-        <html xmlns="http://www.w3.org/1999/xhtml">
-            <head>
-                <title>Archiefbewerkingen</title>
-                <link rel="stylesheet" type="text/css" href="{$nha:context-path}/css/gui.css" />
-                <script language="javascript" src="{$nha:context-path}/js/gui.js" type="text/javascript"></script>
-            </head>
-            <body>
-                <p><img src="img/logo.png" style="float: right; width: 10em"/></p>
-                <xsl:choose>
-                    <xsl:when test="exists($preingestguid)">
-                        <xsl:call-template name="normal-body">
-                            <xsl:with-param name="preingestguid" select="$preingestguid"/>
-                        </xsl:call-template>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:call-template name="error-body"/>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </body>
-        </html>
+    <!-- Pass ?full to the url in order to get a full <html> page and not just a <div> -->
+    <xsl:variable name="full-html" as="xs:boolean" select="exists(/*/req:parameters/req:parameter[@name eq 'full'])"/>
+    
+    <xsl:variable name="preingestguid" as="xs:string?" select="replace(/*/req:path, '^.*/([-a-z0-9]+)$', '$1')"/>
+    
+    <xsl:template match="/req:request">        
+        <xsl:choose>
+            <xsl:when test="$full-html">
+                <html xmlns="http://www.w3.org/1999/xhtml">
+                    <head>
+                        <title>Archiefbewerkingen</title>
+                        <link rel="stylesheet" type="text/css" href="{$nha:context-path}/css/gui.css" />
+                        <script language="javascript" src="{$nha:context-path}/js/gui.js" type="text/javascript"></script>
+                    </head>
+                    <body>
+                        <xsl:call-template name="body-content"/>
+                    </body>
+                </html>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:call-template name="body-content"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+    
+    <xsl:template name="body-content">
+        <div>
+            <p><img src="/img/logo.png" style="float: right; width: 10em"/></p>
+            <xsl:choose>
+                <xsl:when test="exists($preingestguid)">
+                    <xsl:call-template name="normal-body">
+                        <xsl:with-param name="preingestguid" select="$preingestguid"/>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:call-template name="error-body"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </div>
     </xsl:template>
     
     <xsl:template name="error-body">

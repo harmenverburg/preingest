@@ -31,7 +31,7 @@
         </xsl:variable>
         
         <xsl:variable name="httpresponse" select="http:send-request($httprequest)"/>
-        <!--<xsl:sequence select="file:write('/data/httpresponse.xml', $httpresponse[1])"/>-->
+
         <xsl:choose>
             <xsl:when test="$httpresponse[1]/@status eq '200'">
                 <xsl:choose>
@@ -96,7 +96,6 @@
                     <xsl:choose>
                         <xsl:when test="file:exists($absolute-path)">
                             <xsl:variable name="json" as="map(*)" select="json:json-doc($absolute-uri)"/>
-                            <xsl:sequence select="session:set-attribute($nha:preingestguid-session-key, string($json?SessionId))"/>
                             <json:map>
                                 <json:string key="sessionId">{$json?SessionId}</json:string>
                                 <json:string key="code">{$json?Code}</json:string>
@@ -148,21 +147,18 @@
                 </xsl:when>
                 <xsl:when test="$action = ('virusscan', 'naming', 'sidecar', 'profiling', 'exporting', 'greenlist', 'encoding', 'validate', 'updatebinary', 'sipcreator')">
                     <!-- TODO sipcreator heeft misschien ook preservica-id (optioneel) nodig, indien bij transform gebruikt. -->
-                    <xsl:message>action={$action}</xsl:message>
                     <xsl:variable name="sessionid" as="xs:string" select="nha:get-parameter-value(/req:request, 'sessionid')"/>
                     <xsl:variable name="json-uri" as="xs:string" select="$nha:preingest-uri-prefix || '/' || $action || '/' || encode-for-uri($sessionid)"/>
                     <xsl:sequence select="nha:http-post-request-json($json-uri, ())"/>
                 </xsl:when>
                 <xsl:when test="$action eq 'reporting'">
                     <!-- TODO dropdown voor pdf, xml, .. -->
-                    <xsl:message>action={$action}</xsl:message>
                     <xsl:variable name="sessionid" as="xs:string" select="nha:get-parameter-value(/req:request, 'sessionid')"/>
                     <xsl:variable name="json-uri" as="xs:string" select="$nha:preingest-uri-prefix || '/' || $action || '/' || encode-for-uri($sessionid)"/>
                     <xsl:sequence select="nha:http-post-request-json($json-uri, ())"/>
                 </xsl:when>
                 <xsl:when test="$action eq 'transform'">
                     <!-- TODO optioneeel preservica-id, .. -->
-                    <xsl:message>action={$action}</xsl:message>
                     <xsl:variable name="sessionid" as="xs:string" select="nha:get-parameter-value(/req:request, 'sessionid')"/>
                     <xsl:variable name="json-uri" as="xs:string" select="$nha:preingest-uri-prefix || '/' || $action || '/' || encode-for-uri($sessionid)"/>
                     <xsl:sequence select="nha:http-post-request-json($json-uri, ())"/>
