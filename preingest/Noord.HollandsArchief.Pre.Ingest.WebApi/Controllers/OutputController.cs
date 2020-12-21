@@ -39,11 +39,20 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (!directory.Exists)
                 return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
 
-            var files = directory.GetFiles("*.*").Where(s => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz"));
+            var tarArchives = directory.GetFiles("*.*").Where(s => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz"));
 
-            return new JsonResult(files.OrderByDescending(item
+            return new JsonResult(tarArchives.OrderByDescending(item
                 => item.CreationTime).Select(item
-                    => new { item.Name, item.CreationTime, item.LastWriteTime, item.LastAccessTime, item.Length }).ToArray());       
+                    => new
+                    {
+                        Name = item.Name,
+                        CreationTime = item.CreationTime,
+                        LastWriteTime = item.LastWriteTime,
+                        LastAccessTime = item.LastAccessTime,
+                        Size = item.Length,
+                        TarResultFile = System.IO.File.Exists(String.Concat(item.FullName, ".json")) ? String.Concat(item.FullName, ".json") : null,
+                        TarResultData = System.IO.File.Exists(String.Concat(item.FullName, ".json")) ? JsonConvert.DeserializeObject<List<ProcessResult>>(System.IO.File.ReadAllText(String.Concat(item.FullName, ".json"))) : null
+                    }).ToArray()); 
         }
 
         [HttpGet("sessions", Name = "Get working session(s).", Order = 1)]
@@ -107,6 +116,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             };
             return new RandomJsonResponseMessageResult(result);           
         }
+
 
         [HttpGet("report/{guid}/{file}", Name = "Get a report as a file from a session.", Order = 4)]
         public IActionResult GetReport(Guid guid, string file)
