@@ -40,10 +40,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
 
             var files = directory.GetFiles("*.*").Where(s => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz"));
-
-            return new JsonResult(files.OrderByDescending(item
-                => item.CreationTime).Select(item
-                    => new { item.Name, item.CreationTime, item.LastWriteTime, item.LastAccessTime, item.Length }).ToArray());          
+                                    
+            return new JsonResult(files.OrderByDescending(item 
+                => item.CreationTime).Select(item 
+                    => item.Name).ToArray());           
         }
 
         [HttpGet("sessions", Name = "Get working session(s).", Order = 1)]
