@@ -57,7 +57,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             ProcessResult item = new ProcessResult(SessionGuid)
             {
                 CollectionItem = _tarFile,
-                Code = "OK",
+                Code = "Unpack",
                 CreationTimestamp = DateTime.Now,
                 ActionName = this.GetType().Name,
                 Message = String.IsNullOrEmpty(error) ? output : error

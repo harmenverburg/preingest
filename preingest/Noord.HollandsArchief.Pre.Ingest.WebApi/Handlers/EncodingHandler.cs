@@ -65,6 +65,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 }
             }
 
+            if (result.Count == 0)
+                result.Add(new ProcessResult(SessionGuid)
+                {
+                    CollectionItem = TargetFolder,
+                    Code = "Encoding",
+                    CreationTimestamp = DateTime.Now,
+                    ActionName = this.GetType().Name,
+                    Message = "Geen resultaten."
+                });
+
             SaveJson(new DirectoryInfo(TargetFolder), this, result.ToArray());
         }
 

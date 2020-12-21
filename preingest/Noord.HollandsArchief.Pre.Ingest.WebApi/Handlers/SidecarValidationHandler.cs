@@ -141,7 +141,19 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 Messages = item.ObjectExceptions().Select(message => message.Message).ToArray()
             });
 
-            SaveJson(new DirectoryInfo(TargetFolder), this, "Archief", archiefResult.ToArray());
+            if (archiefResult.Count() == 0)
+            {
+                SaveJson(new DirectoryInfo(TargetFolder), this, "Archief", new {
+                    Code = "Archief",
+                    CreationTimestamp = DateTime.Now,
+                    ActionName = this.GetType().Name,
+                    Messages = "Geen resultaten."
+                });
+            }
+            else
+            {
+                SaveJson(new DirectoryInfo(TargetFolder), this, "Archief", archiefResult.ToArray());
+            }
 
             var seriesResult = series.Where(item => item.ObjectExceptions().Count > 0).Select(item => new ProcessResult(SessionGuid)
             {
@@ -152,7 +164,20 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 Messages = item.ObjectExceptions().Select(message => message.Message).ToArray()
             });
 
-            SaveJson(new DirectoryInfo(TargetFolder), this, "Series", seriesResult.ToArray());
+            if (seriesResult.Count() == 0)
+            {
+                SaveJson(new DirectoryInfo(TargetFolder), this, "Series", new
+                {
+                    Code = "Series",
+                    CreationTimestamp = DateTime.Now,
+                    ActionName = this.GetType().Name,
+                    Messages = "Geen resultaten."
+                });
+            }
+            else
+            {
+                SaveJson(new DirectoryInfo(TargetFolder), this, "Series", seriesResult.ToArray());
+            }
 
             var dossierResult = dossier.Where(item => item.ObjectExceptions().Count > 0).Select(item => new ProcessResult(SessionGuid)
             {
@@ -163,7 +188,20 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 Messages = item.ObjectExceptions().Select(message => message.Message).ToArray()
             });
 
-            SaveJson(new DirectoryInfo(TargetFolder), this, "Dossier", dossierResult.ToArray());
+            if (dossierResult.Count() == 0)
+            {
+                SaveJson(new DirectoryInfo(TargetFolder), this, "Dossier", new
+                {
+                    Code = "Dossier",
+                    CreationTimestamp = DateTime.Now,
+                    ActionName = this.GetType().Name,
+                    Messages = "Geen resultaten."
+                });
+            }
+            else
+            {
+                SaveJson(new DirectoryInfo(TargetFolder), this, "Dossier", dossierResult.ToArray());
+            }
 
             var recordResult = record.Where(item => item.ObjectExceptions().Count > 0).Select(item => new ProcessResult(SessionGuid)
             {
@@ -174,7 +212,20 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 Messages = item.ObjectExceptions().Select(message => message.Message).ToArray()
             });
 
-            SaveJson(new DirectoryInfo(TargetFolder), this, "Record", recordResult.ToArray());
+            if (recordResult.Count() == 0)
+            {
+                SaveJson(new DirectoryInfo(TargetFolder), this, "Record", new
+                {
+                    Code = "Record",
+                    CreationTimestamp = DateTime.Now,
+                    ActionName = this.GetType().Name,
+                    Messages = "Geen resultaten."
+                });
+            }
+            else
+            {
+                SaveJson(new DirectoryInfo(TargetFolder), this, "Record", recordResult.ToArray());
+            }
 
             var bestandResult = bestand.Where(item => item.ObjectExceptions().Count > 0).Select(item => new ProcessResult(SessionGuid)
             {
@@ -185,7 +236,20 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 Messages = item.ObjectExceptions().Select(message => message.Message).ToArray()
             });
 
-            SaveJson(new DirectoryInfo(TargetFolder), this, "Bestand", bestandResult.ToArray());
+            if (bestandResult.Count() == 0)
+            {
+                SaveJson(new DirectoryInfo(TargetFolder), this, "Bestand", new
+                {
+                    Code = "Bestand",
+                    CreationTimestamp = DateTime.Now,
+                    ActionName = this.GetType().Name,
+                    Messages = "Geen resultaten."
+                });
+            }
+            else
+            {
+                SaveJson(new DirectoryInfo(TargetFolder), this, "Bestand", bestandResult.ToArray());
+            }
 
             var onbekendResult = onbekend.Select(item => new ProcessResult(SessionGuid)
             {
@@ -196,7 +260,20 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 Message = "Onbekend, niet ok!"
             });
 
-            SaveJson(new DirectoryInfo(TargetFolder), this, "Onbekend", onbekendResult.ToArray());
+            if (onbekendResult.Count() == 0)
+            {
+                SaveJson(new DirectoryInfo(TargetFolder), this, "Onbekend", new
+                {
+                    Code = "Onbekend",
+                    CreationTimestamp = DateTime.Now,
+                    ActionName = this.GetType().Name,
+                    Messages = "Geen resultaten."
+                });
+            }
+            else
+            {
+                SaveJson(new DirectoryInfo(TargetFolder), this, "Onbekend", onbekendResult.ToArray());
+            }
 
             var end = DateTime.Now;
             Logger.LogInformation("End of the validation for the sidecare structure.");

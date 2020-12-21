@@ -63,7 +63,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                         var result = rootError.SchematronValidationReport.errors.Select(item => new ProcessResult(SessionGuid)
                         {
                             CollectionItem = archive.Name,
-                            Code = "Not;OK;SipCreator",
+                            Code = "SipCreator",
                             CreationTimestamp = DateTime.Now,
                             ActionName = this.GetType().Name,
                             Messages = new string[] { item.message, item.FailedAssertLocation, item.FiredRuleContext, item.FailedAssertTest }
@@ -77,14 +77,24 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 var process = new ProcessResult(SessionGuid)
                 {
                     CollectionItem = archive.Name,
-                    Code = "Not;OK;SipCreator",
+                    Code = "SipCreator",
                     CreationTimestamp = DateTime.Now,
                     ActionName = this.GetType().Name,
                     Message = String.Format("SipCreator uitvoeren is niet gelukt!{0}{1}{0}{2}", Environment.NewLine, e.Message, e.StackTrace)
                 };
                 failedResult.Add(process);
             }
-            
+
+            if (failedResult.Count == 0)
+                failedResult.Add(new ProcessResult(SessionGuid)
+                {
+                    CollectionItem = TargetFolder,
+                    Code = "SipCreator",
+                    CreationTimestamp = DateTime.Now,
+                    ActionName = this.GetType().Name,
+                    Message = "Geen resultaten."
+                });
+
             SaveJson(new DirectoryInfo(targetFolder), this, failedResult.ToArray());
         }
     }

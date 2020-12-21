@@ -34,6 +34,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     scanResults.Add(result);
             });
 
+            if (scanResults.Count == 0)
+                scanResults.Add(new ProcessResult(SessionGuid)
+                {
+                    CollectionItem = targetFolder,
+                    Code = "Scanvirus",
+                    CreationTimestamp = DateTime.Now,
+                    ActionName = this.GetType().Name,
+                    Message = "Geen resultaten."
+                });
+
             SaveJson(new DirectoryInfo(targetFolder), this, scanResults.ToArray());
         }
 

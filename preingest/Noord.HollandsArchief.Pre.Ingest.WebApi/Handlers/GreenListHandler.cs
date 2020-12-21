@@ -99,8 +99,22 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                             => new { item, InGreenList = true }).Concat(doNotcontainsGreenListResult.Select(item
                                 => new { item, InGreenList = false })).ToList();
 
-                        string targetFolder = TargetFolder;
-                        SaveJson(new DirectoryInfo(targetFolder), this, endResult.ToArray());
+                        if (endResult.Count == 0)
+                        {                            
+                            var process = new ProcessResult(SessionGuid)
+                            {
+                                CollectionItem = TargetFolder,
+                                Code = "Greenlist",
+                                CreationTimestamp = DateTime.Now,
+                                ActionName = this.GetType().Name,
+                                Message = "Geen resultaten."
+                            };
+                            SaveJson(new DirectoryInfo(TargetFolder), this, process);                    
+                        }
+                        else
+                        {
+                            SaveJson(new DirectoryInfo(TargetFolder), this, endResult.ToArray());
+                        }
                     }
                 }
             }

@@ -84,6 +84,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 Logger.LogInformation("Container not found '{0}'", TargetCollection);
             }
 
+            if(result.Count == 0)
+                result.Add(new ProcessResult(SessionGuid)
+                {
+                    CollectionItem = TargetCollection,
+                    Code = "Checksum",
+                    CreationTimestamp = DateTime.Now,
+                    ActionName = this.GetType().Name,
+                    Message = "Geen resultaten."
+                });
+
             SaveJson(Path.Combine(ApplicationSettings.DataFolderName, String.Format("{0}.json", TarFilename)), this, result.ToArray());
         }
 

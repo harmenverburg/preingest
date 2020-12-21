@@ -53,7 +53,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                             failedResult.Add(new ProcessResult(SessionGuid)
                             {
                                 CollectionItem = requestUri,
-                                Code = "Not;OK;TransformXIP",
+                                Code = "TransformXIP",
                                 CreationTimestamp = DateTime.Now,
                                 ActionName = this.GetType().Name,
                                 Message = String.Format("XIP transformatie niet gelukt voor '{0}'. Antwoord: {1}", requestUri, xDoc.ToString()),
@@ -72,7 +72,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     var process = new ProcessResult(SessionGuid)
                     {
                         CollectionItem = file,
-                        Code = "Not;OK;TransformXIP",
+                        Code = "TransformXIP",
                         CreationTimestamp = DateTime.Now,
                         ActionName = this.GetType().Name,
                         Message = String.Format("Transformatie niet gelukt!{0}{1}{0}{2}", Environment.NewLine, e.Message, e.StackTrace)
@@ -81,7 +81,17 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 }
             }
 
-            SaveJson(new DirectoryInfo(targetFolder), this, failedResult.ToArray());
+            if (failedResult.Count == 0)
+                failedResult.Add(new ProcessResult(SessionGuid)
+                {
+                    CollectionItem = TargetFolder,
+                    Code = "TransformXIP",
+                    CreationTimestamp = DateTime.Now,
+                    ActionName = this.GetType().Name,
+                    Message = "Geen resultaten."
+                });
+   
+                SaveJson(new DirectoryInfo(targetFolder), this, failedResult.ToArray());            
         }
     }
 }

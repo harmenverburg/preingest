@@ -30,6 +30,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
             DirectoryRecursion(collection, result);
 
+            if (result.Count == 0)
+                result.Add(new ProcessResult(SessionGuid)
+                {
+                    CollectionItem = targetFolder,
+                    Code = "Naming",
+                    CreationTimestamp = DateTime.Now,
+                    ActionName = this.GetType().Name,
+                    Message = "Geen resultaten."
+                });
+
             SaveJson(new DirectoryInfo(targetFolder), this, result.ToArray());
         }
 

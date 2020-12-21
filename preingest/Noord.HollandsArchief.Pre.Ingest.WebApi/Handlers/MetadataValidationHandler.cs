@@ -66,7 +66,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                             var result = rootError.SchematronValidationReport.errors.Select(item => new ProcessResult(SessionGuid)
                             {                               
                                 CollectionItem = file,
-                                Code = "Not;OK;MetadataValidation",
+                                Code = "MetadataValidation",
                                 CreationTimestamp = DateTime.Now,
                                 ActionName = this.GetType().Name,
                                 Messages = new string[] { item.message, item.FailedAssertLocation, item.FiredRuleContext, item.FailedAssertTest }
@@ -79,7 +79,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                             var result = rootError.SchemaValidationReport.errors.Select(item => new ProcessResult(SessionGuid)
                             {
                                 CollectionItem = file,
-                                Code = "Not;OK;MetadataValidation",
+                                Code = "MetadataValidation",
                                 CreationTimestamp = DateTime.Now,
                                 ActionName = this.GetType().Name,
                                 Messages = new string[] { item.message, String.Format("Line: {0}, col: {1}", item.line, item.col) }
@@ -93,7 +93,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     var process = new ProcessResult(SessionGuid)
                     {
                         CollectionItem = file,
-                        Code = "Not;OK;MetadataValidation",
+                        Code = "MetadataValidation",
                         CreationTimestamp = DateTime.Now,
                         ActionName = this.GetType().Name,
                         Message = String.Format("Validatie is niet gelukt!{0}{1}{0}{2}", Environment.NewLine, e.Message, e.StackTrace)
@@ -101,6 +101,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     failedResult.Add(process);
                 }
             }
+
+            if (failedResult.Count == 0)
+                failedResult.Add(new ProcessResult(SessionGuid)
+                {
+                    CollectionItem = TargetFolder,
+                    Code = "MetadataValidation",
+                    CreationTimestamp = DateTime.Now,
+                    ActionName = this.GetType().Name,
+                    Message = "Geen resultaten."
+                });
 
             SaveJson(new DirectoryInfo(targetFolder), this, failedResult.ToArray());
         }
