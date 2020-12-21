@@ -43,7 +43,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             return new JsonResult(files.OrderByDescending(item
                 => item.CreationTime).Select(item
-                    => new { item.Name, item.CreationTime, item.LastWriteTime, item.LastAccessTime, item.Length }).ToArray());          
+                    => new { item.Name, item.CreationTime, item.LastWriteTime, item.LastAccessTime, item.Length }).ToArray());       
         }
 
         [HttpGet("sessions", Name = "Get working session(s).", Order = 1)]
