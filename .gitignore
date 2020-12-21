@@ -32,3 +32,5 @@ data/etc/tomcatfrontend/logs/
 data/etc/tomcat/logs/
 
 klad.yml
+
+up-8000.sh
