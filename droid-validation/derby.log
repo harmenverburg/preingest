@@ -1,14 +1,14 @@
 ----------------------------------------------------------------
-Tue Nov 10 21:56:11 UTC 2020:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.13.1.1 - (1765088): instance a816c00e-0175-b428-c389-0000064ba010 
-on database directory /root/.droid6/profiles/1605045371369/db with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@277050dc 
-Loaded from file:/droid/lib/derby-10.13.1.1.jar
-java.vendor=Oracle Corporation
+Thu Dec 17 17:30:08 CET 2020:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.13.1.1 - (1765088): instance a816c00e-0176-7189-8d27-00000ea9f960 
+on database directory C:\Users\WongWaiY\.droid6\profiles\1608222608217\db with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@30946e09 
+Loaded from file:/D:/droid/lib/derby-10.13.1.1.jar
+java.vendor=AdoptOpenJDK
 java.runtime.version=11.0.9+11
-user.dir=/usr/src/droid/droid-validation
-os.name=Linux
+user.dir=D:\01_Noord-Hollands Archief\Source\Repos\noord-hollandsarchief\preingest\droid-validation
+os.name=Windows 10
 os.arch=amd64
-os.version=5.4.39-linuxkit
+os.version=10.0
 derby.system.home=null
-derby.stream.error.file=/root/.droid6/logs/derby.log
+derby.stream.error.file=C:\Users\WongWaiY\.droid6\logs\derby.log
 Database Class Loader started - derby.database.classpath=''

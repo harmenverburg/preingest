@@ -26,22 +26,20 @@ public class ProfilesHandler extends CommandHandler {
           break;
         } 
       } 
-      String[] command = {
-          
+      String[] command = {          
           "java", 
           "-jar", 
-          String.format("%1$2sdroid-command-line-6.5.jar", new Object[] { this.DROID_LINUX_FOLDER
-            
-            }), "-R", 
+          String.format("%1$2sdroid-command-line-6.5.jar", new Object[] { this.DROID_LINUX_FOLDER }), 
+            "-R", 
           "-a", 
-          String.format("\"%1$2s%2$2s/%3$2s\"", new Object[] { this.ARCHIVEDATA_LINUX_FOLDER, this._guid, collectionName
-            }), "-p", 
+          String.format("\"%1$2s%2$2s/%3$2s\"", new Object[] { this.ARCHIVEDATA_LINUX_FOLDER, this._guid, collectionName }), 
+            "-p", 
           String.format("\"%1$2s%2$2s/%2$2s.droid\"", new Object[] { this.ARCHIVEDATA_LINUX_FOLDER, this._guid })
         };
       
         try{
           if (command.length > 0)
-          runSeperateThread(command, false); 
+          runSeperateThread(this._guid, command); 
         }
         catch(IOException ioe){
           ioe.printStackTrace();

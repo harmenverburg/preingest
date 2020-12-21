@@ -31,7 +31,7 @@ public class ReportingHandler extends CommandHandler
     
     try{
       if (command.length > 0)
-      runSeperateThread(command, false); 
+      runSeperateThread(this._guid, command); 
     }
     catch(IOException ioe){
       ioe.printStackTrace();
@@ -56,7 +56,7 @@ public class ReportingHandler extends CommandHandler
     
       try{
         if (command.length > 0)
-        runSeperateThread(command, false); 
+        runSeperateThread(this._guid, command); 
       }
       catch(IOException ioe){
         ioe.printStackTrace();
@@ -81,7 +81,7 @@ public class ReportingHandler extends CommandHandler
     
       try{
         if (command.length > 0)
-        runSeperateThread(command, false); 
+        runSeperateThread(this._guid, command); 
       }
       catch(IOException ioe){
         ioe.printStackTrace();

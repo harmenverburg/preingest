@@ -15,7 +15,7 @@ public class SignatureHandler extends CommandHandler {
     
     try{
       if (command.length > 0)
-      runSeperateThread(command, true); 
+      runSeperateThread(command); 
     }
     catch(IOException ioe){
       ioe.printStackTrace();
@@ -28,7 +28,7 @@ public class SignatureHandler extends CommandHandler {
     
     try{
       if (command.length > 0)
-      runSeperateThread(command, false); 
+      runSeperateThread(command); 
     }
     catch(IOException ioe){
       ioe.printStackTrace();
