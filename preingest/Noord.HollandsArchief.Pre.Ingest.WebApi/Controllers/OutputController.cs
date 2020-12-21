@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,6 +14,7 @@ using System.Net;
 using CsvHelper;
 using System.Globalization;
 using Noord.HollandsArchief.Pre.Ingest.Utilities;
+using System.Net.Http;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -98,10 +98,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (fileinfo == null)
                 return Problem(String.Format("File in session guid '{0}' not found!", json));
 
-            string text = System.IO.File.ReadAllText(fileinfo.FullName);
-            dynamic result = JsonConvert.DeserializeObject(text);
-
-            return new JsonResult(result);
+            string content = System.IO.File.ReadAllText(fileinfo.FullName);
+            
+            var result = new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent(content, System.Text.Encoding.UTF8, "application/json")                
+            };
+            return new RandomJsonResponseMessageResult(result);           
         }
 
         [HttpGet("report/{guid}/{file}", Name = "Get a report as a file from a session.", Order = 4)]
