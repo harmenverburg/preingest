@@ -15,6 +15,7 @@ using CsvHelper;
 using System.Globalization;
 using Noord.HollandsArchief.Pre.Ingest.Utilities;
 using System.Net.Http;
+using System.Text;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -100,9 +101,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             string content = System.IO.File.ReadAllText(fileinfo.FullName);
             
-            var result = new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            var result = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
             {
-                Content = new StringContent(content, System.Text.Encoding.UTF8, "application/json")                
+                Content = new StringContent(content, Encoding.UTF8, "application/json")                
             };
             return new RandomJsonResponseMessageResult(result);           
         }

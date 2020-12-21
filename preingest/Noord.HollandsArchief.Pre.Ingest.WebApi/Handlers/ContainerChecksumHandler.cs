@@ -84,7 +84,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 Logger.LogInformation("Container not found '{0}'", TargetCollection);
             }
 
-            SaveJson(Path.Combine(ApplicationSettings.DataFolderName, String.Format ("{0}.json", TarFilename)), this, result.ToArray());
+            SaveJson(Path.Combine(ApplicationSettings.DataFolderName, String.Format("{0}.json", TarFilename)), this, result.ToArray());
         }
 
     }
