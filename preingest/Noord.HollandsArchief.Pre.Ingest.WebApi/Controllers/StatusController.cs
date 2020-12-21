@@ -217,7 +217,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return new JsonResult(session);
         }
 
-        [HttpPost("start/{actionGuid}", Name = "Add an start status", Order = 5)]
+        [HttpPost("start/{actionGuid}", Name = "Add a start status", Order = 5)]
         public IActionResult AddStartState(Guid actionGuid)
         {
             if (actionGuid == Guid.Empty)
@@ -232,7 +232,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return result;
         }
 
-        [HttpPost("completed/{actionGuid}", Name = "Add an completed status", Order = 6)]
+        [HttpPost("completed/{actionGuid}", Name = "Add a completed status", Order = 6)]
         public IActionResult AddCompletedState(Guid actionGuid)
         {
             if (actionGuid == Guid.Empty)
@@ -247,7 +247,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return result;
         }
 
-        [HttpPost("failed/{actionGuid}", Name = "Add an failed status", Order = 7)]
+        [HttpPost("failed/{actionGuid}", Name = "Add a failed status", Order = 7)]
         public IActionResult AddFailedState(Guid actionGuid, [FromBody] string failMessage)
         {
             if (actionGuid == Guid.Empty)

@@ -96,8 +96,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                         var doNotcontainsGreenListResult = filesByDroid.Except(doesContainsGreenListResult).ToList();
 
                         var endResult = doesContainsGreenListResult.Select(item
-                            => new { DroidRecord = item, InGreenList = true }).Concat(doNotcontainsGreenListResult.Select(item
-                                => new { DroidRecord = item, InGreenList = false })).ToList();
+                            => new { item, InGreenList = true }).Concat(doNotcontainsGreenListResult.Select(item
+                                => new { item, InGreenList = false })).ToList();
 
                         string targetFolder = TargetFolder;
                         SaveJson(new DirectoryInfo(targetFolder), this, endResult.ToArray());
