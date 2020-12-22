@@ -23,6 +23,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             public String Result { get; set; }
         }
 
+        public class ActionMessageBody
+        {
+            public String Message { get; set; }
+        }
+
         private readonly ILogger<StatusController> _logger;
         private AppSettings _settings = null;
 
@@ -58,6 +63,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Exit GetActions.");
 
+            if (action == null)
+                return NotFound(String.Format("Action not found with ID '{0}'", actionGuid));
+
             return new JsonResult(new { action.Creation, action.Description, action.FolderSessionId, action.Name, action.ProcessId, action.ResultFiles });
         }
 
@@ -77,7 +85,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     var result = context.Sessions.Where(item 
                         => item.FolderSessionId == folderSessionGuid).Select(item 
                         => new { item.ProcessId, item.Creation, item.Description, item.Name, item.FolderSessionId, item.ResultFiles }).ToList();
-                    returnResult= new JsonResult(result);
+
+                    if (result == null || result.Count == 0)
+                        returnResult = new JsonResult(new { Message = String.Format("Geen actie(s) gevonden voor map {0}.", folderSessionGuid) });
+
+                    returnResult = new JsonResult(result);
                 }
             }
             catch (Exception e)
@@ -92,7 +104,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return returnResult;
         }
 
-        [HttpGet("result/{processGuid}", Name = "Retrieve all status for an action", Order = 2)]
+        [HttpGet("result/{actionGuid}", Name = "Retrieve all status for an action", Order = 2)]
         public IActionResult GetStatus(Guid actionGuid)
         {
             if (actionGuid == Guid.Empty)
@@ -107,6 +119,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 {
                     var actions = context.Statuses.Where(item => item.ProcessId == actionGuid)
                         .Select(status => new { status.Creation, status.Name, status.ProcessId, status.StatusId }).ToList();
+
+                    if (actions == null || actions.Count == 0)
+                        returnResult = new JsonResult(new { Message = String.Format("Geen resultaten gevonden voor actie {0}.", actionGuid) });
 
                     returnResult = new JsonResult(actions);
                 }
@@ -153,7 +168,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                                        Session = new { x.Session.ProcessId, x.Session.Creation, x.Session.Name, x.Session.Description, x.Session.FolderSessionId, x.Session.ResultFiles },
                                        Status = new { x.Statuses.StatusId, x.Statuses.Creation, x.Statuses.Name, x.Statuses.ProcessId, },
                                        Message = y != null ? new { y.MessageId, y.Creation, y.Description, y.StatusId } : null
-                                   }).ToList();         
+                                   }).ToList();
+
+                    if (result == null || result.Count == 0)
+                        returnResult = new JsonResult(new { Message = String.Format("Geen resultaten gevonden voor map {0}.", folderSessionGuid) });
+
 
                     returnResult = new JsonResult(result);
                 }
@@ -170,10 +189,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return returnResult;
         }
 
-        [HttpPost("new/{folderSessionId}", Name = "Add an action", Order = 4)]
-        public IActionResult AddProcessAction(Guid folderSessionId, [FromBody] ActionFormBody data)
+        [HttpPost("new/{folderSessionGuid}", Name = "Add an action", Order = 4)]
+        public IActionResult AddProcessAction(Guid folderSessionGuid, [FromBody] ActionFormBody data)
         {
-            if (folderSessionId == Guid.Empty)
+            if (folderSessionGuid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
             if(data == null)
                 return Problem("Input data is required");
@@ -190,7 +209,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             var session = new PreIngestSession
             {
                 ProcessId = processId,
-                FolderSessionId = folderSessionId,
+                FolderSessionId = folderSessionGuid,
                 Description = data.Description,
                 Name = data.Name,
                 Creation = DateTime.Now,
@@ -248,14 +267,18 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         }
 
         [HttpPost("failed/{actionGuid}", Name = "Add a failed status", Order = 7)]
-        public IActionResult AddFailedState(Guid actionGuid, [FromBody] string failMessage)
+        public IActionResult AddFailedState(Guid actionGuid, [FromBody] ActionMessageBody failMessage)
         {
             if (actionGuid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
 
             _logger.LogInformation("Enter AddFailedState.");
 
-            var result = AddState(actionGuid, "Failed", failMessage);
+            String message = String.Empty;
+            if (failMessage != null)
+                message = failMessage.Message;
+
+            var result = AddState(actionGuid, "Failed", message);
                         
             _logger.LogInformation("Exit AddFailedState.");
 
