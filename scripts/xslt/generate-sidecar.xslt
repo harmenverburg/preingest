@@ -112,7 +112,7 @@
                             </creatieapplicatie>
                             <fysiekeIntegriteit>
                                 <algoritme>SHA512</algoritme>
-                                <waarde>/*/sha512sum</waarde>
+                                <waarde>{/*/sha512sum}</waarde>
                                 <datumEnTijd>{nha:format-filedate(/*/filedate)}</datumEnTijd>
                             </fysiekeIntegriteit>
                         </formaat>
