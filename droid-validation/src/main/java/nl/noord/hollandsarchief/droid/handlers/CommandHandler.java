@@ -61,7 +61,7 @@ public abstract class CommandHandler implements ICommandHandler {
     System.out.println("============================");
     System.out.println(" ");
 
-    if (guid != null && guid.length() > 0) {
+    if (guid == null || guid.length() == 0) {
       final Thread mainThread = new Thread() {
         @Override
         public void run() {
@@ -75,7 +75,7 @@ public abstract class CommandHandler implements ICommandHandler {
       };
       mainThread.start();
     } else {
-      String jsonData = "{ \"name\" : \"Droid\", \"description\" : \"BMW\", , \"description\" : \"BMW\" }";
+      String jsonData = "{ \"name\" : \"Droid\", \"description\" : \"Test\", \"result\" : \"Test\" }";
       String requestResult = registerNewAction(guid, jsonData);
 
       if (requestResult != null) {
@@ -118,13 +118,13 @@ public abstract class CommandHandler implements ICommandHandler {
   }
 
   private String registerNewAction(String folderGuid, String jsonData) {
-
+    String dev = "localhost:55004";
     String env = System.getenv("PREINGEST_WEBAPI");
     String url = "";
     if (env != null && env.length() > 0) {
       url = "http://" + env + "/api/status/new/" + folderGuid;
     } else {
-      url = "http://noord.hollandsarchief.pre.ingest.webapi/api/status/new/" + folderGuid;
+      url = "https://" + dev + "/api/status/new/" + folderGuid;
     }
 
     String result = postPreingestStatus(url, jsonData);
@@ -133,35 +133,37 @@ public abstract class CommandHandler implements ICommandHandler {
   }
 
   private void registerStartStatus(String actionGuid) {
-
+    String dev = "localhost:55004";
     String env = System.getenv("PREINGEST_WEBAPI");
     String url = "";
     if (env != null && env.length() > 0) {
       url = "http://" + env + "/api/status/start/" + actionGuid;
     } else {
-      url = "http://noord.hollandsarchief.pre.ingest.webapi/api/status/start/" + actionGuid;
+      url = "https://" + dev + "/api/status/start/" + actionGuid;
     }
     postPreingestStatus(url, "");
   }
 
   private void registerCompletedStatus(String actionGuid) {
+    String dev = "localhost:55004";
     String env = System.getenv("PREINGEST_WEBAPI");
     String url = "";
     if (env != null && env.length() > 0) {
       url = "http://" + env + "/api/status/completed/" + actionGuid;
     } else {
-      url = "http://noord.hollandsarchief.pre.ingest.webapi/api/status/completed/" + actionGuid;
+      url = "https://" + dev + "/api/status/completed/" + actionGuid;
     }
     postPreingestStatus(url, "");
   }
 
   private void registerFailedStatus(String actionGuid, String message) {
+    String dev = "localhost:55004";
     String env = System.getenv("PREINGEST_WEBAPI");
     String url = "";
     if (env != null && env.length() > 0) {
       url = "http://" + env + "/api/status/failed/" + actionGuid;
     } else {
-      url = "http://noord.hollandsarchief.pre.ingest.webapi/api/status/failed/" + actionGuid;
+      url = "https://" + dev + "/api/status/failed/" + actionGuid;
     }
     postPreingestStatus(url, message);
   }
