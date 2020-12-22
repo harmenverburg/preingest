@@ -34,7 +34,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "tar",
-                    Arguments = String.Format("-C \"{0}\" -xvf \"{1}\"", sessionFolder, containerFile),
+                    Arguments = String.Format("-C \"{0}\" -oxvf \"{1}\"", sessionFolder, containerFile),
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
