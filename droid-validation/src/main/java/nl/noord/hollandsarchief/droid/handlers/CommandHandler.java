@@ -10,13 +10,14 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
+import org.springframework.web.client.RestTemplate;
 import nl.noord.hollandsarchief.droid.entities.NewActionResult;
-
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import nl.noord.hollandsarchief.droid.entities.NewResultItem;
+import nl.noord.hollandsarchief.droid.entities.RootMessage;
+import nl.noord.hollandsarchief.droid.entities.BodyMessage;
+import nl.noord.hollandsarchief.droid.entities.BodyAction;
 
 public abstract class CommandHandler implements ICommandHandler {
   protected String ARCHIVEDATA_LINUX_FOLDER = "/data/";
@@ -49,19 +50,19 @@ public abstract class CommandHandler implements ICommandHandler {
   }
 
   protected void runSeperateThread(String[] commandArgs) throws IOException {
-    runSeperateThread("", commandArgs);
+    runSeperateThread(null, null, commandArgs);
   }
 
-  protected void runSeperateThread(String guid, String[] commandArgs) throws IOException {
+  protected void runSeperateThread(BodyAction jsonData, String guid, String[] commandArgs) throws IOException {
 
     System.out.println(" ");
     System.out.println("==========Arguments Passed From Command line===========");
     for (String args : commandArgs)
       System.out.println(args);
-    System.out.println("============================");
+    System.out.println("=======================================================");
     System.out.println(" ");
 
-    if (guid == null || guid.length() == 0) {
+    if (guid == null || jsonData == null) {
       final Thread mainThread = new Thread() {
         @Override
         public void run() {
@@ -75,134 +76,165 @@ public abstract class CommandHandler implements ICommandHandler {
       };
       mainThread.start();
     } else {
-      String jsonData = "{ \"name\" : \"Droid\", \"description\" : \"Test\", \"result\" : \"Test\" }";
-      String requestResult = registerNewAction(guid, jsonData);
 
-      if (requestResult != null) {
-        if (requestResult.length() > 0) {
-          NewActionResult actionResult = new ObjectMapper().readValue(requestResult, NewActionResult.class);
-
-          final Thread mainThread = new Thread() {
-            @Override
-            public void run() {
-              boolean isError = false;
-              try {
-                // send start signal
-                if (actionResult != null) {
-                  String actionGuid = actionResult.getProcessId();
-                  registerStartStatus(actionGuid);
-                }
-                executeLogic(commandArgs);
-              } catch (final Exception e) {
-                // send error signal
-                // return of course
-                e.printStackTrace();
-                if (actionResult != null) {
-                  String actionGuid = actionResult.getProcessId();
-                  registerFailedStatus(actionGuid, e.getMessage());
-                }
-                isError = true;
-              } finally {
-                // send completed signal
-                if (actionResult != null && !isError) {
-                  String actionGuid = actionResult.getProcessId();
-                  registerCompletedStatus(actionGuid);
-                }
-              }
+      final Thread mainThread = new Thread() {
+        @Override
+        public void run() {
+          boolean isError = false;
+          NewActionResult requestResult = registerNewAction(guid, jsonData);
+          try {
+            // send start signal
+            if (requestResult != null) {
+              String actionGuid = requestResult.processId;
+              registerStartStatus(actionGuid);
             }
-          };
-          mainThread.start();
+            executeLogic(commandArgs);            
+          } catch (final Exception e) {
+            // send error signal
+            // return of course
+            e.printStackTrace();
+            if (requestResult != null) {
+              BodyMessage message = new BodyMessage();
+              message.message = e.getMessage();
+              String actionGuid = requestResult.processId;
+              registerFailedStatus(actionGuid, message);
+            }
+            isError = true;
+          } finally {
+            // send completed signal
+            if (requestResult != null && !isError) {
+              String actionGuid = requestResult.processId;
+              registerCompletedStatus(actionGuid);
+            }
+          }
         }
-      }
+      };
+      mainThread.start();
     }
   }
 
-  private String registerNewAction(String folderGuid, String jsonData) {
-    String dev = "localhost:55004";
+  private NewActionResult registerNewAction(String folderGuid, BodyAction jsonData) {
+
     String env = System.getenv("PREINGEST_WEBAPI");
     String url = "";
     if (env != null && env.length() > 0) {
-      url = "http://" + env + "/api/status/new/" + folderGuid;
+      url = env + "/api/status/new/" + folderGuid;
     } else {
-      url = "https://" + dev + "/api/status/new/" + folderGuid;
-    }
 
-    String result = postPreingestStatus(url, jsonData);
+      System.out.println(" ");
+      System.out.println("==========Warning===========");
+      System.out.println(
+          "ENVIRONMENT VARIABLE 'PREINGEST_WEBAPI' is not found. Please add ENVIRONMENT VARIABLE with protocol+servername(or server ip) without forward slash.");
+      System.out.println("This action will not be register in the local database.");
+      System.out.println("============================");
+      System.out.println(" ");
+    }
+    NewActionResult result = null;
+    try {
+      RestTemplate restTemplate = new RestTemplate();
+      result = restTemplate.postForObject(url, jsonData, NewActionResult.class);
+
+      if (result != null) {
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String json = ow.writeValueAsString(result);
+        System.out.println(json);
+      }
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
 
     return result;
   }
 
   private void registerStartStatus(String actionGuid) {
-    String dev = "localhost:55004";
+
     String env = System.getenv("PREINGEST_WEBAPI");
     String url = "";
     if (env != null && env.length() > 0) {
-      url = "http://" + env + "/api/status/start/" + actionGuid;
+      url = env + "/api/status/start/" + actionGuid;
     } else {
-      url = "https://" + dev + "/api/status/start/" + actionGuid;
+      System.out.println(" ");
+      System.out.println("==========Warning===========");
+      System.out.println(
+          "ENVIRONMENT VARIABLE 'PREINGEST_WEBAPI' is not found. Please add ENVIRONMENT VARIABLE with protocol+servername(or server ip) without forward slash.");
+      System.out.println("Start result will not be register in the local database.");
+      System.out.println("============================");
+      System.out.println(" ");
     }
-    postPreingestStatus(url, "");
+
+    try {
+      RestTemplate restTemplate = new RestTemplate();
+      NewResultItem result = restTemplate.postForObject(url, null, NewResultItem.class);
+
+      if (result != null) {
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String json = ow.writeValueAsString(result);
+        System.out.println(json);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   private void registerCompletedStatus(String actionGuid) {
-    String dev = "localhost:55004";
+
     String env = System.getenv("PREINGEST_WEBAPI");
     String url = "";
     if (env != null && env.length() > 0) {
-      url = "http://" + env + "/api/status/completed/" + actionGuid;
+      url = env + "/api/status/completed/" + actionGuid;
     } else {
-      url = "https://" + dev + "/api/status/completed/" + actionGuid;
+      System.out.println(" ");
+      System.out.println("==========Warning===========");
+      System.out.println(
+          "ENVIRONMENT VARIABLE 'PREINGEST_WEBAPI' is not found. Please add ENVIRONMENT VARIABLE with protocol+servername(or server ip) without forward slash.");
+      System.out.println("Completed result will not be register in the local database.");
+      System.out.println("============================");
+      System.out.println(" ");
     }
-    postPreingestStatus(url, "");
-  }
-
-  private void registerFailedStatus(String actionGuid, String message) {
-    String dev = "localhost:55004";
-    String env = System.getenv("PREINGEST_WEBAPI");
-    String url = "";
-    if (env != null && env.length() > 0) {
-      url = "http://" + env + "/api/status/failed/" + actionGuid;
-    } else {
-      url = "https://" + dev + "/api/status/failed/" + actionGuid;
-    }
-    postPreingestStatus(url, message);
-  }
-
-  private String postPreingestStatus(String preingestUrl, String input) {
-    String result = "";
 
     try {
-      URL url = new URL(preingestUrl);
-      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-      conn.setDoOutput(true);
-      conn.setRequestMethod("POST");
-      conn.setRequestProperty("Content-Type", "application/json");
+      RestTemplate restTemplate = new RestTemplate();
+      NewResultItem result = restTemplate.postForObject(url, null, NewResultItem.class);
 
-      OutputStream os = conn.getOutputStream();
-      os.write(input.getBytes());
-      os.flush();
-
-      if (conn.getResponseCode() != HttpURLConnection.HTTP_CREATED) {
-        throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+      if (result != null) {
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String json = ow.writeValueAsString(result);
+        System.out.println(json);
       }
-
-      BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
-
-      String output;
-      System.out.println("Output from Server .... \n");
-      while ((output = br.readLine()) != null) {
-        System.out.println(output);
-      }
-
-      conn.disconnect();
-
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
+  }
 
-    return result;
+  private void registerFailedStatus(String actionGuid, BodyMessage message) {
+
+    String env = System.getenv("PREINGEST_WEBAPI");
+    String url = "";
+    if (env != null && env.length() > 0) {
+      url = env + "/api/status/failed/" + actionGuid;
+    } else {
+      System.out.println(" ");
+      System.out.println("==========Warning===========");
+      System.out.println(
+          "ENVIRONMENT VARIABLE 'PREINGEST_WEBAPI' is not found. Please add ENVIRONMENT VARIABLE with protocol+servername(or server ip) without forward slash.");
+      System.out.println("Failed result will not be register in the local database.");
+      System.out.println("============================");
+      System.out.println(" ");
+      return;
+    }
+
+    try {
+      RestTemplate restTemplate = new RestTemplate();
+      RootMessage result = restTemplate.postForObject(url, message, RootMessage.class);
+      if (result != null) {
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String json = ow.writeValueAsString(result);
+        System.out.println(json);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   private void executeLogic(String[] commandArgs) {
@@ -248,7 +280,11 @@ public abstract class CommandHandler implements ICommandHandler {
       Path source = Paths.get(String.format("%1$2stemplate-linux.droid", new Object[] { this.DROID_LINUX_FOLDER }),
           new String[0]);
       Path target = Paths.get(
-          String.format("%1$2s%2$2s/%2$2s.droid", new Object[] { this.ARCHIVEDATA_LINUX_FOLDER, guid }), new String[0]);
+          // String.format("%1$2s%2$2s/%2$2s.droid", new Object[] {
+          // this.ARCHIVEDATA_LINUX_FOLDER, guid }),
+          String.format("%1$2s%2$2s/%3$2s.droid",
+              new Object[] { this.ARCHIVEDATA_LINUX_FOLDER, guid, "DroidValidationHandler" }),
+          new String[0]);
 
       Files.copy(source, target, new CopyOption[] { StandardCopyOption.REPLACE_EXISTING });
       result = true;

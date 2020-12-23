@@ -19,7 +19,13 @@ public class DroidController
 {
   @GetMapping({"/"})
   public StatusResult home() {
-    return new StatusResult("Service is available! Status : Running!", true);
+
+    String env = System.getenv("PREINGEST_WEBAPI");
+
+    if(env == null)
+      env = "value is empty! Please start process with environment variable 'PREINGEST_WEBAPI'";
+    
+    return new StatusResult("Service is available, Status : Running, Environment to preingest webapi : "+env, true);
   }
 
   
