@@ -40,7 +40,9 @@ services:
     volumes:
         - "${DATAFOLDER}:/data" 
     expose:
-        - "8080"     
+        - "8080"
+    environment:
+        - "PREINGEST_WEBAPI=http://Noord.HollandsArchief.Pre.Ingest.WebApi"        
     networks :
         - preingest-network        
   preingest:
