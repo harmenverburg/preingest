@@ -40,13 +40,11 @@
     </xsl:template>
     
     <xsl:template name="body-content">
-        <div>
+        <div id="main-div" data-guid="{$preingestguid}" data-prefix="{$nha:actions-uri-prefix}">
             <p><img src="/img/logo.png" style="float: right; width: 10em"/></p>
             <xsl:choose>
                 <xsl:when test="exists($preingestguid)">
-                    <xsl:call-template name="normal-body">
-                        <xsl:with-param name="preingestguid" select="$preingestguid"/>
-                    </xsl:call-template>
+                    <xsl:call-template name="normal-body"/>
                 </xsl:when>
                 <xsl:otherwise>
                     <xsl:call-template name="error-body"/>
@@ -61,10 +59,6 @@
     </xsl:template>
     
     <xsl:template name="normal-body">
-        <xsl:param name="preingestguid" as="xs:string" required="yes"/>
-        
-        <!-- TODO bij het opbouwen van de pagina controleren of de json/droid/csv-bestanden aanwezig zijn en zo de knoppen kleuren. -->
-        
         <h1>Archiefbewerkingen</h1>
         <h2>Uitgepakte bestanden controleren en bewerken<br/>
             De folder met uitgepakte bestanden is {$preingestguid}</h2>
@@ -72,7 +66,7 @@
             <tbody>
                 <tr>
                     <th>Scan uitvoeren voor het detecteren van virussen</th>
-                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="ScanVirusValidationHandler.json" data-action="virusscan" data-prefix="{$nha:actions-uri-prefix}" data-guid="{$preingestguid}">Viruscontrole&#x2026;</button></td>
+                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="ScanVirusValidationHandler.json" data-action="virusscan">Viruscontrole&#x2026;</button></td>
                 </tr>
                 <tr style="display: none;">
                     <td colspan="2">
@@ -93,7 +87,7 @@
                 </tr>
                 <tr>
                     <th>Benamingen van mappen en bestanden controleren op ongewenste karakters en gereserveerde bestandsnamen</th>
-                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="NamingValidationHandler.json" data-action="naming" data-prefix="{$nha:actions-uri-prefix}" data-guid="{$preingestguid}">Bestandsnamen controleren&#x2026;</button></td>
+                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="NamingValidationHandler.json" data-action="naming">Bestandsnamen controleren&#x2026;</button></td>
                 </tr>
                 <tr style="display: none">
                     <td colspan="2"><div class="report">
@@ -107,15 +101,15 @@
                 <tr>
                     <th>Mappen en bestanden controlen op sidecarstructuur</th>
                     <!-- TODO naast SidecarValidationHandler_Archief.json heb je ook SidecarValidationHandler_Dossier.json, etc. -->
-                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="SidecarValidationHandler_Archief.json" data-action="sidecar" data-prefix="{$nha:actions-uri-prefix}" data-guid="{$preingestguid}">Sidecarstructuur controleren&#x2026;</button></td>
+                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="SidecarValidationHandler_Archief.json" data-action="sidecar">Sidecarstructuur controleren&#x2026;</button></td>
                 </tr>
                 <tr>
                     <th>Droid voorbereiden om een map (en onderliggende objecten) te scannen voor metagegevens</th>
-                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="{$preingestguid}.droid" data-action="profiling" data-prefix="{$nha:actions-uri-prefix}" data-guid="{$preingestguid}">Droid voorbereiden&#x2026;</button></td>
+                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="{$preingestguid}.droid" data-action="profiling">Droid voorbereiden&#x2026;</button></td>
                 </tr>
                 <tr>
                     <th>Droid metagegevens exporteren naar een CSV-bestand; vereist eerst de actie 'Droid voorbereiden&#x2026;'</th>
-                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="{$preingestguid}.droid.csv" data-action="exporting" data-prefix="{$nha:actions-uri-prefix}" data-guid="{$preingestguid}">CSV-bestand aanmaken&#x2026;</button></td>
+                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="{$preingestguid}.droid.csv" data-action="exporting">CSV-bestand aanmaken&#x2026;</button></td>
                 </tr>
                 <tr>
                     <th>Droid metagegevens exporteren naar een PDF- of een XML-bestand; vereist eerst de actie 'Droid voorbereiden&#x2026;' [TODO]</th>
@@ -127,19 +121,19 @@
                             <option value="planets">Planets-XML</option>
                         </select>
                         <br/>
-                        <button disabled="disabled" onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="TODO.json" data-action="reporting" data-prefix="{$nha:actions-uri-prefix}" data-guid="{$preingestguid}">PDF- of XML-bestand aanmaken&#x2026;</button></td>
+                        <button disabled="disabled" onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="TODO.json" data-action="reporting">PDF- of XML-bestand aanmaken&#x2026;</button></td>
                 </tr>
                 <tr>
                     <th>Bestanden controleren of deze in de 'greenlist' voorkomen. Vereist eerst de actie 'Droid metagegevens exporteren&#x2026;'</th>
-                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="GreenListHandler.json" data-action="greenlist" data-prefix="{$nha:actions-uri-prefix}" data-guid="{$preingestguid}">Greenlistcontrole&#x2026;</button></td>
+                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="GreenListHandler.json" data-action="greenlist">Greenlistcontrole&#x2026;</button></td>
                 </tr>
                 <tr>
                     <th>Metadata bestanden controleren op de encoding</th>
-                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="EncodingHandler.json" data-action="encoding" data-prefix="{$nha:actions-uri-prefix}" data-guid="{$preingestguid}">Encodingcontrole&#x2026;</button></td>
+                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="EncodingHandler.json" data-action="encoding">Encodingcontrole&#x2026;</button></td>
                 </tr>
                 <tr>
                     <th>Metadata valideren aan de hand van xml-schema (XSD) en schematron</th>
-                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="MetadataValidationHandler.json" data-action="validate" data-prefix="{$nha:actions-uri-prefix}" data-guid="{$preingestguid}">Schema(tron)-controle&#x2026;</button></td>
+                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="MetadataValidationHandler.json" data-action="validate">Schema(tron)-controle&#x2026;</button></td>
                 </tr>
                 <tr style="display: none">
                     <td colspan="2"><div class="report">
@@ -152,15 +146,15 @@
                     <td>
                         <input type="text" size="40" placeholder="Optioneel: preservica-id voor toevoeging" value="" />
                         <br/>
-                        <button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="TransformationHandler.json" data-action="transform" data-prefix="{$nha:actions-uri-prefix}" data-guid="{$preingestguid}">Omvormen naar XIP&#x2026;</button></td>
+                        <button onclick="doOperationsButton(this, {$nha:refresh-value})" data-waitforfile="TransformationHandler.json" data-action="transform">Omvormen naar XIP&#x2026;</button></td>
                 </tr>
                 <tr>
                     <th>Binary bestand bijwerken met PRONOM, Greenlist en Encoding gegevens (indien deze data beschikbaar zijn) [TODO]</th>
-                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" disabled="disabled" data-waitforfile="TODO.json" data-action="updatebinary" data-prefix="{$nha:actions-uri-prefix}" data-guid="{$preingestguid}">Binary bijwerken&#x2026;</button></td>
+                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" disabled="disabled" data-waitforfile="TODO.json" data-action="updatebinary">Binary bijwerken&#x2026;</button></td>
                 </tr>
                 <tr>
                     <th>Bestanden laten verwerken door Preservica SIP Creator [TODO]</th>
-                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" disabled="disabled" data-waitforfile="TODO.json" data-action="sipcreator" data-prefix="{$nha:actions-uri-prefix}" data-guid="{$preingestguid}">Sipcreator&#x2026;</button></td>
+                    <td><button onclick="doOperationsButton(this, {$nha:refresh-value})" disabled="disabled" data-waitforfile="TODO.json" data-action="sipcreator">Sipcreator&#x2026;</button></td>
                 </tr>
             </tbody>
         </table>

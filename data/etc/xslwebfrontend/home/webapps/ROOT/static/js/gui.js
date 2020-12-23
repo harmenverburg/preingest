@@ -44,7 +44,7 @@ function doCheckButton(checkButton, uncompressButtonId, urlStart, checksumTypeFi
     let selectedFile = getRadioValue(selectedFileFieldId);
     let uncompressButton = document.getElementById(uncompressButtonId);
     
-    let url = urlStart + '?action=calculate&checksum-type=' + checksumType + '&relative-path=' + selectedFile;
+    let url = urlStart + '?action=calculate&checksum-type=' + checksumType + '&relative-path=' + encodeURI(selectedFile);
     
     if ((selectedFile != null) && (checksumType !== '') && checksumValue !== '') {
         ableButton(checkButton, false, "opProgress");
@@ -52,10 +52,12 @@ function doCheckButton(checkButton, uncompressButtonId, urlStart, checksumTypeFi
         
         loadJSON(url, function () {
             let preingestSessionId = this.response.sessionId;
+            let actionId = this.response.actionId;
             
             let timer = setInterval(function () {
-                let pollURL = urlStart + '?action=check-for-tar-json-file&relative-path=' + selectedFile + '&preingest-session-id=' + preingestSessionId;
-                fileChecksumPoller(timer, pollURL, checksumType, checksumValue, checkButton, uncompressButton);
+                let pollURL = urlStart + "?action=check-action-result&action-id=" + actionId + "&relative-path=" + encodeURI(selectedFile);
+                
+                actionResultPoller(timer, pollURL, checksumType, checksumValue, checkButton, uncompressButton);
             },
             pollIntervalMS);
         });
@@ -76,7 +78,7 @@ function doUncompressButton(uncompressButton, urlStart, selectedFileFieldId, pol
             
             let timer = setInterval(function () {
                 let pollURL = urlStart + '?action=check-for-file-with-ok&relative-path=' + preingestSessionId + "/UnpackTarHandler.json";
-                fileOKCheckPoller(timer, pollURL, function() {
+                fileOKCheckPoller(timer, pollURL, "Unpack", function() {
                      ableButton(uncompressButton, true, "opSuccess");
                      let a = document.getElementById('proceedlink');
                      let href = a.href;
@@ -92,12 +94,16 @@ function doUncompressButton(uncompressButton, urlStart, selectedFileFieldId, pol
 }
 
 function doOperationsButton(clickedButton, pollIntervalMS) {
+    let mainDiv = document.getElementById("main-div");
+    let guid = mainDiv.dataset.guid;
+    let actionsPrefix = mainDiv.dataset.prefix;
+    
     ableButton(clickedButton, false, "opProgress");
-    let url = clickedButton.dataset.prefix + "?action=" + clickedButton.dataset.action + "&sessionid=" + clickedButton.dataset.guid;
+    let url = actionsPrefix + "?action=" + clickedButton.dataset.action + "&sessionid=" + guid;
     loadJSON(url, function () {
         let timer = setInterval(function () {
-            let pollURL = clickedButton.dataset.prefix + '?action=check-for-file&relative-path=' + clickedButton.dataset.guid + "/" + clickedButton.dataset.waitforfile;
-            fileOKCheckPoller(timer, pollURL, function() {
+            let pollURL = "/actions" + "?action=check-for-file&relative-path=" + guid + "/" + clickedButton.dataset.waitforfile;
+            fileOKCheckPoller(timer, pollURL, "OK", function() {
                 ableButton(clickedButton, true, "opSuccess");
             }, function() {
                     ableButton(clickedButton, true, "opFailure");
@@ -107,14 +113,14 @@ function doOperationsButton(clickedButton, pollIntervalMS) {
     });
 }
 
-function fileOKCheckPoller(timer, url, successFunction, failFunction) {
+function fileOKCheckPoller(timer, url, requiredCode, successFunction, failFunction) {
     loadJSON(url, function () {
         let code = this.response.code;
         if (code != null) {
             clearInterval(timer);
             
-            if (code !== "OK") {
-                showError("De statuscode is niet OK maar " + code);
+            if (code !== requiredCode) {
+                showError("De statuscode is niet " + requiredCode + " maar " + code);
                 if (failFunction != undefined) {
                     failFunction.call(this);
                 }
@@ -143,6 +149,33 @@ function fileChecksumPoller(timer, url, requiredChecksumType, requiredChecksumVa
                 ableButton(uncompressButton, true);
             }
             
+        }
+    });
+}
+
+
+function actionResultPoller(timer, url, requiredChecksumType, requiredChecksumValue, checkButton, uncompressButton) {
+    loadJSON(url, function () {
+        if (this.response != undefined && this.response.status != null) {
+            clearInterval(timer);
+            
+            let status = this.response.status;
+            
+            if (status != 'completed') {
+                ableButton(checkButton, true, "opFailure");
+                showError("Het checksumtype en/of de checksumwaarde komen niet overeen; vereist/gevonden: " + requiredChecksumType + "/" + checksumType + ", " + requiredChecksumValue + "/" + checksumValue);
+            } else {
+                let checksumType = this.response.checksumType;
+                let checksumValue = this.response.checksumValue;
+                
+                if ((checksumType !== requiredChecksumType) || (checksumValue !== requiredChecksumValue)) {
+                    ableButton(checkButton, true, "opFailure");
+                    showError("Het checksumtype en/of de checksumwaarde komen niet overeen; vereist/gevonden: " + requiredChecksumType + "/" + checksumType + ", " + requiredChecksumValue + "/" + checksumValue);
+                } else {
+                    ableButton(checkButton, false, "opSuccess");
+                    ableButton(uncompressButton, true);
+                }
+            }            
         }
     });
 }

@@ -42,6 +42,15 @@
       <value>/api/preingest</value>
     </parameter>
     
+    <parameter name="status-api-basepath" type="xs:string">
+      <value>/api/status</value>
+    </parameter>
+    
+    
+    <parameter name="output-api-basepath" type="xs:string">
+      <value>/api/output</value>
+    </parameter>
+    
     <parameter name="archives-file-glob" type="xs:string">
       <value>*.tar</value>
     </parameter>

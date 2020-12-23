@@ -34,3 +34,9 @@ data/etc/tomcat/logs/
 klad.yml
 
 up-8000.sh
+
+up-55004.sh
+
+docker-compose-poort.yml
+
+data/etc/preingest.db
