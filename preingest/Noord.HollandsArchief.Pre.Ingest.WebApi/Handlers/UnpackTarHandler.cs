@@ -29,7 +29,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             if (!Directory.Exists(sessionFolder))
                 Directory.CreateDirectory(sessionFolder);
 
-            var process = new Process()
+            var tarProcess = new Process()
             {
                 StartInfo = new ProcessStartInfo
                 {
@@ -44,15 +44,30 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
             this.Logger.LogDebug("Unpacking container '{0}'", containerFile);
 
-            process.Start();
+            tarProcess.Start();
 
-            string output = process.StandardOutput.ReadToEnd();
-            string error = process.StandardError.ReadToEnd();
-                       
-            process.WaitForExit();
-
+            string output = tarProcess.StandardOutput.ReadToEnd();
+            string error = tarProcess.StandardError.ReadToEnd();
+           
             if (!String.IsNullOrEmpty(output))
-                this.Logger.LogDebug(output);
+                this.Logger.LogDebug(output); 
+            
+            tarProcess.WaitForExit();
+
+            var chmodProcess = new Process()
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "chmod",
+                    Arguments = String.Format("-R ugo+rwX {0}", sessionFolder),
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                }
+            };
+
+            chmodProcess.WaitForExit();
 
             ProcessResult item = new ProcessResult(SessionGuid)
             {
