@@ -27,7 +27,9 @@
         
         <xsl:variable name="httprequest" as="element(http:http-request)">
             <http:http-request method="POST" href="{$url}">
-                <http:body media-type="application/x-www-form-urlencoded">dummy=dummy&amp;{$queryparams}</http:body>
+                <!-- We want nothing else back but json -->
+                <http:header name="Accept" value="application/json"/>
+                <http:body media-type="application/x-www-form-urlencoded">dummy=dummy{if (string($queryparams) ne '') then '&amp;' || $queryparams else ''}</http:body>
             </http:http-request>
         </xsl:variable>
         
@@ -35,9 +37,15 @@
 
         <xsl:choose>
             <xsl:when test="$httpresponse[1]/@status eq '200'">
+                <!-- TODO remove writes <xsl:message> does not give complete output --> 
+                <xsl:sequence select="file:write('/data/httpresponse.xml', $httpresponse[1])"/>
+                <xsl:sequence select="file:write-text('/data/httpresponse.txt', string($httpresponse[2]))"/>
+                <xsl:sequence select="file:write-binary('/data/httpresponse.bin', $httpresponse[2])"/>
+                
                 <xsl:choose>
                     <xsl:when test="starts-with($httpresponse[1]/http:body/@media-type, 'application/json')">
                         <xsl:try>
+                            <xsl:message>http-post-request-json, $url="{$url}", $httpresponse[2]={$httpresponse[2]}</xsl:message>
                             <xsl:sequence select="parse-json($httpresponse[2])"/>
                             <xsl:catch>
                                 <xsl:message>parsing json failed, errorcode={$err:code}, omschrijving="{$err:description}", module="{$err:module}", regelnummer="{$err:line-number}"</xsl:message>
@@ -81,45 +89,6 @@
         
         <xsl:variable name="response" as="element(json:map)">
             <xsl:choose>
-                <xsl:when test="$action eq 'check-for-file'">
-                    <xsl:variable name="relative-path" as="xs:string" select="nha:get-parameter-value(/req:request, 'relative-path')"/>
-                    <xsl:variable name="absolute-path" as="xs:string" select="$nha:archives-folder-path || file:dir-separator() || $relative-path"/>
-                    
-                    <xsl:choose>
-                        <xsl:when test="file:exists($absolute-path)">
-                            <xsl:message>Check: absolute-path={$absolute-path} -- BESTAAT</xsl:message>
-                            <json:map>
-                                <json:string key="code">OK</json:string>
-                            </json:map>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:message>Check: absolute-path={$absolute-path} -- BESTAAT NIET</xsl:message>
-                            <json:map>
-                                <json:null key="code"/>
-                            </json:map>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:when>
-                <xsl:when test="$action eq 'check-for-file-with-ok'">
-                    <xsl:variable name="relative-path" as="xs:string" select="nha:get-parameter-value(/req:request, 'relative-path')"/>
-                    <xsl:variable name="absolute-path" as="xs:string" select="$nha:archives-folder-path || file:dir-separator() || $relative-path"/>
-                    
-                    <xsl:variable name="absolute-uri" as="xs:anyURI" select="file:path-to-uri($nha:archives-folder-path || file:dir-separator() || nha:encode-path-for-uri($relative-path))"/>
-                    <xsl:choose>
-                        <xsl:when test="file:exists($absolute-path)">
-                            <xsl:variable name="json" as="map(*)" select="json:json-doc($absolute-uri)"/>
-                            <json:map>
-                                <json:string key="sessionId">{$json?SessionId}</json:string>
-                                <json:string key="code">{$json?Code}</json:string>
-                            </json:map>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <json:map>
-                                <json:null key="sessionId"/>
-                            </json:map>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:when>
                 <xsl:when test="$action eq 'action-result'">
                     <xsl:variable name="action-id" as="xs:string" select="nha:get-parameter-value(/req:request, 'action-id')"/>
                     <xsl:variable name="session-id" as="xs:string" select="nha:get-parameter-value(/req:request, 'session-id')"/>
@@ -206,6 +175,7 @@
                     <!-- TODO sipcreator heeft misschien ook preservica-id (optioneel) nodig, indien bij transform gebruikt. -->
                     <xsl:variable name="sessionid" as="xs:string" select="nha:get-parameter-value(/req:request, 'sessionid')"/>
                     <xsl:variable name="json-uri" as="xs:string" select="$nha:preingest-uri-prefix || '/' || $action || '/' || encode-for-uri($sessionid)"/>
+                    <xsl:message>$action="{$action}", $json-uri="{$json-uri}"</xsl:message>
                     <xsl:sequence select="nha:http-post-request-json($json-uri, ())"/>
                 </xsl:when>
                 <xsl:when test="$action eq 'reporting'">
