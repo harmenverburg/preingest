@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Mono.Unix;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using System;
 using System.Diagnostics;
@@ -29,7 +30,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             if (!Directory.Exists(sessionFolder))
                 Directory.CreateDirectory(sessionFolder);
 
-            var tarProcess = new Process()
+            string output = string.Empty;
+            string error = string.Empty;
+
+            using (var tarProcess = new Process()
             {
                 StartInfo = new ProcessStartInfo
                 {
@@ -40,34 +44,23 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     UseShellExecute = false,
                     CreateNoWindow = true,
                 }
-            };
+            })
+            {
+                tarProcess.Start();
+                
+                this.Logger.LogDebug("Unpacking container '{0}'", containerFile);
 
-            this.Logger.LogDebug("Unpacking container '{0}'", containerFile);
+                output = tarProcess.StandardOutput.ReadToEnd();
+                error = tarProcess.StandardError.ReadToEnd();
 
-            tarProcess.Start();
-
-            string output = tarProcess.StandardOutput.ReadToEnd();
-            string error = tarProcess.StandardError.ReadToEnd();
-           
-            if (!String.IsNullOrEmpty(output))
+                if (!String.IsNullOrEmpty(output))
                 this.Logger.LogDebug(output); 
             
-            tarProcess.WaitForExit();
+                tarProcess.WaitForExit();
+            }
 
-            var chmodProcess = new Process()
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "chmod",
-                    Arguments = String.Format("-R ugo+rwX {0}", sessionFolder),
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
-
-            chmodProcess.WaitForExit();
+            var unixDirInfo = new UnixDirectoryInfo(sessionFolder);
+            ScanPath(unixDirInfo);
 
             ProcessResult item = new ProcessResult(SessionGuid)
             {
@@ -87,6 +80,26 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
             if (File.Exists(containerFile))            
                 File.Delete(containerFile);            
+        }
+
+        private void ScanPath(UnixDirectoryInfo dirinfo)
+        {
+            dirinfo.FileAccessPermissions = FileAccessPermissions.AllPermissions;
+            foreach (var fileinfo in dirinfo.GetFileSystemEntries())
+            {                
+                switch (fileinfo.FileType)
+                {
+                    case FileTypes.RegularFile:    
+                        fileinfo.FileAccessPermissions = FileAccessPermissions.AllPermissions;                    
+                        break;
+                    case FileTypes.Directory:
+                        ScanPath((UnixDirectoryInfo)fileinfo);
+                        break;
+                    default:
+                        /* Do nothing for symlinks or other weird things. */
+                        break;
+                }
+            }
         }
     }
 }

@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UserSecretsId>e5ac314a-1cc0-4a33-a354-d7384efe85da</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileRunArguments>-v "D:/data:/data" --network preingest_development_preingest-network</DockerfileRunArguments> 
+    <DockerfileRunArguments>-v "D:/data:/data"</DockerfileRunArguments> 
     <AssemblyName>Noord.HollandsArchief.Pre.Ingest.WebApi</AssemblyName>
     <RootNamespace>Noord.HollandsArchief.Pre.Ingest.WebApi</RootNamespace>
   </PropertyGroup>
@@ -26,6 +26,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
+    <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
     <PackageReference Include="nClamCI" Version="4.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
