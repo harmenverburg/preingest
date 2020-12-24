@@ -176,7 +176,7 @@
                 <xsl:when test="$action eq 'unpack'">
                     <xsl:variable name="relative-path" as="xs:string" select="nha:get-parameter-value(/req:request, 'relative-path')"/>
                     <xsl:variable name="json-uri" as="xs:string" select="$nha:preingest-uri-prefix || '/unpack/' || encode-for-uri($relative-path)"/>
-                    <xsl:variable name="json-doc" select="json-doc($json-uri)"/>
+                    <xsl:variable name="json-doc" select="nha:http-post-request-json($json-uri, ())"/>
                     <json:map>
                         <json:string key="sessionId">{$json-doc?sessionId}</json:string>
                         <json:string key="actionId">{$json-doc?actionId}</json:string>
