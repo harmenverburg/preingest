@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import nl.noord.hollandsarchief.droid.entities.BodyAction;
+import nl.noord.hollandsarchief.droid.entities.NewActionResult;
 
 public class ProfilesHandler extends CommandHandler {
   private String _guid = null;
@@ -12,9 +13,9 @@ public class ProfilesHandler extends CommandHandler {
     this._guid = guid;
   }
 
-  public void execute() {
+  public NewActionResult execute() {
     boolean copyResult = copyProfileTemplate(this._guid);
-
+    NewActionResult result = null;
     if (copyResult) {
       String sessiondId = String.format("%1$2s%2$2s", new Object[] { this.ARCHIVEDATA_LINUX_FOLDER, this._guid });
       String collectionName = "";
@@ -33,8 +34,10 @@ public class ProfilesHandler extends CommandHandler {
           String.format("\"%1$2s%2$2s/%3$2s\"",
               new Object[] { this.ARCHIVEDATA_LINUX_FOLDER, this._guid, collectionName }),
           "-p",
-          // String.format("\"%1$2s%2$2s/%2$2s.droid\"", new Object[] { this.ARCHIVEDATA_LINUX_FOLDER, this._guid })
-          String.format("\"%1$2s%2$2s/%3$2s.droid\"", new Object[] { this.ARCHIVEDATA_LINUX_FOLDER, this._guid, "DroidValidationHandler" }) };
+          // String.format("\"%1$2s%2$2s/%2$2s.droid\"", new Object[] {
+          // this.ARCHIVEDATA_LINUX_FOLDER, this._guid })
+          String.format("\"%1$2s%2$2s/%3$2s.droid\"",
+              new Object[] { this.ARCHIVEDATA_LINUX_FOLDER, this._guid, "DroidValidationHandler" }) };
 
       try {
         if (command.length > 0) {
@@ -43,11 +46,14 @@ public class ProfilesHandler extends CommandHandler {
           jsonData.description = String.join(" ", command);
           jsonData.result = "DroidValidationHandler.droid";
 
-          runSeperateThread(jsonData, this._guid, command);
+          result = this.registerNewAction(this._guid, jsonData);
+          String processId = result != null ? result.processId : null;
+          runSeperateThread(processId, this._guid, command);
         }
       } catch (IOException ioe) {
         ioe.printStackTrace();
       }
     }
+    return result;
   }
 }

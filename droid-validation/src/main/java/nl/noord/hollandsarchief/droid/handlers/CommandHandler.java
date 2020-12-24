@@ -53,7 +53,7 @@ public abstract class CommandHandler implements ICommandHandler {
     runSeperateThread(null, null, commandArgs);
   }
 
-  protected void runSeperateThread(BodyAction jsonData, String guid, String[] commandArgs) throws IOException {
+  protected void runSeperateThread(String processGuid, String guid, String[] commandArgs) throws IOException {
 
     System.out.println(" ");
     System.out.println("==========Arguments Passed From Command line===========");
@@ -62,7 +62,7 @@ public abstract class CommandHandler implements ICommandHandler {
     System.out.println("=======================================================");
     System.out.println(" ");
 
-    if (guid == null || jsonData == null) {
+    if (guid == null || processGuid == null) {
       final Thread mainThread = new Thread() {
         @Override
         public void run() {
@@ -81,11 +81,11 @@ public abstract class CommandHandler implements ICommandHandler {
         @Override
         public void run() {
           boolean isError = false;
-          NewActionResult requestResult = registerNewAction(guid, jsonData);
+
           try {
             // send start signal
-            if (requestResult != null) {
-              String actionGuid = requestResult.processId;
+            if (processGuid != null) {
+              String actionGuid = processGuid;
               registerStartStatus(actionGuid);
             }
             executeLogic(commandArgs);            
@@ -93,17 +93,17 @@ public abstract class CommandHandler implements ICommandHandler {
             // send error signal
             // return of course
             e.printStackTrace();
-            if (requestResult != null) {
+            if (processGuid != null) {
               BodyMessage message = new BodyMessage();
               message.message = e.getMessage();
-              String actionGuid = requestResult.processId;
+              String actionGuid = processGuid;
               registerFailedStatus(actionGuid, message);
             }
             isError = true;
           } finally {
             // send completed signal
-            if (requestResult != null && !isError) {
-              String actionGuid = requestResult.processId;
+            if (processGuid != null && !isError) {
+              String actionGuid = processGuid;
               registerCompletedStatus(actionGuid);
             }
           }
@@ -113,7 +113,7 @@ public abstract class CommandHandler implements ICommandHandler {
     }
   }
 
-  private NewActionResult registerNewAction(String folderGuid, BodyAction jsonData) {
+  protected NewActionResult registerNewAction(String folderGuid, BodyAction jsonData) {
 
     String env = System.getenv("PREINGEST_WEBAPI");
     String url = "";
@@ -147,7 +147,7 @@ public abstract class CommandHandler implements ICommandHandler {
     return result;
   }
 
-  private void registerStartStatus(String actionGuid) {
+  protected void registerStartStatus(String actionGuid) {
 
     String env = System.getenv("PREINGEST_WEBAPI");
     String url = "";
@@ -177,7 +177,7 @@ public abstract class CommandHandler implements ICommandHandler {
     }
   }
 
-  private void registerCompletedStatus(String actionGuid) {
+  protected void registerCompletedStatus(String actionGuid) {
 
     String env = System.getenv("PREINGEST_WEBAPI");
     String url = "";
@@ -207,7 +207,7 @@ public abstract class CommandHandler implements ICommandHandler {
     }
   }
 
-  private void registerFailedStatus(String actionGuid, BodyMessage message) {
+  protected void registerFailedStatus(String actionGuid, BodyMessage message) {
 
     String env = System.getenv("PREINGEST_WEBAPI");
     String url = "";
@@ -299,7 +299,8 @@ public abstract class CommandHandler implements ICommandHandler {
     return result;
   }
 
-  public void execute() {
+  public NewActionResult execute() throws Exception {
     System.out.println("Java CommandHandler (execute): Not implemented.");
+    throw new Exception("Function is not implemented.");
   }
 }

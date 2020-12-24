@@ -1,5 +1,7 @@
 package nl.noord.hollandsarchief.droid.handlers;
 
+import nl.noord.hollandsarchief.droid.entities.NewActionResult;
+
 public interface ICommandHandler {
   String currentApplicationLocation();
   
@@ -7,5 +9,5 @@ public interface ICommandHandler {
   
   boolean existsDroidFolder();
   
-  void execute();
+  NewActionResult execute() throws Exception;
 }

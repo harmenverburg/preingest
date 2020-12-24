@@ -1,5 +1,6 @@
 package nl.noord.hollandsarchief.droid;
 
+import nl.noord.hollandsarchief.droid.entities.NewActionResult;
 import nl.noord.hollandsarchief.droid.entities.StatusResult;
 import nl.noord.hollandsarchief.droid.handlers.ExportingHandler;
 import nl.noord.hollandsarchief.droid.handlers.ProfilesHandler;
@@ -25,22 +26,23 @@ public class DroidController
     if(env == null)
       env = "value is empty! Please start process with environment variable 'PREINGEST_WEBAPI'";
     
-    return new StatusResult("Service is available, Status : Running, Environment to preingest webapi : "+env, true);
+    return new StatusResult("Service is available, Status : Running, Environment to preingest webapi : " + env, true, null);
   }
 
   
   @GetMapping({"/profiles/{guid}"})
-  public StatusResult profiled(@PathVariable String guid) {
+  public StatusResult profiling(@PathVariable String guid) {
     ProfilesHandler handler = new ProfilesHandler(guid);
     if (!handler.existsArchiveFolder()) {
-      return new StatusResult("Archive folder not found!", false);
+      return new StatusResult("Archive folder not found!", false, null);
     }
     if (!handler.existsDroidFolder()) {
-      return new StatusResult("Droid folder not found!", false);
+      return new StatusResult("Droid folder not found!", false, null);
     }
-    handler.execute();
-    
-    return new StatusResult("Adding and preparing resource.", true);
+
+    NewActionResult result = handler.execute();
+    String actionId = result!=null ? result.processId : null;
+    return new StatusResult("Adding and preparing resource.", true, actionId);
   }
   
   @GetMapping({"/reporting/pdf/{guid}"})
@@ -48,15 +50,15 @@ public class DroidController
     ReportingHandler handler = new ReportingHandler(guid);
     
     if (!handler.existsArchiveFolder()) {
-      return new StatusResult("Archive folder not found!", false);
+      return new StatusResult("Archive folder not found!", false, null);
     }
     if (!handler.existsDroidFolder()) {
-      return new StatusResult("Droid folder not found!", false);
+      return new StatusResult("Droid folder not found!", false, null);
     }
     
-    handler.doPdf();
-    
-    return new StatusResult("Generating results.", true);
+    NewActionResult result = handler.doPdf();
+    String actionId = result!=null ? result.processId : null;
+    return new StatusResult("Generating results.", true, actionId);
   }
   
   @GetMapping({"/reporting/droid/{guid}"})
@@ -64,15 +66,15 @@ public class DroidController
     ReportingHandler handler = new ReportingHandler(guid);
     
     if (!handler.existsArchiveFolder()) {
-      return new StatusResult("Archive folder not found!", false);
+      return new StatusResult("Archive folder not found!", false, null);
     }
     if (!handler.existsDroidFolder()) {
-      return new StatusResult("Droid folder not found!", false);
+      return new StatusResult("Droid folder not found!", false, null);
     }
     
-    handler.doDroid();
-    
-    return new StatusResult("Generating results.", true);
+    NewActionResult result = handler.doDroid();
+    String actionId = result!=null ? result.processId : null;
+    return new StatusResult("Generating results.", true, actionId);
   }
   
   @GetMapping({"/reporting/planets/{guid}"})
@@ -80,15 +82,15 @@ public class DroidController
     ReportingHandler handler = new ReportingHandler(guid);
     
     if (!handler.existsArchiveFolder()) {
-      return new StatusResult("Archive folder not found!", false);
+      return new StatusResult("Archive folder not found!", false, null);
     }
     if (!handler.existsDroidFolder()) {
-      return new StatusResult("Droid folder not found!", false);
+      return new StatusResult("Droid folder not found!", false, null);
     }
     
-    handler.doPlanets();
-    
-    return new StatusResult("Generating results.", true);
+    NewActionResult result = handler.doPlanets();
+    String actionId = result!=null ? result.processId : null;
+    return new StatusResult("Generating results.", true, actionId);
   }
   
   @GetMapping({"/exporting/{guid}"})
@@ -96,15 +98,15 @@ public class DroidController
     ExportingHandler handler = new ExportingHandler(guid);
     
     if (!handler.existsArchiveFolder()) {
-      return new StatusResult("Archive folder not found!", false);
+      return new StatusResult("Archive folder not found!", false, null);
     }
     if (!handler.existsDroidFolder()) {
-      return new StatusResult("Droid folder not found!", false);
+      return new StatusResult("Droid folder not found!", false, null);
     }
     
-    handler.execute();
-    
-    return new StatusResult("Exporting results.", true);
+    NewActionResult result = handler.execute();
+    String actionId = result!=null ? result.processId : null;
+    return new StatusResult("Exporting results.", true, actionId);
   }
   
   @GetMapping({"/signature/update"})
@@ -112,14 +114,15 @@ public class DroidController
     SignatureHandler handler = new SignatureHandler();
     
     if (!handler.existsArchiveFolder()) {
-      return new StatusResult("Archive folder not found!", false);
+      return new StatusResult("Archive folder not found!", false, null);
     }
     if (!handler.existsDroidFolder()) {
-      return new StatusResult("Droid folder not found!", false);
+      return new StatusResult("Droid folder not found!", false, null);
     }
     
-    handler.execute();
+    handler.doUpdateCheck();
+    handler.doDownloadUpdate();
     
-    return new StatusResult("Signature results.", true);
+    return new StatusResult("Signature results.", true, null);
   }
 }
