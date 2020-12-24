@@ -68,7 +68,7 @@
 			}
 		},
 		"/preingest/unpack/{collectionName}": {
-			"get": {
+			"post": {
 				"tags": [
 					"Uitpakken van een tar container (bestand)."
 				],

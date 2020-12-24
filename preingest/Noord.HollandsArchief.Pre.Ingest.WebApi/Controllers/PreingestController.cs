@@ -115,7 +115,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         }
 
         //Voorbereiding  
-        [HttpGet("unpack/{collectionName}", Name = "Unpack tar collection", Order = 2)]
+        [HttpPost("unpack/{collectionName}", Name = "Unpack tar collection", Order = 2)]
         public IActionResult Unpack(String collectionName)
         {
             _logger.LogInformation("Enter Unpack.");
@@ -651,7 +651,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return ValidationProblem(e.Message, typeof(GreenListHandler).Name);
             }
             _logger.LogInformation("Exit GreenListCheck.");
-            return new JsonResult(new { Message = String.Format("Greenlist check is started."), SessionId = guid });
+            return new JsonResult(new { Message = String.Format("Greenlist check is started."), SessionId = guid, ActionId = processId });
         }
 
         [HttpPost("encoding/{guid}", Name = "Encoding check .metadata files", Order = 11)]
