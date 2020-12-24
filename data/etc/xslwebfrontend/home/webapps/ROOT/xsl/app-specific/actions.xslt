@@ -21,13 +21,15 @@
     <xsl:include href="commoncode.xslt"/>
     <xsl:include href="json-xml.xslt"/>
     
-    <xsl:function name="nha:http-post-request-json" as="element(json:map)">
+    <xsl:function name="nha:http-post-request-json" as="item()*">
         <xsl:param name="url" as="xs:string"/>
         <xsl:param name="queryparams" as="xs:string?"/>
         
         <xsl:variable name="httprequest" as="element(http:http-request)">
             <http:http-request method="POST" href="{$url}">
-                <http:body media-type="application/x-www-form-urlencoded">dummy=dummy&amp;{$queryparams}</http:body>
+                <!-- We want nothing else back but json -->
+                <http:header name="Accept" value="application/json"/>
+                <http:body media-type="application/x-www-form-urlencoded">dummy=dummy{if (string($queryparams) ne '') then '&amp;' || $queryparams else ''}</http:body>
             </http:http-request>
         </xsl:variable>
         
@@ -38,15 +40,11 @@
                 <xsl:choose>
                     <xsl:when test="starts-with($httpresponse[1]/http:body/@media-type, 'application/json')">
                         <xsl:try>
-                            <xsl:sequence select="parse-json($httpresponse[2])"/>
+                            <xsl:sequence select="parse-json(base64:decode(string($httpresponse[2])))" xmlns:base64="http://www.armatiek.com/xslweb/functions/base64"/>
                             <xsl:catch>
                                 <xsl:message>parsing json failed, errorcode={$err:code}, omschrijving="{$err:description}", module="{$err:module}", regelnummer="{$err:line-number}"</xsl:message>
                             </xsl:catch>
                         </xsl:try>
-                        <!-- TODO Als de json niet parseert, is het wellicht base64binary. Hoe dan ook, we beschouwen dit tijdelijk als een goed resultaat. -->
-                        <json:map>
-                            <json:string key="code">OK</json:string>
-                        </json:map>
                     </xsl:when>
                     <xsl:otherwise>
                         <xsl:message>post-request response is geen json maar "{$httpresponse[1]/http:body/@media-type}"</xsl:message>
@@ -67,59 +65,28 @@
     
     <xsl:function name="nha:get-status-result-names" as="xs:string*">
         <xsl:param name="action-id" as="xs:string"/>
-        <xsl:variable name="json-uri" as="xs:string" select="$nha:status-uri-prefix || '/result/' || encode-for-uri($action-id)"/>
         
-        <xsl:variable name="json-xml" as="document-node()" select="nha:json-doc-as-xml($json-uri)"/>
-        <!--<xsl:sequence select="file:write('/data/json.xml', $json-xml)"/>-->
-        <xsl:variable name="names" as="xs:string*" select="$json-xml//json:name"/>
-        
-        <xsl:sequence select="$names"/>
+        <xsl:choose>
+            <xsl:when test="$action-id ne ''">
+                <xsl:variable name="json-uri" as="xs:string" select="$nha:status-uri-prefix || '/result/' || encode-for-uri($action-id)"/>
+                
+                <xsl:variable name="json-xml" as="document-node()" select="nha:json-doc-as-xml($json-uri)"/>
+                <!--<xsl:sequence select="file:write('/data/json.xml', $json-xml)"/>-->
+                <xsl:variable name="names" as="xs:string*" select="$json-xml//json:name"/>
+                
+                <xsl:sequence select="$names"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:text>Not-yet-implemented</xsl:text>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:function>
     
     <xsl:template match="/">
         <xsl:variable name="action" as="xs:string" select="nha:get-parameter-value(/req:request, 'action')"/>
         
-        <xsl:variable name="response" as="element(json:map)">
+        <xsl:variable name="response" as="item()*">
             <xsl:choose>
-                <xsl:when test="$action eq 'check-for-file'">
-                    <xsl:variable name="relative-path" as="xs:string" select="nha:get-parameter-value(/req:request, 'relative-path')"/>
-                    <xsl:variable name="absolute-path" as="xs:string" select="$nha:archives-folder-path || file:dir-separator() || $relative-path"/>
-                    
-                    <xsl:choose>
-                        <xsl:when test="file:exists($absolute-path)">
-                            <xsl:message>Check: absolute-path={$absolute-path} -- BESTAAT</xsl:message>
-                            <json:map>
-                                <json:string key="code">OK</json:string>
-                            </json:map>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:message>Check: absolute-path={$absolute-path} -- BESTAAT NIET</xsl:message>
-                            <json:map>
-                                <json:null key="code"/>
-                            </json:map>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:when>
-                <xsl:when test="$action eq 'check-for-file-with-ok'">
-                    <xsl:variable name="relative-path" as="xs:string" select="nha:get-parameter-value(/req:request, 'relative-path')"/>
-                    <xsl:variable name="absolute-path" as="xs:string" select="$nha:archives-folder-path || file:dir-separator() || $relative-path"/>
-                    
-                    <xsl:variable name="absolute-uri" as="xs:anyURI" select="file:path-to-uri($nha:archives-folder-path || file:dir-separator() || nha:encode-path-for-uri($relative-path))"/>
-                    <xsl:choose>
-                        <xsl:when test="file:exists($absolute-path)">
-                            <xsl:variable name="json" as="map(*)" select="json:json-doc($absolute-uri)"/>
-                            <json:map>
-                                <json:string key="sessionId">{$json?SessionId}</json:string>
-                                <json:string key="code">{$json?Code}</json:string>
-                            </json:map>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <json:map>
-                                <json:null key="sessionId"/>
-                            </json:map>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:when>
                 <xsl:when test="$action eq 'action-result'">
                     <xsl:variable name="action-id" as="xs:string" select="nha:get-parameter-value(/req:request, 'action-id')"/>
                     <xsl:variable name="session-id" as="xs:string" select="nha:get-parameter-value(/req:request, 'session-id')"/>
@@ -130,25 +97,38 @@
                         
                         <json:map>
                             <xsl:choose>
+                                <xsl:when test="'Not-yet-implemented' = $names"><json:string key="status">not-yet-implemented</json:string></xsl:when>
                                 <xsl:when test="'Failed' = $names"><json:string key="status">failed</json:string></xsl:when>
                                 <xsl:when test="'Completed' = $names">
                                     <!--
                                         Haal de json op aan de hand van session-id en jsonresultfile
-                                        Geef de waarde van Code in de JSON terug in code
+                                        Geef de waarde van Code in de JSON terug in code.
+                                        TODO niet in elke result-JSON wordt de key "Code" toegepast...
                                     -->
                                     <xsl:variable name="result-json-url" as="xs:string" select="$nha:output-uri-prefix || '/json/' || $session-id || '/' || $jsonresultfile"/>
-                                    <xsl:variable name="result-json" as="map(*)" select="json-doc($result-json-url)"/>
+                                    <xsl:variable name="result-json" as="item()" select="json-doc($result-json-url)"/>
+                                    <xsl:variable name="code">
+                                        <xsl:choose>
+                                            <!-- Resultcode may be spelt like Code or code. The contruction ( )[1] solves this.
+                                                 TODO Deal with this, maybe uniform way of result status reporting.
+                                            -->
+                                            <xsl:when test="$result-json instance of map(*)">{($result-json?Code, $result-json?code)[1]}</xsl:when>
+                                            <xsl:when test="$result-json instance of array(*)">check-log</xsl:when>
+                                            <xsl:otherwise>unknown</xsl:otherwise>
+                                        </xsl:choose>
+                                    </xsl:variable>
+                                    <json:string key="code">{$code}</json:string>
                                     <json:string key="status">completed</json:string>
-                                    <json:string key="code">{$result-json?Code}</json:string>
                                 </xsl:when>
                                 <!-- Null indicates: still busy, try again later -->
                                 <xsl:otherwise><json:null key="status"/></xsl:otherwise>
                             </xsl:choose>
                         </json:map>
                         <xsl:catch>
+                            <xsl:message>actions.xslt, action={$action}, loading json failed, errorcode={$err:code}, omschrijving="{$err:description}", module="{$err:module}", regelnummer="{$err:line-number}"</xsl:message>
                             <json:map>
                                 <json:string key="status">error</json:string>
-                                <json:string key="message">loading json failed, errorcode={$err:code}, omschrijving="{$err:description}", module="{$err:module}", regelnummer="{$err:line-number}"></json:string>
+                                <json:string key="message">loading json failed, errorcode={$err:code}, omschrijving="{$err:description}", module="{$err:module}", regelnummer="{$err:line-number}"</json:string>
                             </json:map>
                         </xsl:catch>
                     </xsl:try>
@@ -178,7 +158,7 @@
                         <xsl:catch>
                             <json:map>
                                 <json:string key="status">error</json:string>
-                                <json:string key="message">loading json failed, errorcode={$err:code}, omschrijving="{$err:description}", module="{$err:module}", regelnummer="{$err:line-number}"></json:string>
+                                <json:string key="message">loading json failed, errorcode={$err:code}, omschrijving="{$err:description}", module="{$err:module}", regelnummer="{$err:line-number}"</json:string>
                             </json:map>
                         </xsl:catch>
                     </xsl:try>
@@ -196,29 +176,29 @@
                 <xsl:when test="$action eq 'unpack'">
                     <xsl:variable name="relative-path" as="xs:string" select="nha:get-parameter-value(/req:request, 'relative-path')"/>
                     <xsl:variable name="json-uri" as="xs:string" select="$nha:preingest-uri-prefix || '/unpack/' || encode-for-uri($relative-path)"/>
-                    <xsl:variable name="json-doc" select="json-doc($json-uri)"/>
+                    <xsl:variable name="json-doc" select="nha:http-post-request-json($json-uri, ())"/>
                     <json:map>
                         <json:string key="sessionId">{$json-doc?sessionId}</json:string>
                         <json:string key="actionId">{$json-doc?actionId}</json:string>
                     </json:map>
                 </xsl:when>
-                <xsl:when test="$action = ('virusscan', 'naming', 'sidecar', 'profiling', 'exporting', 'greenlist', 'encoding', 'validate', 'updatebinary', 'sipcreator')">
+                <xsl:when test="$action = ('virusscan', 'naming', 'sidecar', 'greenlist', 'encoding', 'validate', 'transform')">
+                    <xsl:variable name="sessionid" as="xs:string" select="nha:get-parameter-value(/req:request, 'sessionid')"/>
+                    <xsl:variable name="json-uri" as="xs:string" select="$nha:preingest-uri-prefix || '/' || $action || '/' || encode-for-uri($sessionid)"/>
+                    <xsl:variable name="json-doc" select="nha:http-post-request-json($json-uri, ())"/>
+                    <json:map>
+                        <json:string key="sessionId">{$sessionid}</json:string>
+                        <json:string key="actionId">{$json-doc?actionId}</json:string>
+                    </json:map>
+                </xsl:when>
+                <xsl:when test="$action = ('profiling', 'exporting', 'reporting', 'updatebinary', 'sipcreator')">
+                    <!-- TODO Wacht op voorbeelden van JSON-bestanden (en hun namen) voor deze acties. -->
                     <!-- TODO sipcreator heeft misschien ook preservica-id (optioneel) nodig, indien bij transform gebruikt. -->
                     <xsl:variable name="sessionid" as="xs:string" select="nha:get-parameter-value(/req:request, 'sessionid')"/>
-                    <xsl:variable name="json-uri" as="xs:string" select="$nha:preingest-uri-prefix || '/' || $action || '/' || encode-for-uri($sessionid)"/>
-                    <xsl:sequence select="nha:http-post-request-json($json-uri, ())"/>
-                </xsl:when>
-                <xsl:when test="$action eq 'reporting'">
-                    <!-- TODO dropdown voor pdf, xml, .. -->
-                    <xsl:variable name="sessionid" as="xs:string" select="nha:get-parameter-value(/req:request, 'sessionid')"/>
-                    <xsl:variable name="json-uri" as="xs:string" select="$nha:preingest-uri-prefix || '/' || $action || '/' || encode-for-uri($sessionid)"/>
-                    <xsl:sequence select="nha:http-post-request-json($json-uri, ())"/>
-                </xsl:when>
-                <xsl:when test="$action eq 'transform'">
-                    <!-- TODO optioneeel preservica-id, .. -->
-                    <xsl:variable name="sessionid" as="xs:string" select="nha:get-parameter-value(/req:request, 'sessionid')"/>
-                    <xsl:variable name="json-uri" as="xs:string" select="$nha:preingest-uri-prefix || '/' || $action || '/' || encode-for-uri($sessionid)"/>
-                    <xsl:sequence select="nha:http-post-request-json($json-uri, ())"/>
+                    <json:map>
+                        <json:string key="sessionId">{$sessionid}</json:string>
+                        <json:string key="actionId"/>
+                    </json:map>
                 </xsl:when>
                 <xsl:otherwise>
                     <xsl:sequence select="()"/>

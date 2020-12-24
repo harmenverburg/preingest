@@ -44,7 +44,7 @@
     </xsl:template>
     
     <xsl:template name="body-content">
-        <div>
+        <div id="main-div" data-prefix="{$nha:actions-uri-prefix}">
             <p><img src="/img/logo.png" style="float: right; width: 10em"/></p>
             <h1>Archiefselectie</h1>
             
@@ -79,9 +79,9 @@
             </p>
             <p>
                 <button type="submit" name="{$nha:check-button}" 
-                    onclick="doCheckButton(this, '{$nha:uncompress-button}', '{$nha:actions-uri-prefix}', '{$nha:checksumtype-field}', '{$nha:checksumvalue-field}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Check&#x2026;</button>&#160;
+                    onclick="doCheckButton(this, '{$nha:uncompress-button}', '{$nha:checksumtype-field}', '{$nha:checksumvalue-field}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Check&#x2026;</button>&#160;
                 <button disabled="disabled" type="submit" name="{$nha:uncompress-button}" id="{$nha:uncompress-button}"
-                    onclick="doUncompressButton(this, '{$nha:actions-uri-prefix}', '{$nha:selectedfile-field}', {$nha:refresh-value})">Uitpakken&#x2026;</button>
+                    onclick="doUncompressButton(this, '{$nha:selectedfile-field}', {$nha:refresh-value})">Uitpakken&#x2026;</button>
             </p>
             <p style="display: none" id="proceedmessage">Het tarbestand is uitgepakt, ga nu <a id="proceedlink" href="operations/{if ($full-html) then '?full' else ''}">naar de operations-pagina</a>.</p>
         </div>
