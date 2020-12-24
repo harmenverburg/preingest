@@ -106,7 +106,7 @@ function doUncompressButton(uncompressButton, selectedFileFieldId, pollIntervalM
                 
                      if (code !== requiredCode) {
                          ableButton(uncompressButton, true, "opFailure");
-                         showError("De geretourneerde code is niet " + requiredCode + " maar " + code);
+                         showError("De geretourneerde code is niet \"" + requiredCode + "\" maar \"" + code + "\"");
                      } else {
                          ableButton(uncompressButton, false, "opSuccess");
                          let a = document.getElementById('proceedlink');
@@ -127,22 +127,29 @@ function doOperationsButton(clickedButton, pollIntervalMS) {
     let mainDiv = document.getElementById("main-div");
     let guid = mainDiv.dataset.guid;
     let actionsPrefix = mainDiv.dataset.prefix;
+    let requiredResultCode = clickedButton.dataset.resultcode;
     
     ableButton(clickedButton, false, "opProgress");
     
     let url = actionsPrefix + "?action=" + clickedButton.dataset.action + "&sessionid=" + guid;
-    console.log("doOperationsButton, url=" + url);
+    //console.log("doOperationsButton, url=" + url);
     loadJSON(url, function () {
         let preingestSessionId = this.response.sessionId;
         let actionId = this.response.actionId;
-        let requiredCode = "Unpack";
         let jsonResultFile = clickedButton.dataset.waitforfile;
         
         let timer = setInterval(function () {
             let pollURL = actionsPrefix + "?action=action-result&action-id=" + actionId + "&session-id=" + preingestSessionId + "&jsonresultfile=" + encodeURI(jsonResultFile);
             //console.log("doOperationsButton, pollURL=" + pollURL);
             actionResultPoller(timer, pollURL, "completed", function() {
-                ableButton(clickedButton, true, "opSuccess");
+                let code = this.response.code;
+            
+                if (code !== requiredResultCode) {
+                    ableButton(clickedButton, true, "opFailure");
+                    showError("De geretourneerde code is niet \"" + requiredResultCode + "\" maar \"" + code + "\"");
+                } else {
+                    ableButton(clickedButton, false, "opSuccess");
+                }
             }, function() {
                 ableButton(clickedButton, true, "opFailure");
             });
@@ -152,14 +159,16 @@ function doOperationsButton(clickedButton, pollIntervalMS) {
 }
 
 function actionResultPoller(timer, url, requiredStatus, successFunction, failFunction) {
+    //console.log("actionResultPoller, url=" + url + ", requiredStatus=" + requiredStatus);
     loadJSON(url, function () {
         if (this.response != undefined && this.response.status != null) {
             clearInterval(timer);
             
             let status = this.response.status;
+            //console.log("actionResultPoller, status=" + status);
             
             if (status != requiredStatus) {
-                showError("De statuscode is niet " + requiredStatus + " maar " + status);
+                showError("De statuscode is niet \"" + requiredStatus + "\" maar \"" + status + "\"");
                 if (failFunction != undefined) {
                     failFunction.call(this);
                 }
