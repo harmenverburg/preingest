@@ -41,7 +41,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         public String DroidCsvOutputLocation()
         {
             var directory = new DirectoryInfo(TargetFolder);
-            var files = directory.GetFiles("*.droid.csv");
+            var files = directory.GetFiles("*.csv");
 
             if (files.Count() > 0)
             { 

@@ -42,7 +42,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
                 PairNode<ISidecar> sidecar = Utilities.DeserializerHelper.DeSerializeObjectFromBinaryFile<PairNode<ISidecar>>(fileinfo.FullName);
 
-                var droidCsvFile = directoryInfo.GetFiles("*.droid.csv").OrderByDescending(item => item.CreationTime).FirstOrDefault();
+                var droidCsvFile = directoryInfo.GetFiles("*.csv").OrderByDescending(item => item.CreationTime).FirstOrDefault();
                 if (droidCsvFile == null)
                     throw new FileNotFoundException("Droid CSV file not found! Cannot update. Run droid profile and export CSV first.");
 
