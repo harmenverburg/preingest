@@ -376,27 +376,15 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             handler.Logger = _logger;
             handler.SetSessionGuid(guid);
 
+            string actionId = string.Empty;
             try
             {
                 _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
-                var task = Task.Run(() =>
-                {
-                    try
-                    {
-                        var result = handler.GetProfiles().Result;
-                        _logger.LogInformation("Profiling is completed.");
-                    }
-                    catch (Exception innerExc)
-                    {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(DroidValidationHandler).Name, innerExc.Message);
-                        //send notification
-                    }
-                    finally
-                    {
-                        //send notification
-                        _logger.LogInformation("Profiling exiting thread.");
-                    }
-                });
+                
+                var result = handler.GetProfiles().Result;
+                _logger.LogInformation("Profiling is completed.");
+
+                actionId = (result != null) ? result.ActionId : string.Empty;
             }
             catch (Exception e)
             {
@@ -406,7 +394,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Exit Profiling.");
 
-            return new JsonResult(new { Message = String.Format("Droid profiling is started."), SessionId = handler.SessionGuid });
+            return new JsonResult(new { Message = String.Format("Droid profiling is started."), SessionId = handler.SessionGuid, ActionId = actionId });
         }
 
         //Check 2, 7 : integriteit met DROID
@@ -430,28 +418,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             handler.Logger = _logger;
             handler.SetSessionGuid(guid);
-
+            string actionId = string.Empty;
             try
             {
                 _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
-                var task = Task.Run(() =>
-                {
-                    try
-                    {
-                        var result = handler.GetExporting().Result;
-                        _logger.LogInformation("Exporting is completed.");
-                    }
-                    catch (Exception innerExc)
-                    {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(DroidValidationHandler).Name, innerExc.Message);
-                        //send notification
-                    }
-                    finally
-                    {
-                        //send notification
-                        _logger.LogInformation("Exporting exiting thread.");
-                    }
-                });
+                
+                var result = handler.GetExporting().Result;
+                _logger.LogInformation("Exporting is completed.");
+                actionId = (result != null) ? result.ActionId : string.Empty;
             }
             catch (Exception e)
             {
@@ -461,7 +435,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Exit Exporting.");
 
-            return new JsonResult(new { Message = String.Format("Droid exporting (CSV) is started."), SessionId = handler.SessionGuid });
+            return new JsonResult(new { Message = String.Format("Droid exporting (CSV) is started."), SessionId = handler.SessionGuid, ActionId = actionId });
         }       
 
         [HttpPost("reporting/{type}/{guid}", Name = "Droid reporting PDF/Droid (XML)/Planets (XML)", Order = 8)]
@@ -500,28 +474,15 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             handler.Logger = _logger;
             handler.SetSessionGuid(guid);
+            string actionId = string.Empty;
 
+            
             try
             {
                 _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
-                var task = Task.Run(() =>
-                {
-                    try
-                    {
-                        var result = handler.GetReporting(style).Result;
-                        _logger.LogInformation("Reporting is completed.");
-                    }
-                    catch (Exception innerExc)
-                    {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(DroidValidationHandler).Name, innerExc.Message);
-                        //send notification
-                    }
-                    finally
-                    {
-                        //send notification
-                        _logger.LogInformation("Reporting exiting thread.");
-                    }
-                });
+                var result = handler.GetReporting(style).Result;
+                _logger.LogInformation("Reporting is completed.");
+                actionId = (result != null) ? result.ActionId : string.Empty;
             }
             catch (Exception e)
             {
@@ -531,7 +492,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Exit Reporting.");
 
-            return new JsonResult(new { Message = String.Format("Droid reporting ({0}) is started.", style), SessionId = handler.SessionGuid });
+            return new JsonResult(new { Message = String.Format("Droid reporting ({0}) is started.", style), SessionId = handler.SessionGuid, ActionId = actionId });
         }
 
         [HttpPost("signature/update", Name = "Droid signature update", Order = 9)]
@@ -550,24 +511,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             try
             {
                 _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
-                var task = Task.Run(() =>
-                {
-                    try
-                    {
-                        var result = handler.SetSignatureUpdate().Result;
-                        _logger.LogInformation("SignatureUpdate is completed.");
-                    }
-                    catch (Exception innerExc)
-                    {
-                        _logger.LogError(innerExc, "An exception is throwned in {0}: '{1}'.", typeof(DroidValidationHandler).Name, innerExc.Message);
-                        //send notification
-                    }
-                    finally
-                    {
-                        //send notification
-                        _logger.LogInformation("SignatureUpdate exiting thread.");
-                    }
-                });
+                var result = handler.SetSignatureUpdate().Result;               
             }
             catch (Exception e)
             {
@@ -577,7 +521,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Exit SignatureUpdate.");
 
-            return new JsonResult(new { Message = String.Format("Droid signature update check/download is started."), SessionId = dummyGuid });
+            return new JsonResult(new { Message = String.Format("Droid signature update check/download is started."), SessionId = dummyGuid, ActionId = "" });
         }
 
         [HttpPost("greenlist/{guid}", Name = "Greenlist check", Order = 10)]

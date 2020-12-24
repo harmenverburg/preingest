@@ -16,6 +16,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         {
             public String Message { get; set; }
             public Boolean Result { get; set; }
+            public String ActionId { get; set; }
         }
         public enum ReportingStyle
         {            
