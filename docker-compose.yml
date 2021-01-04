@@ -21,16 +21,6 @@ services:
         - "${ETCFOLDER}:/data/etc"
     expose:
         - "8080" 
-    networks :
-        - preingest-network
-  xslwebfrontend:
-    image: "pmasereeuwnha/xslwebfrontend"
-    container_name: "xslwebfrontend"
-    volumes:
-        - "${DATAFOLDER}:/data"
-        - "${ETCFOLDER}:/data/etc"
-    expose:
-        - "8080" 
     ports:
         - "8888:8080"     
     networks :
