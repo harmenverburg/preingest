@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<webapp xmlns="http://www.armatiek.com/xslweb/webapp" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.armatiek.com/xslweb/webapp ../../config/xsd/xslweb/webapp.xsd">
+
+  <title>Noord-Hollands Archief Pre-ingestapplicatie</title>
+  <description>Noord-Hollands Archief Pre-ingestapplicatie</description>
+  <development-mode>false</development-mode>
+  <max-upload-size>10</max-upload-size>
+
+  <!-- Resources to serve straight away: -->
+  <resources>
+    <resource pattern="/favicon.ico" media-type="image/x-icon" duration="P7DT0H0M0S"/>
+  </resources>
+
+  <parameters>
+    <!-- Make sure uri-like parameters are properly uri-encoded! -->
+    
+    <parameter name="preingest-scheme-host-port" type="xs:string">
+      <value>http://Noord.HollandsArchief.Pre.Ingest.WebApi:80</value>
+    </parameter>
+    
+    <parameter name="output-api-basepath" type="xs:string">
+      <value>/api/output</value>
+    </parameter>
+    
+    <parameter name="excel-preingest-dir" type="xs:string">
+      <value>static/excel/preingest_resultaten</value>
+    </parameter>
+  </parameters>
+</webapp>

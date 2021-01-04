@@ -8,6 +8,7 @@ services:
     container_name: "clamav"
     volumes:
         - "${DATAFOLDER}:/data"
+        - "${ETCFOLDER}:/data/etc"
     expose :
         - "3310"        
     networks :
@@ -15,16 +16,6 @@ services:
   xslweb:
     image: "pmasereeuwnha/xslweb"
     container_name: "xslweb"
-    volumes:
-        - "${DATAFOLDER}:/data"
-        - "${ETCFOLDER}:/data/etc"
-    expose:
-        - "8080" 
-    networks :
-        - preingest-network
-  xslwebfrontend:
-    image: "pmasereeuwnha/xslwebfrontend"
-    container_name: "xslwebfrontend"
     volumes:
         - "${DATAFOLDER}:/data"
         - "${ETCFOLDER}:/data/etc"
@@ -39,6 +30,7 @@ services:
     container_name: "droid"
     volumes:
         - "${DATAFOLDER}:/data" 
+        - "${ETCFOLDER}:/data/etc"
     expose:
         - "8080"
     environment:
@@ -50,6 +42,7 @@ services:
     container_name: "Noord.HollandsArchief.Pre.Ingest.WebApi"
     volumes:
         - "${DATAFOLDER}:/data"  
+        - "${ETCFOLDER}:/data/etc"
     expose:
         - "80"
     # Only (temporarily) mapped here for direct debugging access to the API's HTTP endpoints
@@ -66,6 +59,7 @@ services:
     container_name: "Noord.HollandsArchief.Pre.Ingest.WebTool"
     volumes:
         - "${DATAFOLDER}:/data"  
+        - "${ETCFOLDER}:/data/etc"
     expose:
         - "80"      
     ports:
