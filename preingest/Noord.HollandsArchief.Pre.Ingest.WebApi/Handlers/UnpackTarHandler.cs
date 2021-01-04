@@ -27,9 +27,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             
             string sessionFolder = Path.Combine(ApplicationSettings.DataFolderName, SessionGuid.ToString());
 
-            if (!Directory.Exists(sessionFolder))
-                Directory.CreateDirectory(sessionFolder);
-
             string output = string.Empty;
             string error = string.Empty;
 

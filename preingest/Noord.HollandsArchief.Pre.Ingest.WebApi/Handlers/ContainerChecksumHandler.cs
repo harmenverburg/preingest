@@ -94,7 +94,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     Message = "Geen resultaten."
                 });
 
-            SaveJson(Path.Combine(ApplicationSettings.DataFolderName, String.Format("{0}.json", TarFilename)), this, result.ToArray());
+            string sessionFolder = Path.Combine(ApplicationSettings.DataFolderName, SessionGuid.ToString());
+            SaveJson(new DirectoryInfo(sessionFolder), this, result.ToArray());
         }
 
     }

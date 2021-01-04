@@ -164,5 +164,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.Utilities
 
             return sb.ToString();
         }
+
+        public static Guid GeneratePreingestGuid(String name)
+        {
+            MD5 md5 = MD5.Create();
+            return new Guid(md5.ComputeHash(Encoding.Default.GetBytes(name)));
+        }
     }
 }

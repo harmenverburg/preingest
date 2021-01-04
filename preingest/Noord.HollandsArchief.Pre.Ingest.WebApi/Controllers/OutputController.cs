@@ -41,17 +41,23 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             var tarArchives = directory.GetFiles("*.*").Where(s => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz"));
 
+            tarArchives.ToList().ForEach(item =>
+            {
+                var workingDir = Path.Combine(directory.FullName, ChecksumHelper.GeneratePreingestGuid(item.Name).ToString());
+                if (!Directory.Exists(workingDir))
+                    directory.CreateSubdirectory(ChecksumHelper.GeneratePreingestGuid(item.Name).ToString());                
+            });
+
             return new JsonResult(tarArchives.OrderByDescending(item
                 => item.CreationTime).Select(item
                     => new
                     {
                         Name = item.Name,
+                        SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name),
                         CreationTime = item.CreationTime,
                         LastWriteTime = item.LastWriteTime,
                         LastAccessTime = item.LastAccessTime,
-                        Size = item.Length,
-                        TarResultFile = System.IO.File.Exists(String.Concat(item.FullName, ".json")) ? String.Concat(item.FullName, ".json") : null,
-                        TarResultData = System.IO.File.Exists(String.Concat(item.FullName, ".json")) ? JsonConvert.DeserializeObject<List<ProcessResult>>(System.IO.File.ReadAllText(String.Concat(item.FullName, ".json"))) : null
+                        Size = item.Length
                     }).ToArray()); 
         }
 
@@ -63,13 +69,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (!directory.Exists)
                 return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
 
-            var directories = directory.GetDirectories();
+            var tarArchives = directory.GetFiles("*.*").Where(s => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz"));
 
-            Guid guid = Guid.Empty;
-            return new JsonResult(directories.OrderByDescending(item
-                => item.CreationTime).Select(item 
-                    => item.Name).Where(item 
-                        => Guid.TryParse(item, out guid)).ToArray());
+            var output = tarArchives.Select(item => new { SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name), Tar = item.Name }).ToArray();
+
+            return new JsonResult(output);
         }
 
         [HttpGet("results/{guid}", Name = "Get results from a session.", Order = 2)]

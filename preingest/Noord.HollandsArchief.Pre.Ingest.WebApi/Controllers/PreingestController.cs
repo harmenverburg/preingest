@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Noord.HollandsArchief.Pre.Ingest.Utilities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Model;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -50,39 +49,50 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             });
         }
 
-        [HttpGet("calculate/{checksum}/{collectionName}", Name = "Collection checksum calculation. Options : MD5, SHA1, SHA256, SHA512", Order = 1)]
-        public IActionResult CollectionChecksumCalculation(String checksum, String collectionName)
+        [HttpGet("calculate/{checksum}/{guid}", Name = "Collection checksum calculation. Options : MD5, SHA1, SHA256, SHA512", Order = 1)]
+        public IActionResult CollectionChecksumCalculation(String checksum, Guid guid)
         {
             _logger.LogInformation("Enter CollectionChecksumCalculation.");
 
-            if (String.IsNullOrEmpty(collectionName))
-                return BadRequest("Missing collection name.");
-            
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
             if (String.IsNullOrEmpty(checksum))
                 return BadRequest("Missing checksum name.");
 
-            bool exists = System.IO.File.Exists(Path.Combine(_settings.DataFolderName, collectionName));
+            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
             if (!exists)
-                return NotFound("Collection not found.");            
+                return NotFound(String.Format("Session {0} not found.", guid));
 
             ContainerChecksumHandler handler = HttpContext.RequestServices.GetService(typeof(ContainerChecksumHandler)) as ContainerChecksumHandler;
             if (handler == null)
                 return Problem("Object is not loaded.", typeof(ContainerChecksumHandler).Name);
 
-            handler.Logger = _logger;
-            handler.TarFilename = collectionName;
+            handler.Logger = _logger;            
             handler.Checksum = checksum;
-
-            //data map id
-            Guid sessionId = Guid.NewGuid();
-            handler.SetSessionGuid(sessionId);
+            //data map id            
+            handler.SetSessionGuid(guid);
             //database process id
             Guid processId = Guid.Empty;
             try
             {
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ContainerChecksumHandler).Name, sessionId.ToString());
+                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ContainerChecksumHandler).Name, handler.SessionGuid);
 
-                processId = handler.AddProcessAction("Calculate", String.Format("Container file {0}", handler.TarFilename), String.Concat(handler.TarFilename, ".json"));
+                var directory = new DirectoryInfo(_settings.DataFolderName);
+
+                if (!directory.Exists)
+                    return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
+
+                var tarArchives = directory.GetFiles("*.*").Where(s
+                        => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
+                            => new { Tar = item.Name, SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name) }).ToList();
+                
+                handler.TarFilename = tarArchives.First(item => item.SessionId == handler.SessionGuid).Tar;
+
+                if (String.IsNullOrEmpty(handler.TarFilename))
+                    return Problem(String.Format("Tar file not found for GUID '{0}'!", handler.SessionGuid));
+
+                processId = handler.AddProcessAction("Calculate", String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(ContainerChecksumHandler).Name, ".json"));
 
                 var task = Task.Run(() =>
                 {
@@ -111,37 +121,49 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
 
             _logger.LogInformation("Exit CollectionChecksumCalculation.");
-            return new JsonResult(new { Message = String.Format("Container checksum calculation {0} is started", collectionName), SessionId = sessionId, ActionId = processId  });
+            return new JsonResult(new { Message = String.Format("Container checksum calculation {0} is started", handler.TarFilename), SessionId = handler.SessionGuid, ActionId = processId  });
         }
 
         //Voorbereiding  
-        [HttpPost("unpack/{collectionName}", Name = "Unpack tar collection", Order = 2)]
-        public IActionResult Unpack(String collectionName)
+        [HttpPost("unpack/{guid}", Name = "Unpack tar collection", Order = 2)]
+        public IActionResult Unpack(Guid guid)
         {
             _logger.LogInformation("Enter Unpack.");
 
-            if (String.IsNullOrEmpty(collectionName))
-                return BadRequest("Missing collection name.");
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
 
-            bool exists = System.IO.File.Exists(Path.Combine(_settings.DataFolderName, collectionName));
+            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
             if (!exists)
-            {
-                return NotFound("Collection not found.");
-            }
+                return NotFound(String.Format("Session {0} not found.", guid));
+
 
             UnpackTarHandler handler = HttpContext.RequestServices.GetService(typeof(UnpackTarHandler)) as UnpackTarHandler;
             if (handler == null)
                 return Problem("Object is not loaded.", typeof(UnpackTarHandler).Name);
 
             handler.Logger = _logger;
-            handler.TarFilename = collectionName;
-            //data map id
-            Guid sessionId = Guid.NewGuid();
-            handler.SetSessionGuid(sessionId);
+
+            var directory = new DirectoryInfo(_settings.DataFolderName);
+
+            if (!directory.Exists)
+                return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));                       
+           
+            //database action id
             Guid processId = Guid.Empty;
             try
-            {
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(UnpackTarHandler).Name, sessionId.ToString());
+            { 
+                handler.SetSessionGuid(guid);
+                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(UnpackTarHandler).Name, handler.SessionGuid);
+
+                var tarArchives = directory.GetFiles("*.*").Where(s
+                    => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
+                        => new { Tar = item.Name, SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name) }).ToList();
+
+                handler.TarFilename = tarArchives.First(item => item.SessionId == handler.SessionGuid).Tar;
+
+                if (String.IsNullOrEmpty(handler.TarFilename))
+                    return Problem(String.Format("Tar file not found for GUID '{0}'!", handler.SessionGuid));
 
                 processId = handler.AddProcessAction("Unpack", String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(UnpackTarHandler).Name, ".json"));
 
@@ -173,10 +195,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
 
             _logger.LogInformation("Exit Unpack.");
-            return new JsonResult(new { Message = String.Format ("Unpack tar container '{0}' started", collectionName), SessionId = sessionId, ActionId = processId });
+            return new JsonResult(new { Message = String.Format ("Unpack tar container '{0}' started", handler.TarFilename), SessionId = handler.SessionGuid, ActionId = processId });
         }
 
-        //Check 1 : virus scannen
         [HttpPost("virusscan/{guid}", Name = "Virusscan check", Order = 3)]
         public IActionResult VirusScan(Guid guid)
         {
@@ -238,8 +259,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return new JsonResult(new { Message = String.Format("Virusscan started."), SessionId = guid, ActionId = processId });
         }
                 
-        //Check 3 : bestandsnamen en mapnamen 
-        [HttpPost("naming/{guid}", Name = "Naming check", Order = 4)]
+          [HttpPost("naming/{guid}", Name = "Naming check", Order = 4)]
         public IActionResult Naming(Guid guid)
         {
             if (guid == Guid.Empty)
@@ -297,7 +317,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return new JsonResult(new { Message = String.Format("Folder(s) and file(s) naming check started."), SessionId = guid, ActionId = processId });
         }
        
-        //Check 4 : sidecar structuur
         [HttpPost("sidecar/{guid}", Name = "Sidecar check", Order = 5)]
         public IActionResult Sidecar(Guid guid)
         {
@@ -397,7 +416,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return new JsonResult(new { Message = String.Format("Droid profiling is started."), SessionId = handler.SessionGuid, ActionId = actionId });
         }
 
-        //Check 2, 7 : integriteit met DROID
         [HttpPost("exporting/{guid}", Name = "Droid exporting result (CSV)", Order = 7)]
         public IActionResult Exporting(Guid guid)
         {
@@ -897,6 +915,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Exit UpdateBinary.");
             return new JsonResult(new { Message = String.Format("Update binary is started."), SessionId = guid, ActionId = processId });
         }
-
+      
     }
 }
