@@ -61,6 +61,11 @@
                 <identificatiekenmerk>{if ($is-bestand) then /*/directory || '/' || $filenaam else /*/directory}</identificatiekenmerk>
                 <aggregatieniveau>{if ($is-bestand) then 'Bestand' else nha:dirlevel2AggregatieNiveau(xs:integer(/*/dirlevel))}</aggregatieniveau>
                 <naam>{/*/file}</naam>
+                <classificatie>
+                    <code>code-{$filenaam}</code>
+                    <omschrijving>classificatie-omschrijving-{$filenaam}</omschrijving>
+                    <bron>bron-{$filenaam}</bron>
+                </classificatie>
                 <omschrijving>omschrijving-{$filenaam}</omschrijving>
                 <dekking>
                     <inTijd>
@@ -93,7 +98,7 @@
                     <datumOfPeriode><jaar>2020</jaar></datumOfPeriode>
                 </vertrouwelijkheid>
                 <openbaarheid>
-                    <omschrijvingBeperkingen>openbaarheid-omschrijvingBeperkingen-{$filenaam}</omschrijvingBeperkingen>
+                    <omschrijvingBeperkingen>Openbaar</omschrijvingBeperkingen>
                     <datumOfPeriode><jaar>2020</jaar></datumOfPeriode>
                 </openbaarheid>
                 <xsl:choose>
