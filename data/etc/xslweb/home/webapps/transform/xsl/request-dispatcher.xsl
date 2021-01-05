@@ -4,6 +4,7 @@
   xmlns:pipeline="http://www.armatiek.com/xslweb/pipeline"
   xmlns:config="http://www.armatiek.com/xslweb/configuration"
   xmlns:req="http://www.armatiek.com/xslweb/request"
+  xmlns:log="http://www.armatiek.com/xslweb/functions/log"
   xmlns:err="http://expath.org/ns/error"
   exclude-result-prefixes="#all" version="3.0" expand-text="yes">
   
@@ -24,6 +25,9 @@
   
   <xsl:template match="/">
     <xsl:sequence select="file:write('/tmp/request.xml', /)" xmlns:file="http://expath.org/ns/file" use-when="$DUMP_REQUEST"/>
+    
+    
+    <xsl:sequence select="log:log('INFO', 'Dealing with request-path ' || /req:request/req:path)"/>
     
     <!-- Dit request-attribuut voorkomt dat we deze logica telkens moeten herhalen: -->
     <xsl:sequence select="req:set-attribute('data-uri-prefix', if ($config:development-mode) then $data-uri-prefix-devmode else $data-uri-prefix)"/>

@@ -3,6 +3,7 @@
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xmlns:pipeline="http://www.armatiek.com/xslweb/pipeline"
   xmlns:config="http://www.armatiek.com/xslweb/configuration"
+  xmlns:log="http://www.armatiek.com/xslweb/functions/log"
   xmlns:req="http://www.armatiek.com/xslweb/request"
   xmlns:err="http://expath.org/ns/error"
   exclude-result-prefixes="#all" version="3.0" expand-text="yes">
@@ -27,6 +28,9 @@
   <xsl:template match="/req:request[req:path eq '/']">
     <xsl:variable name="paramname" as="xs:string" select="'reluri'"/>
     <xsl:variable name="paramvalue" as="xs:string?" select="/*/req:parameters/req:parameter[@name eq $paramname]/req:value"/>
+    
+    <xsl:sequence select="log:log('INFO', 'Dealing with request-path ' || /req:request/req:path || ', parameter ' || $paramname || '=' || $paramvalue)"/>
+    
     <pipeline:pipeline>
       <xsl:choose>
         <xsl:when test="not($paramvalue)">
