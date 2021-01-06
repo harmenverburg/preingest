@@ -70,20 +70,17 @@ services:
         - preingest
   frontend:
     image: "noordhollandsarchief/preingest-frontend:development"
-    container_name: "frontend"
-    volumes:
-        - "${DATAFOLDER}:/data"  
-        - "${ETCFOLDER}:/data/etc"
+    container_name: "preingest-frontend"
     expose:
-        - "80"
-    environment:
-        - "PROXY_API_DEST=http://172.17.0.1:8000/api/"        
+      - "80"
     ports:
       - "9000:80"
-    networks :
-        - preingest-network          
+    environment:
+      - "PROXY_API_DEST=http://Noord.HollandsArchief.Pre.Ingest.WebApi/api/"
+    networks:
+      - preingest-network
     depends_on:
-      - webtool
+      - preingest
 networks:
     preingest-network:
         driver: bridge
