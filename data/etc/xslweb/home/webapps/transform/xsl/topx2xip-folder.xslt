@@ -17,7 +17,7 @@
     
     <xsl:template match="/" mode="topx2xip-folder">
         <xsl:try>
-            <xsl:variable name="reluri" as="xs:string" select="encode-for-uri(/*/req:parameters/req:parameter[@name eq 'reluri']/req:value)"/>
+            <xsl:variable name="reluri" as="xs:string" select="encode-for-uri(replace(/*/req:path, '^/[^/]+/(.*)$', '$1'))"/>
             <xsl:variable name="metadatafiles" as="xs:string*" select="file:list($data-uri-prefix || $reluri, true(), '*.metadata')"/>
             
             <metadatafiles data-uri-prefix="{$data-uri-prefix}" reluri="{$reluri}">
