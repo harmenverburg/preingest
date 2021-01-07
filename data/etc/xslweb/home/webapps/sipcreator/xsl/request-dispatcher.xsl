@@ -3,6 +3,7 @@
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xmlns:pipeline="http://www.armatiek.com/xslweb/pipeline"
   xmlns:config="http://www.armatiek.com/xslweb/configuration"
+  xmlns:log="http://www.armatiek.com/xslweb/functions/log"
   xmlns:req="http://www.armatiek.com/xslweb/request"
   xmlns:err="http://expath.org/ns/error"
   exclude-result-prefixes="#all" version="3.0" expand-text="yes">
@@ -24,27 +25,12 @@
     <xsl:apply-templates/>
   </xsl:template>
   
-  <xsl:template match="/req:request[req:path eq '/']">
-    <xsl:variable name="paramname" as="xs:string" select="'reluri'"/>
-    <xsl:variable name="paramvalue" as="xs:string?" select="/*/req:parameters/req:parameter[@name eq $paramname]/req:value"/>
+  <xsl:template match="/req:request[matches(req:path, '^/[^/]+/[^/]+$')]">
+    <xsl:sequence select="log:log('INFO', 'Dealing with request-path ' || /req:request/req:path)"/>
+    
     <pipeline:pipeline>
-      <xsl:choose>
-        <xsl:when test="not($paramvalue)">
-          <pipeline:transformer name="error" xsl-path="error.xslt">
-            <pipeline:parameter name="message" type="xs:string">
-              <pipeline:value>Request-parameter "{$paramname}" ontbreekt voor context-pad "{/req:request/req:webapp-path ||
-                /req:request/req:path}". Het moet verwijzen naar een bestandsuri relatief t.o.v. de folder "{req:get-attribute('data-uri-prefix')}" in de Dockercontainer.</pipeline:value>
-            </pipeline:parameter>
-            <pipeline:parameter name="error-code" type="xs:string">
-              <pipeline:value>missing-parameter</pipeline:value>
-            </pipeline:parameter>
-          </pipeline:transformer>
-        </xsl:when>
-        <xsl:otherwise>
-          <pipeline:transformer name="sipcreator" xsl-path="sipcreator.xslt"/>
-          <pipeline:transformer name="xml-response" xsl-path="xml-response.xslt"/>
-        </xsl:otherwise>
-      </xsl:choose>
+      <pipeline:transformer name="sipcreator" xsl-path="sipcreator.xslt"/>
+      <pipeline:transformer name="xml-response" xsl-path="xml-response.xslt"/>
     </pipeline:pipeline>
   </xsl:template>
 </xsl:stylesheet>

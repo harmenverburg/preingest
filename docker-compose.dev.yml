@@ -6,10 +6,10 @@
 version: "3.8"
 
 services:
-  # xslweb:
-  #  # image: "pmasereeuwnha/xslweb"
-  # xslwebfrontend:
-  #  # image: "pmasereeuwnha/xslwebfrontend"
+  clamav:
+    # entrypoint: ["echo", "Service clamav disabled"]
+  xslweb:
+    # image: "pmasereeuwnha/xslweb"
   droid:
     # image: "noordhollandsarchief/droidvalidationwebapi:development"
     build: droid-validation
@@ -23,3 +23,8 @@ services:
     build:
       context: ./preingest
       dockerfile: Noord.HollandsArchief.Pre.Ingest.WebTool/Dockerfile
+  frontend:
+    # image: "noordhollandsarchief/preingest-frontend:development"
+    build:
+      # Assume the Git repository was cloned in this folder:
+      context: ../preingest-frontend

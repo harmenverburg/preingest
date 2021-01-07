@@ -21,6 +21,8 @@ services:
         - "${ETCFOLDER}:/data/etc"
     expose:
         - "8080" 
+    environment:
+        - "PREINGEST_WEBAPI=http://Noord.HollandsArchief.Pre.Ingest.WebApi"
     ports:
         - "8888:8080"     
     networks :
@@ -68,6 +70,19 @@ services:
         - preingest-network
     depends_on:
         - preingest
+  frontend:
+    image: "noordhollandsarchief/preingest-frontend:development"
+    container_name: "preingest-frontend"
+    expose:
+      - "80"
+    ports:
+      - "9000:80"
+    environment:
+      - "PROXY_API_DEST=http://Noord.HollandsArchief.Pre.Ingest.WebApi/api/"
+    networks:
+      - preingest-network
+    depends_on:
+      - preingest
 networks:
     preingest-network:
         driver: bridge

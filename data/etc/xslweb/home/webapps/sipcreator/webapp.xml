@@ -35,7 +35,7 @@
     </parameter>
     <parameter name="sipcreator-shellscript" type="xs:string">
       <!-- Verwijzing naar het script dat de sipcreator aanroept en het resultaat zipt. Relatief t.o.v. sipcreator-folder -->
-      <value>run-zipcreator.sh</value>
+      <value>run-sipcreator.sh</value>
     </parameter>
   </parameters>
 </webapp>

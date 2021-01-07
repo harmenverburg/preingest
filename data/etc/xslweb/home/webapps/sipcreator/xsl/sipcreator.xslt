@@ -16,16 +16,16 @@
     <xsl:param name="sipcreator-shellscript" required="yes" as="xs:string"/>
     
     <xsl:template match="/">
-        <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute('data-uri-prefix')"/>
-        <xsl:variable name="sipcreator-folder" as="xs:string" select="req:get-attribute('sipcreator-folder')"/>
-        
-        <xsl:variable name="sipcreator-script" as="xs:string" select="$sipcreator-folder || '/' || $sipcreator-shellscript"/>
+        <xsl:variable name="guid" as="xs:string" select="replace(/*/req:path, '^/([^/]+)/.*$', '$1')"/>
+        <xsl:variable name="archive-folder-raw" as="xs:string" select="replace(/*/req:path, '^/[^/]+/([^/]+).*$', '$1')"/>
         <xsl:variable name="preservica-reference" as="xs:string?" select="/*/req:parameters/req:parameter[@name eq 'preservica-reference']/req:value"/>
-        <xsl:variable name="reluri-raw" as="xs:string" select="/*/req:parameters/req:parameter[@name eq 'reluri']/req:value"/>
-        <xsl:variable name="reluri" as="xs:string" select="encode-for-uri($reluri-raw)"/>
-        <xsl:variable name="inputdir" as="xs:string" select="file:path-to-native($data-uri-prefix || $reluri)"/>
-        <xsl:variable name="outputdir" as="xs:string" select="file:path-to-native($data-uri-prefix || $reluri || '.out')"/>
-        <xsl:variable name="scriptargs" as="xs:string+" select="($inputdir, $outputdir, $preservica-reference)"/>
+
+        <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute('data-uri-prefix')"/>
+        <xsl:variable name="sipcreator-folder" as="xs:string" select="req:get-attribute('sipcreator-folder')"/>    
+        <xsl:variable name="sipcreator-script" as="xs:string" select="$sipcreator-folder || '/' || $sipcreator-shellscript"/>
+        <xsl:variable name="archive-folder" as="xs:string" select="encode-for-uri($archive-folder-raw)"/>
+        <xsl:variable name="inputdir" as="xs:string" select="file:path-to-native($data-uri-prefix || $guid || '/' || $archive-folder)"/>
+        <xsl:variable name="scriptargs" as="xs:string+" select="($inputdir, $guid, $preservica-reference)"/>
         
         <result>
             <exit-status><xsl:sequence select="external:exec-external( $sipcreator-script, $scriptargs, xs:long(-1), false(), (), false())"/></exit-status>
