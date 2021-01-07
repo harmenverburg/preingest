@@ -16,8 +16,10 @@
     <xsl:param name="sipcreator-shellscript" required="yes" as="xs:string"/>
     
     <xsl:template match="/">
-        <xsl:variable name="guid" as="xs:string" select="replace(/*/req:path, '^/([^/]+)/.*$', '$1')"/>
-        <xsl:variable name="archive-folder-raw" as="xs:string" select="replace(/*/req:path, '^/[^/]+/([^/]+).*$', '$1')"/>
+        <!-- As the path starts with a slash, the guid and the archive-folder are at offsets 2 and 3. -->
+        <xsl:variable name="guid" as="xs:string" select="tokenize(/*/req:path, '/')[2]"/>
+        <xsl:variable name="archive-folder-raw" as="xs:string" select="tokenize(/*/req:path, '/')[3]"/>
+        <xsl:message>guid={$guid}, archive-folder-raw={$archive-folder-raw}</xsl:message>
         <xsl:variable name="preservica-reference" as="xs:string?" select="/*/req:parameters/req:parameter[@name eq 'preservica-reference']/req:value"/>
 
         <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute('data-uri-prefix')"/>

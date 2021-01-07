@@ -25,7 +25,8 @@
     <xsl:apply-templates/>
   </xsl:template>
   
-  <xsl:template match="/req:request[matches(req:path, '^/[^/]+/[^/]+$')]">
+  <xsl:template match="/req:request[count(tokenize(req:path, '/')) ge 3]">
+    <!-- 3 parts, as the path starts with a /, the format is http:/host:port/guid/directory -->
     <xsl:sequence select="log:log('INFO', 'Dealing with request-path ' || /req:request/req:path)"/>
     
     <pipeline:pipeline>
