@@ -22,7 +22,7 @@
   <xsl:template match="/req:request[starts-with(req:path, '/')]">
     <!-- After /excel/, place the guid of the directory containing the generated JSON files -->
     <pipeline:pipeline>
-      <pipeline:transformer name="excel" xsl-path="app-specific/excel.xslt"/>
+      <pipeline:transformer name="excelreport" xsl-path="app-specific/excelreport.xslt"/>
       <pipeline:transformer name="xlsx-response" xsl-path="app-specific/xlsx-response.xslt"/>
       <pipeline:zip-serializer name="zip"/>
     </pipeline:pipeline>
