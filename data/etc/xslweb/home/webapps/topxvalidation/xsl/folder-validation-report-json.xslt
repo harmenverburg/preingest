@@ -31,7 +31,7 @@
             <string key="reluri">{@reluri}</string>
             <number key="schema-errors">{@count-schema-errors}</number>
             <number key="schematron-errors">{@count-schematron-errors}</number>
-            <string key="detail-uri">{$validation-detail-uri}?reluri={@reluri}&amp;format=json</string>
+            <string key="detail-uri">{$validation-detail-uri}/{@reluri}?format=json</string>
         </map>
     </xsl:template>
 </xsl:stylesheet>

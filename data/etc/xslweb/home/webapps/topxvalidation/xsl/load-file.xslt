@@ -13,7 +13,7 @@
     <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute('data-uri-prefix')"/>
     
     <xsl:template match="/">
-        <xsl:variable name="reluri" as="xs:string" select="/*/req:parameters/req:parameter[@name eq 'reluri']/req:value"/>
+        <xsl:variable name="reluri" as="xs:string" select="substring-after(/*/req:path, '/')"/>
         
         <xsl:copy-of select="doc($data-uri-prefix || encode-for-uri($reluri))"/>
     </xsl:template>

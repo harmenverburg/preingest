@@ -10,6 +10,7 @@
   <xsl:param name="config:development-mode"/>
   <xsl:param name="data-uri-prefix" as="xs:string" required="yes"/>
   <xsl:param name="data-uri-prefix-devmode" as="xs:string" required="yes"/>
+  <xsl:param name="default-output-format" as="xs:string" select="'json'"/>
   
   <xsl:variable name="DUMP_REQUEST" as="xs:boolean" static="yes" select="false()"/>
 
@@ -21,7 +22,7 @@
     <xsl:apply-templates/>
   </xsl:template>
 
-  <xsl:template name="xml-validation" match="/req:request[req:path = '/']">    
+  <xsl:template name="xml-validation" match="/req:request[not(starts-with(req:path, '/validate-folder'))]">    
     <pipeline:pipeline>
       <pipeline:transformer name="generate-sample" xsl-path="load-file.xslt"/>   
       
@@ -38,7 +39,7 @@
       <pipeline:transformer name="validation-report" xsl-path="validation-report-xml.xslt"/>
       
       <xsl:variable name="format-from-request" as="xs:string?" select="/*/req:parameters/req:parameter[@name eq 'format']/req:value"/>
-      <xsl:variable name="format" as="xs:string" select="if ($format-from-request) then $format-from-request else 'html'"/>
+      <xsl:variable name="format" as="xs:string" select="if ($format-from-request) then $format-from-request else $default-output-format"/>
       
       <xsl:choose>
         <xsl:when test="$format eq 'xml'">
@@ -64,12 +65,12 @@
     </pipeline:pipeline>
   </xsl:template>
   
-  <xsl:template name="validate-folder" match="/req:request[req:path = '/validate-folder']">    
+  <xsl:template name="validate-folder" match="/req:request[starts-with(req:path, '/validate-folder')]">    
     <pipeline:pipeline>
       <pipeline:transformer name="folder-validation-report" xsl-path="folder-validation-report-xml.xslt"/>
       
       <xsl:variable name="format-from-request" as="xs:string?" select="/*/req:parameters/req:parameter[@name eq 'format']/req:value"/>
-      <xsl:variable name="format" as="xs:string" select="if ($format-from-request) then $format-from-request else 'html'"/>
+      <xsl:variable name="format" as="xs:string" select="if ($format-from-request) then $format-from-request else $default-output-format"/>
       
       <xsl:choose>
         <xsl:when test="$format eq 'xml'">

@@ -31,12 +31,12 @@
     
     <xsl:template match="/" mode="topx2xip-folder">
         <xsl:try>
-            <xsl:variable name="reluri" as="xs:string" select="encode-for-uri(/*/req:parameters/req:parameter[@name eq 'reluri']/req:value)"/>
+            <xsl:variable name="reluri" as="xs:string" select="encode-for-uri(substring-after(/*/req:path, '/validate-folder/'))"/>
             <xsl:variable name="metadatafiles" as="xs:string*" select="file:list($data-uri-prefix || $reluri, true(), '*.metadata')"/>
             
             <nha:folder-validation data-uri-prefix="{$data-uri-prefix}" reluri="{$reluri}">
                 <xsl:for-each select="$metadatafiles">
-                    <xsl:variable name="validation-uri" as="xs:string" select="'xslweb://' || $context-path || '?reluri=' || $reluri || '/' || encode-for-uri(.) || '&amp;format=xml'"/>
+                    <xsl:variable name="validation-uri" as="xs:string" select="'xslweb://' || $context-path || '/' || $reluri || '/' || encode-for-uri(.) || '?format=xml'"/>
                     
                     <xsl:variable name="valresult" as="document-node()" select="nha:discard-document(doc($validation-uri))"/>
                     <xsl:variable name="count-schema-errors" as="xs:integer" select="count($valresult/*/nha:schema-validation-report//validation:error)"/>

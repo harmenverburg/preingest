@@ -48,7 +48,7 @@
     
     <xsl:template match="nha:file-with-errors">
         <tr>
-            <td class="reluri"><a href="{$validation-detail-uri}?reluri={@reluri}&amp;format=html">{@reluri}</a></td>
+            <td class="reluri"><a href="{$validation-detail-uri}/{@reluri}?format=html">{@reluri}</a></td>
             <td class="schema-errors">{@count-schema-errors}</td>
             <td class="schematron-errors">{@count-schematron-errors}</td>
         </tr>
