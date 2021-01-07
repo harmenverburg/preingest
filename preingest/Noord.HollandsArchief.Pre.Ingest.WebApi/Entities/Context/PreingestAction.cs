@@ -5,8 +5,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context
 {
-    [Table("Sessions")]
-    public class PreIngestSession
+    [Table("PreingestAction")]
+    public class PreingestAction
     {
         [Key]
         [Column("ProcessId")]
@@ -27,7 +27,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context
         [Column("ResultFiles")]
         public String ResultFiles { get; set; }
 
+        [Column("ActionStatus")]
+        public String ActionStatus { get; set; }
+
+        [Column("StatisticsSummary")]
+        public String StatisticsSummary { get; set; }
+
         [ForeignKey("ProcessId")]
-        public ICollection<ProcessStatusItem> Status { get; set; }
+        public ICollection<ActionStates> Status { get; set; }
     }
 }

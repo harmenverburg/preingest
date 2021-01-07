@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Noord.HollandsArchief.Pre.Ingest.Utilities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure;
@@ -7,39 +6,103 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Xml.Linq;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     //Check 5
     public class SidecarValidationHandler : AbstractPreingestHandler
-    {        
+    {
+        public event EventHandler<PreingestEventArgs> PreingestEvents;
         public SidecarValidationHandler(AppSettings settings) : base(settings)  { }
-        private String TargetFolder { get => Path.Combine(ApplicationSettings.DataFolderName, SessionGuid.ToString()); }
+ 
         private String CollectionTitlePath(String fullnameLocation)
         {
             return fullnameLocation.Remove(0, TargetFolder.Length);
         }
         public override void Execute()
         {
-            var collection = new DirectoryInfo(TargetFolder).GetDirectories().First();
-            if (collection == null)
-                return;
+            var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);            
+            OnTrigger(new PreingestEventArgs { Description = "Start sidecar structure validation.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
+            bool isSucces = false;
 
-            PairNode<ISidecar> sidecarTreeNode = ScanSidecarStructure(collection);
-           
-            //Calculate summary and save json
-            SetSummary(collection, sidecarTreeNode);           
-            //Validate objects and save json
-            StartValidation(collection, sidecarTreeNode);  
-            //Save binary with validation
-            SaveBinary(new DirectoryInfo(TargetFolder), this, sidecarTreeNode);                      
+            PairNode<ISidecar> sidecarTreeNode = null;
+            try
+            {
+                var collection = new DirectoryInfo(TargetFolder).GetDirectories().First();
+                if (collection == null)
+                    throw new DirectoryNotFoundException(String.Format("Folder '{0}' not found!", TargetFolder));
+
+                PreingestEventArgs execEventArgs = new PreingestEventArgs { Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel };
+                sidecarTreeNode = ScanSidecarStructure(collection, execEventArgs);
+                //Calculate summary and save json
+                SetSummary(collection, sidecarTreeNode, execEventArgs);
+                //Validate objects and save json
+                StartValidation(collection, sidecarTreeNode, execEventArgs);
+                                
+                if (eventModel.Summary.Rejected > 0)
+                    eventModel.ActionResult.ResultName = PreingestActionResults.Error;
+                else
+                    eventModel.ActionResult.ResultName = PreingestActionResults.Success;
+
+                isSucces = true;
+            }
+            catch(Exception e)
+            {
+                isSucces = false;
+                Logger.LogError(e, "Exception occured in sidecar structure validation!");
+
+                var anyMessages = new List<String>();
+                anyMessages.Clear();
+                anyMessages.Add("Exception occured in sidecar structure validation!");
+                anyMessages.Add(e.Message);
+                anyMessages.Add(e.StackTrace);
+
+                eventModel.Summary.Processed = -1;
+                eventModel.Summary.Accepted = -1;
+                eventModel.Summary.Rejected = -1;
+
+                eventModel.ActionResult.ResultName = PreingestActionResults.Failed;
+                eventModel.Properties.Messages = anyMessages.ToArray();
+
+                OnTrigger(new PreingestEventArgs { Description = "An exception occured in sidecar structure validation!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
+            }
+            finally
+            {
+                if (isSucces)
+                    OnTrigger(new PreingestEventArgs { Description = "Sidecar structure validation is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel, SidecarStructure = sidecarTreeNode });
+            }
         }
 
-        public PairNode<ISidecar> ScanSidecarStructure(DirectoryInfo collection)
+        protected void OnTrigger(PreingestEventArgs e)
         {
+            EventHandler<PreingestEventArgs> handler = PreingestEvents;
+            if (handler != null)
+            {
+                if (e.ActionType == PreingestActionStates.Started)
+                    e.PreingestAction.Summary.Start = e.Initiate;
+
+                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
+                    e.PreingestAction.Summary.End = e.Initiate;
+
+                handler(this, e);
+
+                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
+                {
+                    if (e.PreingestAction != null)
+                        SaveJson(new DirectoryInfo(TargetFolder), this, e.PreingestAction);
+                    //Save binary with validation
+                    //if (e.SidecarStructure != null)
+                        //SaveBinary(new DirectoryInfo(TargetFolder), this, e.SidecarStructure);
+                }
+            }
+        }
+
+        private PairNode<ISidecar> ScanSidecarStructure(DirectoryInfo collection, PreingestEventArgs eventArgs)
+        {
+            eventArgs.Description = "Running scan.";
+            OnTrigger(eventArgs);
+
             var start = DateTime.Now;
             Logger.LogInformation("Start scanning sidecare structure in '{0}'.", TargetFolder);
             Logger.LogInformation("Start time {0}", start);
@@ -56,8 +119,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             archiefSidecar.PrepareMetadata();
 
             PairNode<ISidecar> sidecarTreeNode = new Entities.Structure.PairNode<ISidecar>(archiefSidecar, null);
-            DeepScan(collection.FullName, sidecarTreeNode);
-           
+            DeepScan(collection.FullName, sidecarTreeNode, eventArgs);           
+
             var end = DateTime.Now;
             Logger.LogInformation("End of scanning sidecare structure.");
             Logger.LogInformation("End time {0}", end);
@@ -67,8 +130,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             return sidecarTreeNode;
         }
 
-        public void SetSummary(DirectoryInfo collection, PairNode<ISidecar> sidecarTreeNode)
+        private void SetSummary(DirectoryInfo collection, PairNode<ISidecar> sidecarTreeNode, PreingestEventArgs eventArgs)
         {
+            //trigger event
+            eventArgs.Description = String.Format("Start calculate summary sidecare structure in '{0}'.", TargetFolder);
+            OnTrigger(eventArgs);
+
             var start = DateTime.Now;
             Logger.LogInformation("Start calculate summary sidecare structure in '{0}'.", TargetFolder);
             Logger.LogInformation("Start time {0}", start);
@@ -90,18 +157,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 String.Format("Dossier : {0} item(s)", dossier.Count),
                 String.Format("Bestand : {0} item(s)", bestand.Count),
                 String.Format("Onbekend : {0} item(s)", onbekend.Count)
-            };          
-
-            var result = new ProcessResult(SessionGuid)
-            {
-                CollectionItem = collection.FullName,
-                Code = collection.Name,
-                CreationTimestamp = DateTime.Now,
-                ActionName = this.GetType().Name,
-                Messages = messages
             };
 
-            SaveJson(new DirectoryInfo(TargetFolder), this, "Samenvatting", new[] { result });
+            eventArgs.PreingestAction.Properties.Messages = messages;
 
             var end = DateTime.Now;
             Logger.LogInformation("End of calculation of the sidecare structure.");
@@ -110,8 +168,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             Logger.LogInformation(String.Format("Processed in {0} ms.", processTime));
         }
 
-        public void StartValidation(DirectoryInfo collection, PairNode<ISidecar> sidecarTreeNode)
+        private void StartValidation(DirectoryInfo collection, PairNode<ISidecar> sidecarTreeNode, PreingestEventArgs eventArgs)
         {
+            eventArgs.Description = String.Format("Start to validate sidecare structure in '{0}'.", TargetFolder);
+            OnTrigger(eventArgs);
+
             var start = DateTime.Now;
             Logger.LogInformation("Start to validate sidecare structure in '{0}'.", TargetFolder);
             Logger.LogInformation("Start time {0}", start);
@@ -125,155 +186,49 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             var bestand = sidecarObjects.OfType<Bestand>().ToList();
             var onbekend = sidecarObjects.OfType<NotDefined>().ToList();
 
+            List<SidecarItem> validationResult = new List<SidecarItem>();           
+
+            eventArgs.Description = "Validate level 'Archief'.";
+            OnTrigger(eventArgs);
             archief.ForEach(item => item.Validate());
+            var archiefResult = archief.Select(item => new SidecarItem { IsCorrect = (item.ObjectExceptions().Count == 0), Level = item.GetType().Name, TitlePath = item.TitlePath, ErrorMessages = item.ObjectExceptions().Select(m => m.Message).ToArray() }).ToList();
+            validationResult.AddRange(archiefResult);
+
+            eventArgs.Description = "Validate level 'Series'.";
+            OnTrigger(eventArgs);
             series.ForEach(item => item.Validate());
+            var seriesResult = series.Select(item => new SidecarItem { IsCorrect = (item.ObjectExceptions().Count == 0), Level = item.GetType().Name, TitlePath = item.TitlePath, ErrorMessages = item.ObjectExceptions().Select(m => m.Message).ToArray() }).ToList();
+            validationResult.AddRange(seriesResult);
+
+            eventArgs.Description = "Validate level 'Dossier'.";
+            OnTrigger(eventArgs);
             dossier.ForEach(item => item.Validate());
+            var dossierResult = dossier.Select(item => new SidecarItem { IsCorrect = (item.ObjectExceptions().Count == 0), Level = item.GetType().Name, TitlePath = item.TitlePath, ErrorMessages = item.ObjectExceptions().Select(m => m.Message).ToArray() }).ToList();
+            validationResult.AddRange(dossierResult);
+
+            eventArgs.Description = "Validate level 'Record'.";
+            OnTrigger(eventArgs);
             record.ForEach(item => item.Validate());
+            var recordResult = record.Select(item => new SidecarItem { IsCorrect = (item.ObjectExceptions().Count == 0), Level = item.GetType().Name, TitlePath = item.TitlePath, ErrorMessages = item.ObjectExceptions().Select(m => m.Message).ToArray() }).ToList();
+            validationResult.AddRange(recordResult);
+
+            eventArgs.Description = "Validate level 'Bestand'.";
+            OnTrigger(eventArgs);
             bestand.ForEach(item => item.Validate());
+            var bestandResult = bestand.Select(item => new SidecarItem { IsCorrect = (item.ObjectExceptions().Count == 0), Level = item.GetType().Name, TitlePath = item.TitlePath, ErrorMessages = item.ObjectExceptions().Select(m => m.Message).ToArray() }).ToList();
+            validationResult.AddRange(bestandResult);
+
+            eventArgs.Description = "Validate level 'NotDefined'.";
+            OnTrigger(eventArgs);
             onbekend.ForEach(item => item.Validate());
+            var onbekendResult = onbekend.Select(item => new SidecarItem { IsCorrect = (item.ObjectExceptions().Count == 0), Level = item.GetType().Name, TitlePath = item.TitlePath, ErrorMessages = item.ObjectExceptions().Select(m => m.Message).ToArray() }).ToList();
+            validationResult.AddRange(onbekendResult);
 
-            var archiefResult = archief.Where(item => item.ObjectExceptions().Count > 0).Select(item => new ProcessResult(SessionGuid)
-            {
-                CollectionItem = item.TitlePath,
-                Code = "Archief",
-                CreationTimestamp = DateTime.Now,
-                ActionName = this.GetType().Name,
-                Messages = item.ObjectExceptions().Select(message => message.Message).ToArray()
-            });
+            eventArgs.PreingestAction.Summary.Processed = validationResult.Count;
+            eventArgs.PreingestAction.Summary.Accepted = validationResult.Where(item => item.IsCorrect).Count();
+            eventArgs.PreingestAction.Summary.Rejected = validationResult.Where(item => !item.IsCorrect).Count();
 
-            if (archiefResult.Count() == 0)
-            {
-                SaveJson(new DirectoryInfo(TargetFolder), this, "Archief", new {
-                    Code = "Archief",
-                    CreationTimestamp = DateTime.Now,
-                    ActionName = this.GetType().Name,
-                    Messages = "Geen resultaten."
-                });
-            }
-            else
-            {
-                SaveJson(new DirectoryInfo(TargetFolder), this, "Archief", archiefResult.ToArray());
-            }
-
-            var seriesResult = series.Where(item => item.ObjectExceptions().Count > 0).Select(item => new ProcessResult(SessionGuid)
-            {
-                CollectionItem = item.TitlePath,
-                Code = "Series",
-                CreationTimestamp = DateTime.Now,
-                ActionName = this.GetType().Name,
-                Messages = item.ObjectExceptions().Select(message => message.Message).ToArray()
-            });
-
-            if (seriesResult.Count() == 0)
-            {
-                SaveJson(new DirectoryInfo(TargetFolder), this, "Series", new
-                {
-                    Code = "Series",
-                    CreationTimestamp = DateTime.Now,
-                    ActionName = this.GetType().Name,
-                    Messages = "Geen resultaten."
-                });
-            }
-            else
-            {
-                SaveJson(new DirectoryInfo(TargetFolder), this, "Series", seriesResult.ToArray());
-            }
-
-            var dossierResult = dossier.Where(item => item.ObjectExceptions().Count > 0).Select(item => new ProcessResult(SessionGuid)
-            {
-                CollectionItem = item.TitlePath,
-                Code = "Dossier",
-                CreationTimestamp = DateTime.Now,
-                ActionName = this.GetType().Name,
-                Messages = item.ObjectExceptions().Select(message => message.Message).ToArray()
-            });
-
-            if (dossierResult.Count() == 0)
-            {
-                SaveJson(new DirectoryInfo(TargetFolder), this, "Dossier", new
-                {
-                    Code = "Dossier",
-                    CreationTimestamp = DateTime.Now,
-                    ActionName = this.GetType().Name,
-                    Messages = "Geen resultaten."
-                });
-            }
-            else
-            {
-                SaveJson(new DirectoryInfo(TargetFolder), this, "Dossier", dossierResult.ToArray());
-            }
-
-            var recordResult = record.Where(item => item.ObjectExceptions().Count > 0).Select(item => new ProcessResult(SessionGuid)
-            {
-                CollectionItem = item.TitlePath,
-                Code = "Record",
-                CreationTimestamp = DateTime.Now,
-                ActionName = this.GetType().Name,
-                Messages = item.ObjectExceptions().Select(message => message.Message).ToArray()
-            });
-
-            if (recordResult.Count() == 0)
-            {
-                SaveJson(new DirectoryInfo(TargetFolder), this, "Record", new
-                {
-                    Code = "Record",
-                    CreationTimestamp = DateTime.Now,
-                    ActionName = this.GetType().Name,
-                    Messages = "Geen resultaten."
-                });
-            }
-            else
-            {
-                SaveJson(new DirectoryInfo(TargetFolder), this, "Record", recordResult.ToArray());
-            }
-
-            var bestandResult = bestand.Where(item => item.ObjectExceptions().Count > 0).Select(item => new ProcessResult(SessionGuid)
-            {
-                CollectionItem = item.TitlePath,
-                Code = "Bestand",
-                CreationTimestamp = DateTime.Now,
-                ActionName = this.GetType().Name,
-                Messages = item.ObjectExceptions().Select(message => message.Message).ToArray()
-            });
-
-            if (bestandResult.Count() == 0)
-            {
-                SaveJson(new DirectoryInfo(TargetFolder), this, "Bestand", new
-                {
-                    Code = "Bestand",
-                    CreationTimestamp = DateTime.Now,
-                    ActionName = this.GetType().Name,
-                    Messages = "Geen resultaten."
-                });
-            }
-            else
-            {
-                SaveJson(new DirectoryInfo(TargetFolder), this, "Bestand", bestandResult.ToArray());
-            }
-
-            var onbekendResult = onbekend.Select(item => new ProcessResult(SessionGuid)
-            {
-                CollectionItem = item.TitlePath,
-                Code = "Onbekend",
-                CreationTimestamp = DateTime.Now,
-                ActionName = this.GetType().Name,
-                Message = "Onbekend, niet ok!"
-            });
-
-            if (onbekendResult.Count() == 0)
-            {
-                SaveJson(new DirectoryInfo(TargetFolder), this, "Onbekend", new
-                {
-                    Code = "Onbekend",
-                    CreationTimestamp = DateTime.Now,
-                    ActionName = this.GetType().Name,
-                    Messages = "Geen resultaten."
-                });
-            }
-            else
-            {
-                SaveJson(new DirectoryInfo(TargetFolder), this, "Onbekend", onbekendResult.ToArray());
-            }
+            eventArgs.PreingestAction.ActionData = validationResult.ToArray();
 
             var end = DateTime.Now;
             Logger.LogInformation("End of the validation for the sidecare structure.");
@@ -282,8 +237,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             Logger.LogInformation(String.Format("Processed in {0} ms.", processTime));
         }
         
-        private void DeepScan(string directory, PairNode<ISidecar> sidecarTreeNode)
+        private void DeepScan(string directory, PairNode<ISidecar> sidecarTreeNode, PreingestEventArgs eventArgs)
         {
+            eventArgs.Description = String.Format("Running deepscan for sidecare structure in '{0}'.", directory);
+            OnTrigger(eventArgs);
+
             this.Logger.LogDebug("Processing folder '{0}'", directory);
 
             string[] subdirectoryEntries = Directory.GetDirectories(directory);
@@ -425,7 +383,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     childSidecarTreeNode = sidecarTreeNode.AddChild(serieSidecar);
                 }
 
-                DeepScan(subdirectory, childSidecarTreeNode);
+                DeepScan(subdirectory, childSidecarTreeNode, eventArgs);
             }
         }
 

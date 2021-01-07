@@ -33,7 +33,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
             services.AddCors();
             services.AddControllers();
             services.AddHealthChecks();
-
             var appSettingsSection = Configuration.GetSection("AppSettings");
             services.Configure<AppSettings>(appSettingsSection);
 
@@ -50,8 +49,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
             services.Add(new ServiceDescriptor(typeof(EncodingHandler), new EncodingHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(GreenListHandler), new GreenListHandler(settings)));            
             services.Add(new ServiceDescriptor(typeof(MetadataValidationHandler), new MetadataValidationHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(TransformationHandler), new TransformationHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(UpdateBinaryHandler), new UpdateBinaryHandler(settings)));            
+            services.Add(new ServiceDescriptor(typeof(TransformationHandler), new TransformationHandler(settings)));           
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

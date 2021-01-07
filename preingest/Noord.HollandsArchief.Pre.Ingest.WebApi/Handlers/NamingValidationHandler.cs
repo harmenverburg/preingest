@@ -12,110 +12,118 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
     //Check 2.2
     public class NamingValidationHandler : AbstractPreingestHandler
     {
-
-        public NamingValidationHandler(AppSettings settings) : base(settings)
-        {
-
-        }
-
+        public event EventHandler<PreingestEventArgs> PreingestEvents;
+        public NamingValidationHandler(AppSettings settings) : base(settings) { }
         public override void Execute()
         {
-            string targetFolder = Path.Combine(ApplicationSettings.DataFolderName, SessionGuid.ToString());
+            bool isSucces = false;
+            var anyMessages = new List<String>();
+            var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
+            try
+            {  
+                OnTrigger(new PreingestEventArgs { Description=String.Format("Start name check on folders, sub-folders and files in '{0}'", TargetFolder),  Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
 
-            var collection = new DirectoryInfo(targetFolder).GetDirectories().First();
-            if (collection == null)
-                return;
+                var collection = new DirectoryInfo(TargetFolder).GetDirectories().First();
+                if (collection == null)
+                    throw new DirectoryNotFoundException(String.Format("Directory '{0}' not found!", TargetFolder));
 
-            var result = new List<ProcessResult>();
+                var result = new List<NamingItem>();
 
-            DirectoryRecursion(collection, result);
+                DirectoryRecursion(collection, result, new PreingestEventArgs { Description = "Walk through the folder structure.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
 
-            if (result.Count == 0)
-                result.Add(new ProcessResult(SessionGuid)
-                {
-                    CollectionItem = targetFolder,
-                    Code = "Naming",
-                    CreationTimestamp = DateTime.Now,
-                    ActionName = this.GetType().Name,
-                    Message = "Geen resultaten."
-                });
+                eventModel.Summary.Processed = result.Count();
+                eventModel.Summary.Accepted = result.Where(item => !item.ContainsDosNames && !item.ContainsInvalidCharacters).Count();
+                eventModel.Summary.Rejected = result.Where(item => item.ContainsDosNames || item.ContainsInvalidCharacters).Count();
 
-            SaveJson(new DirectoryInfo(targetFolder), this, result.ToArray());
+                eventModel.ActionData = result.ToArray();
+
+                if (eventModel.Summary.Rejected > 0)
+                    eventModel.ActionResult.ResultName = PreingestActionResults.Error;
+                else
+                    eventModel.ActionResult.ResultName = PreingestActionResults.Success;
+
+                isSucces = true;
+            }
+            catch(Exception e)
+            {
+                isSucces = false;
+                Logger.LogError(e, "An exception occured in file and folder name check!");
+                anyMessages.Clear();
+                anyMessages.Add("An exception occured in file and folder name check!");
+                anyMessages.Add(e.Message);
+                anyMessages.Add(e.StackTrace);
+
+                //eventModel.Summary.Processed = -1;
+                eventModel.Summary.Accepted = 0;
+                eventModel.Summary.Rejected = eventModel.Summary.Processed;
+
+                eventModel.ActionResult.ResultName = PreingestActionResults.Failed;
+                eventModel.Properties.Messages = anyMessages.ToArray();
+
+                OnTrigger(new PreingestEventArgs { Description = "An exception occured in name check!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
+            }
+            finally
+            {
+                if (isSucces)
+                    OnTrigger(new PreingestEventArgs { Description = "Checking names in files and folders is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
+            }
         }
 
-        private void DirectoryRecursion(DirectoryInfo currentFolder, List<ProcessResult> procesResult)
+        private void DirectoryRecursion(DirectoryInfo currentFolder, List<NamingItem> procesResult, PreingestEventArgs model)
         {
+            OnTrigger(model);
+
             this.Logger.LogDebug("Checking folder '{0}'", currentFolder.FullName);
 
             bool checkResult = ContainsInvalidCharacters(currentFolder.Name);
-            if (checkResult)
-            {
-                //DNA_CSM_023	Een of meerdere niet-toegestane bijzondere tekens komen voor in de map- of bestandsnaam <padnaam map of bestand>. 
-                ProcessResult item = new ProcessResult (SessionGuid)
-                {
-                    CollectionItem = currentFolder.Name,
-                    Code = "Not;OK;InvalidCharacter",
-                    CreationTimestamp = DateTime.Now,
-                    ActionName = this.GetType().Name,
-                    Message = String.Format("Een of meerdere niet-toegestane bijzondere tekens komen voor in de map - of bestandsnaam '{0} ({1})'.", currentFolder.Name, currentFolder.FullName),
-                };
-                procesResult.Add(item);
-            }
-
             bool checkResultNames = ContainsAnyDOSNames(currentFolder.Name);
-            if (checkResultNames)
-            {
-                //DNA_CSM_024 De map of het bestand<padnaam map of bestand> heeft een niet-toegestane naam.
-                ProcessResult item = new ProcessResult(SessionGuid)
-                {
-                    CollectionItem = currentFolder.Name,
-                    Code = "Not;OK;DOSCommand",
-                    CreationTimestamp = DateTime.Now,
-                    ActionName = this.GetType().Name,
-                    Message = String.Format("De map of het bestand '{0} ({1})' heeft een niet-toegestane naam.", currentFolder.Name, currentFolder.FullName),
-                };
-                procesResult.Add(item);
-            }
+            var errorMessages = new List<String>();
+            if (checkResult)            
+                errorMessages.Add(String.Format("Een of meerdere niet-toegestane bijzondere tekens komen voor in de map - of bestandsnaam '{0} ({1})'.", currentFolder.Name, currentFolder.FullName));  
+            if (checkResultNames)           
+                errorMessages.Add(String.Format("De map of het bestand '{0} ({1})' heeft een niet-toegestane naam.", currentFolder.Name, currentFolder.FullName));
+
+            procesResult.Add(new NamingItem { ContainsInvalidCharacters = checkResult, ContainsDosNames = checkResultNames, Name = currentFolder.FullName, ErrorMessages = errorMessages.ToArray() });
 
             currentFolder.GetFiles().ToList().ForEach(item =>
             {
+                OnTrigger(model);
+
                 this.Logger.LogDebug("Checking file '{0}'", currentFolder.FullName);
-
+                var errorMessages = new List<String>();
                 bool checkResult = ContainsInvalidCharacters(item.Name);
-                if (checkResult)
-                {
-                    //DNA_CSM_023	Een of meerdere niet-toegestane bijzondere tekens komen voor in de map- of bestandsnaam <padnaam map of bestand>.
-                    ProcessResult result = new ProcessResult(SessionGuid)
-                    {
-                        CollectionItem = currentFolder.Name,
-                        Code = "Not;OK;InvalidCharacter",
-                        CreationTimestamp = DateTime.Now,
-                        ActionName = this.GetType().Name,
-                        Message = String.Format("Een of meerdere niet-toegestane bijzondere tekens komen voor in de map - of bestandsnaam '{0} ({1})'", item.Name, item.FullName),
-                    };
-                    procesResult.Add(result);
-                }
-
+                if (checkResult)                
+                    errorMessages.Add(String.Format("Een of meerdere niet-toegestane bijzondere tekens komen voor in de map - of bestandsnaam '{0} ({1})'", item.Name, item.FullName));
                 bool checkResultNames = ContainsAnyDOSNames(item.Name);
-                if (checkResultNames)
-                {
-                    // DNA_CSM_024 De map of het bestand<padnaam map of bestand> heeft een niet-toegestane naam.
-                    ProcessResult result = new ProcessResult(SessionGuid)
-                    {
-                        CollectionItem = currentFolder.Name,
-                        Code = "Not;OK;DOSCommand",
-                        CreationTimestamp = DateTime.Now,
-                        ActionName = this.GetType().Name,
-                        Message = String.Format("De map of het bestand '{0} ({1})' heeft een niet-toegestane naam.", item.Name, item.FullName),
-                    };
-                    procesResult.Add(result);
-                }
+                if (checkResultNames)                
+                    errorMessages.Add(String.Format("De map of het bestand '{0} ({1})' heeft een niet-toegestane naam.", item.Name, item.FullName));
+
+                procesResult.Add(new NamingItem { ContainsInvalidCharacters = checkResult, ContainsDosNames = checkResultNames, Name = item.FullName, ErrorMessages = errorMessages.ToArray() });
             });
 
             foreach (var directory in currentFolder.GetDirectories())
-                DirectoryRecursion(directory, procesResult);
+                DirectoryRecursion(directory, procesResult, model);
         }
+        protected void OnTrigger(PreingestEventArgs e)
+        {
+            EventHandler<PreingestEventArgs> handler = PreingestEvents;
+            if (handler != null)
+            {
+                if (e.ActionType == PreingestActionStates.Started)
+                    e.PreingestAction.Summary.Start = e.Initiate;
 
+                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
+                    e.PreingestAction.Summary.End = e.Initiate;
+
+                handler(this, e);
+
+                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
+                {
+                    if (e.PreingestAction != null)
+                        SaveJson(new DirectoryInfo(TargetFolder), this, e.PreingestAction);                    
+                }
+            }
+        }
         private bool ContainsInvalidCharacters(string testName)
         {
             Regex containsABadCharacter = new Regex("[\\?*:\"​|/<>#&‌​]");

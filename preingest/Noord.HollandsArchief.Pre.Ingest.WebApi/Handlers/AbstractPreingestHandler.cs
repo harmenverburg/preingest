@@ -41,6 +41,27 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         {
             this._guidSessionFolder = guid;
         }
+        public String TarFilename { get; set; }
+
+        protected String TargetCollection { get => Path.Combine(ApplicationSettings.DataFolderName, TarFilename); }
+
+        protected String TargetFolder { get => Path.Combine(ApplicationSettings.DataFolderName, SessionGuid.ToString()); }
+
+        protected PreingestActionModel CurrentActionProperties(String collectionName, String actionName, PreingestActionResults actionResult = PreingestActionResults.None)
+        {
+            var eventModel = new PreingestActionModel();
+            eventModel.Properties = new PreingestProperties
+            {
+                SessionId = SessionGuid,
+                CollectionItem = collectionName,
+                ActionName = actionName,
+                CreationTimestamp = DateTime.Now
+            };
+            eventModel.ActionResult = new PreingestResult() { ResultName = actionResult };
+            eventModel.Summary = new PreingestStatisticsSummary();
+
+            return eventModel;
+        }
 
         protected String SaveJson(DirectoryInfo outputFolder, PreIngest typeName, object data, bool useTimestamp = false)
         {
@@ -53,43 +74,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             using (StreamWriter file = File.CreateText(outputFile))
             {
                 JsonSerializer serializer = new JsonSerializer();
-                serializer.Serialize(file, data);
-            }
-
-            return outputFile;
-        }
-
-        protected String SaveJson(DirectoryInfo outputFolder, PreIngest typeName, String prefix, object data, bool useTimestamp = false)
-        {
-            string fileName = new FileInfo(Path.GetTempFileName()).Name;
-            if (typeName != null)
-                fileName = String.Format ("{0}_{1}", typeName.GetType().Name, prefix.Trim());
-
-            string outputFile = useTimestamp ? Path.Combine(outputFolder.FullName, String.Concat(fileName, "_", DateTime.Now.ToFileTime().ToString(), ".json")) : Path.Combine(outputFolder.FullName, String.Concat(fileName, ".json"));
-
-            using (StreamWriter file = File.CreateText(outputFile))
-            {
-                JsonSerializer serializer = new JsonSerializer();
                 serializer.ContractResolver = new CamelCasePropertyNamesContractResolver();
-                serializer.Serialize(file, data);
-            }
-
-            return outputFile;
-        }
-
-        protected String SaveJson(String outputFile, PreIngest typeName, object data)
-        {
-            string fileName = new FileInfo(Path.GetTempFileName()).Name;
-            if (typeName != null)
-                fileName = typeName.GetType().Name;
-
-            if (File.Exists(outputFile))
-                File.Delete(outputFile);            
-
-            using (StreamWriter file = File.CreateText(outputFile))
-            {
-                JsonSerializer serializer = new JsonSerializer();
-                serializer.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                serializer.NullValueHandling = NullValueHandling.Ignore;
                 serializer.Serialize(file, data);
             }
 
@@ -132,7 +118,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             
             using (var context = new PreIngestStatusContext())
             {
-                var session = new PreIngestSession
+                var session = new PreingestAction
                 {
                     ProcessId = processId,
                     FolderSessionId = SessionGuid,
@@ -142,7 +128,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     ResultFiles = result
                 };
 
-                context.Add<PreIngestSession>(session);
+                context.Add<PreingestAction>(session);
                 try
                 {
                     context.SaveChanges();
@@ -150,19 +136,41 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 catch (Exception e) { _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", e.Message, e.StackTrace); }
                 finally { }
             }
-
             return processId;
+        }
+
+        public void UpdateProcessAction(Guid actionId, String result, String summary)
+        {
+            using (var context = new PreIngestStatusContext())
+            {
+                var currentAction = context.Find<PreingestAction>(actionId);
+                if (currentAction != null)
+                {
+                    if (!String.IsNullOrEmpty(result))
+                        currentAction.ActionStatus = result;
+
+                    if (!String.IsNullOrEmpty(summary))
+                        currentAction.StatisticsSummary = summary;
+
+                    try
+                    {
+                        context.SaveChanges();
+                    }
+                    catch (Exception e) { _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", e.Message, e.StackTrace); }
+                    finally { }
+                }
+            }
         }
 
         public void AddStartState(Guid processId)
         {
             using (var context = new PreIngestStatusContext())
             {
-                var currentSession = context.Find<PreIngestSession>(processId);
+                var currentSession = context.Find<PreingestAction>(processId);
                 if (currentSession != null)
                 {
-                    var item = new ProcessStatusItem { StatusId = Guid.NewGuid(), Creation = DateTime.Now, Name = "Started", ProcessId = currentSession.ProcessId, Session = currentSession };
-                    context.Add<ProcessStatusItem>(item);
+                    var item = new ActionStates { StatusId = Guid.NewGuid(), Creation = DateTime.Now, Name = "Started", ProcessId = currentSession.ProcessId, Session = currentSession };
+                    context.Add<ActionStates>(item);
                     try
                     {
                         context.SaveChanges();
@@ -177,11 +185,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         {
             using (var context = new PreIngestStatusContext())
             {
-                var currentSession = context.Find<PreIngestSession>(processId);
+                var currentSession = context.Find<PreingestAction>(processId);
                 if (currentSession != null)
                 {
-                    var item = new ProcessStatusItem { StatusId = Guid.NewGuid(), Creation = DateTime.Now, Name = "Completed", ProcessId = currentSession.ProcessId, Session = currentSession };
-                    context.Add<ProcessStatusItem>(item);
+                    var item = new ActionStates { StatusId = Guid.NewGuid(), Creation = DateTime.Now, Name = "Completed", ProcessId = currentSession.ProcessId, Session = currentSession };
+                    context.Add<ActionStates>(item);
 
                     try
                     {
@@ -197,11 +205,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         {
             using (var context = new PreIngestStatusContext())
             {
-                var currentSession = context.Find<PreIngestSession>(processId);
+                var currentSession = context.Find<PreingestAction>(processId);
                 if (currentSession != null)
                 {
-                    var item = new ProcessStatusItem { StatusId = Guid.NewGuid(), Creation = DateTime.Now, Name = "Failed", ProcessId = currentSession.ProcessId, Session = currentSession };
-                    context.Add<ProcessStatusItem>(item);
+                    var item = new ActionStates { StatusId = Guid.NewGuid(), Creation = DateTime.Now, Name = "Failed", ProcessId = currentSession.ProcessId, Session = currentSession };
+                    context.Add<ActionStates>(item);
 
                     try
                     {
@@ -209,7 +217,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
                         if (!String.IsNullOrEmpty(message))
                         {
-                            var stateMessage = new StatusMessageItem
+                            var stateMessage = new StateMessage
                             {
                                 Creation = DateTime.Now,
                                 Description = message,
@@ -218,7 +226,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                                 StatusId = item.StatusId
 
                             };
-                            context.Add<StatusMessageItem>(stateMessage);
+                            context.Add<StateMessage>(stateMessage);
                         }
 
                         context.SaveChanges();

@@ -16,11 +16,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     public class GreenListHandler : AbstractPreingestHandler
     {
-        public GreenListHandler(AppSettings settings) : base(settings)
-        {
-
-        }
-        private String TargetFolder { get => Path.Combine(ApplicationSettings.DataFolderName, SessionGuid.ToString()); }
+        public event EventHandler<PreingestEventArgs> PreingestEvents;
+        public GreenListHandler(AppSettings settings) : base(settings) { }
 
         public String GreenlistLocation()
         {
@@ -44,7 +41,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             var files = directory.GetFiles("*.csv");
 
             if (files.Count() > 0)
-            { 
+            {
                 FileInfo droidCsvFile = files.OrderByDescending(item => item.CreationTime).First();
                 if (droidCsvFile == null)
                     return null;
@@ -58,25 +55,32 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         }
 
         public override void Execute()
-        {            
+        { 
+            var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
+            OnTrigger(new PreingestEventArgs { Description = "Start compare extensions with greenlist.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
+
+            var anyMessages = new List<String>();
+            bool isSuccess = false;
             try
             {
                 string droidCsvFile = DroidCsvOutputLocation();
                 if (String.IsNullOrEmpty(droidCsvFile))
-                    return;
+                    throw new FileNotFoundException("CSV file not found!", droidCsvFile);
 
                 string greenListLocation = GreenlistLocation();
                 if (String.IsNullOrEmpty(greenListLocation))
-                    return;
+                    throw new FileNotFoundException("Greenlist JSON file not found!", greenListLocation);
 
                 string extensionJson = File.ReadAllText(greenListLocation);
                 var extensionData = JsonConvert.DeserializeObject<GreenListItem[]>(extensionJson);
 
+                OnTrigger(new PreingestEventArgs { Description = "Read CSV file.",  Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
                 using (var reader = new StreamReader(droidCsvFile))
                 {
                     using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
                     {
-                        var records = csv.GetRecords<dynamic>();
+                        var records = csv.GetRecords<dynamic>().ToList();
+
                         var filesByDroid = records.Where(item
                             => item.TYPE == "File" && item.EXT != "metadata").Select(item => new
                             {
@@ -89,38 +93,81 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                                 Puid = item.PUID
                             }).ToList();
 
+                        eventModel.Summary.Processed = filesByDroid.Count;
+
+                        OnTrigger(new PreingestEventArgs { Description = "Filter only files (no folders or files with .metadata extension).", Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+
                         var doesContainsGreenListResult = filesByDroid.Where(item
                             => extensionData.Select(green
                                 => green.Extension.ToUpper()).ToList().Contains(item.Extension.ToUpper())).ToList();
+                        
+                        OnTrigger(new PreingestEventArgs { Description = "Filter the content.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
 
                         var doNotcontainsGreenListResult = filesByDroid.Except(doesContainsGreenListResult).ToList();
+
+                        OnTrigger(new PreingestEventArgs { Description = "Compare both lists.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
 
                         var endResult = doesContainsGreenListResult.Select(item
                             => new { item, InGreenList = true }).Concat(doNotcontainsGreenListResult.Select(item
                                 => new { item, InGreenList = false })).ToList();
 
-                        if (endResult.Count == 0)
-                        {                            
-                            var process = new ProcessResult(SessionGuid)
-                            {
-                                CollectionItem = TargetFolder,
-                                Code = "Greenlist",
-                                CreationTimestamp = DateTime.Now,
-                                ActionName = this.GetType().Name,
-                                Message = "Geen resultaten."
-                            };
-                            SaveJson(new DirectoryInfo(TargetFolder), this, process);                    
-                        }
-                        else
-                        {
-                            SaveJson(new DirectoryInfo(TargetFolder), this, endResult.ToArray());
-                        }
+                        OnTrigger(new PreingestEventArgs { Description = "Done comparing both lists.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                        
+                        eventModel.Summary.Accepted = doesContainsGreenListResult.Count();
+                        eventModel.Summary.Rejected = doNotcontainsGreenListResult.Count();
+                        
+                        eventModel.ActionData = endResult.ToArray();
                     }
                 }
+                isSuccess = true;
+
+                if (eventModel.Summary.Rejected > 0)
+                    eventModel.ActionResult.ResultName = PreingestActionResults.Error;
+                else
+                    eventModel.ActionResult.ResultName = PreingestActionResults.Success;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                Logger.LogError(e, "Determine Droid CSV with greenlist failed!");
+                isSuccess = false;
+                Logger.LogError(e, "Comparing greenlist with CSV failed!");
+
+                anyMessages.Add(String.Format("Comparing greenlist with CSV failed!"));
+                anyMessages.Add(e.Message);
+                anyMessages.Add(e.StackTrace);
+
+                //eventModel.Summary.Processed = -1;
+                eventModel.Summary.Accepted = 0;
+                eventModel.Summary.Rejected = eventModel.Summary.Processed;
+
+                eventModel.Properties.Messages = anyMessages.ToArray();
+                eventModel.ActionResult.ResultName = PreingestActionResults.Failed;               
+
+                OnTrigger(new PreingestEventArgs { Description="An exception occured while comparing greenlist with CSV!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
+            }
+            finally
+            {
+                if (isSuccess)
+                    OnTrigger(new PreingestEventArgs { Description="Comparing greenlist using CSV from DROID is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });                
+            }
+        }
+        protected void OnTrigger(PreingestEventArgs e)
+        {
+            EventHandler<PreingestEventArgs> handler = PreingestEvents;
+            if (handler != null)
+            {
+                if (e.ActionType == PreingestActionStates.Started)
+                    e.PreingestAction.Summary.Start = e.Initiate;
+
+                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
+                    e.PreingestAction.Summary.End = e.Initiate;
+
+                handler(this, e);
+
+                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
+                {
+                    if (e.PreingestAction != null)
+                        SaveJson(new DirectoryInfo(TargetFolder), this, e.PreingestAction);                    
+                }
             }
         }
     }

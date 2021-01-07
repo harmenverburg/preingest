@@ -7,9 +7,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Model
 {
     public class PreIngestStatusContext : DbContext
     {
-        public DbSet<ProcessStatusItem> Statuses { get; set; }
-        public DbSet<PreIngestSession> Sessions { get; set; }
-        public DbSet<StatusMessageItem> Messages { get; set; }
+        public DbSet<ActionStates> ActionStateCollection { get; set; }
+        public DbSet<PreingestAction> PreingestActionCollection { get; set; }
+        public DbSet<StateMessage> ActionStateMessageCollection { get; set; }
 
         public PreIngestStatusContext() : base() { }
 
@@ -18,9 +18,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Model
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<PreIngestSession>().ToTable("Sessions");
-            modelBuilder.Entity<ProcessStatusItem>().ToTable("Status");
-            modelBuilder.Entity<StatusMessageItem>().ToTable("Messages"); 
+            modelBuilder.Entity<PreingestAction>().ToTable("Actions");
+            modelBuilder.Entity<ActionStates>().ToTable("States");
+            modelBuilder.Entity<StateMessage>().ToTable("Messages"); 
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

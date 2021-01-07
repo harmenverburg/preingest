@@ -6,14 +6,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context
 {
     [Table("Status")]
-    public class ProcessStatusItem
+    public class ActionStates
     {
         [Key]
         [Column("StatusId")]
         public Guid StatusId { get; set; }
 
         public Guid ProcessId { get; set; }
-        public PreIngestSession Session { get; set; }
+        public PreingestAction Session { get; set; }
 
         [Column("Name")]
         public String Name { get; set; }
@@ -22,7 +22,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context
         public DateTime Creation { get; set; }
 
         [ForeignKey("StatusId")]
-        public ICollection<StatusMessageItem> Messages { get; set; }
+        public ICollection<StateMessage> Messages { get; set; }
     }
 
 }

@@ -2,85 +2,143 @@
 using Mono.Unix;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     public class UnpackTarHandler : AbstractPreingestHandler
     {
-        string _tarFile = string.Empty;       
-        public UnpackTarHandler(AppSettings settings) : base (settings){ }
-
-        public String TarFilename
+        public event EventHandler<PreingestEventArgs> PreingestEvents;
+        public UnpackTarHandler(AppSettings settings) : base(settings) { }       
+        protected void OnTrigger(PreingestEventArgs e)
         {
-            set { this._tarFile = value; }
-            get { return this._tarFile; }
-        }      
-        
+            EventHandler<PreingestEventArgs> handler = PreingestEvents;
+            if (handler != null)
+            {
+                if (e.ActionType == PreingestActionStates.Started)
+                    e.PreingestAction.Summary.Start = e.Initiate;
+
+                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
+                    e.PreingestAction.Summary.End = e.Initiate;
+
+                handler(this, e);
+
+                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
+                {
+                    if (e.PreingestAction != null)                    
+                        SaveJson(new DirectoryInfo(TargetFolder), this, e.PreingestAction);                    
+                }
+            }
+        }
+
         public override void Execute()
         {
-            string containerFile = Path.Combine(ApplicationSettings.DataFolderName, _tarFile);
-
-            if (!File.Exists(containerFile))
-                return;
-            
-            string sessionFolder = Path.Combine(ApplicationSettings.DataFolderName, SessionGuid.ToString());
-
+            var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);  
+            OnTrigger(new PreingestEventArgs { Description= String.Format("Start expanding container '{0}'.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
+               
             string output = string.Empty;
             string error = string.Empty;
 
-            using (var tarProcess = new Process()
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "tar",
-                    Arguments = String.Format("-C \"{0}\" -oxvf \"{1}\"", sessionFolder, containerFile),
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            })
-            {
-                tarProcess.Start();
-                
-                this.Logger.LogDebug("Unpacking container '{0}'", containerFile);
+            var anyMessages = new List<String>();
+            bool isSuccess = false;
+            try
+            {                
+                if (!File.Exists(TargetCollection))
+                    throw new FileNotFoundException ("Collection not found!", TargetCollection) ;
 
-                output = tarProcess.StandardOutput.ReadToEnd();
-                error = tarProcess.StandardError.ReadToEnd();
+                string sessionFolder = Path.Combine(ApplicationSettings.DataFolderName, SessionGuid.ToString());
+
+                using (var tarProcess = new Process()
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "tar",
+                        Arguments = String.Format("-C \"{0}\" -oxvf \"{1}\"", sessionFolder, TargetCollection),
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    }
+                })
+                {
+                    tarProcess.Start();
+                    OnTrigger(new PreingestEventArgs { Description="Container is unpacking content.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+
+                    this.Logger.LogDebug("Unpacking container '{0}'", TargetCollection);
+
+                    output = tarProcess.StandardOutput.ReadToEnd();
+                    error = tarProcess.StandardError.ReadToEnd();
+
+                    tarProcess.WaitForExit();
+                }
 
                 if (!String.IsNullOrEmpty(output))
-                this.Logger.LogDebug(output); 
-            
-                tarProcess.WaitForExit();
+                    this.Logger.LogDebug(output);
+
+                if (!String.IsNullOrEmpty(error))
+                    this.Logger.LogDebug(error);
+
+                var fileInformation = new FileInfo(TargetCollection);
+                anyMessages.Add(String.Concat("Name : ", fileInformation.Name));
+                anyMessages.Add(String.Concat("Extension : ", fileInformation.Extension));
+                anyMessages.Add(String.Concat("Size : ", fileInformation.Length));
+                anyMessages.Add(String.Concat("CreationTime : ", fileInformation.CreationTimeUtc));
+                anyMessages.Add(String.Concat("LastAccessTime : ", fileInformation.LastAccessTimeUtc));
+                anyMessages.Add(String.Concat("LastWriteTime : ", fileInformation.LastWriteTimeUtc));
+
+                eventModel.Properties.Messages = anyMessages.ToArray();
+                    
+                bool isWindows = RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
+                if (!isWindows)
+                {
+                    var unixDirInfo = new UnixDirectoryInfo(sessionFolder);
+                    //trigger event executing
+                    var passEventArgs = new PreingestEventArgs { Description = String.Format("Execute chmod 777 for container '{0}'", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel };
+                    OnTrigger(passEventArgs);
+                    ScanPath(unixDirInfo, passEventArgs);
+                }
+
+                isSuccess = true;
             }
-
-            var unixDirInfo = new UnixDirectoryInfo(sessionFolder);
-            ScanPath(unixDirInfo);
-
-            ProcessResult item = new ProcessResult(SessionGuid)
+            catch(Exception e)
             {
-                CollectionItem = _tarFile,
-                Code = "Unpack",
-                CreationTimestamp = DateTime.Now,
-                ActionName = this.GetType().Name,
-                Message = String.IsNullOrEmpty(error) ? output : error
-            };
+                isSuccess = false;
+                anyMessages.Clear();
+                anyMessages.Add(String.Format("Unpack container file: '{0}' failed!", TargetCollection));
+                anyMessages.Add(e.Message);
+                anyMessages.Add(e.StackTrace);
 
-            SaveJson(new DirectoryInfo(sessionFolder), this, item);          
+                Logger.LogError(e, "Unpack container file: '{0}' failed!", TargetCollection);
+                
+                eventModel.ActionResult.ResultName = PreingestActionResults.Failed;
+                eventModel.Properties.Messages = anyMessages.ToArray();
+                eventModel.Summary.Processed = 1;
+                eventModel.Summary.Accepted = 0;
+                eventModel.Summary.Rejected = 1;
+
+                OnTrigger(new PreingestEventArgs {Description = "An exception occured while unpacking a container!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
+            }
+            finally
+            {
+                if (isSuccess)
+                {                    
+                    eventModel.ActionResult.ResultName = PreingestActionResults.Success;                    
+                    eventModel.Summary.Processed = 1;
+                    eventModel.Summary.Accepted = 1;
+                    eventModel.Summary.Rejected = 0;
+                    eventModel.ActionData = output.Split(Environment.NewLine);
+
+                    OnTrigger(new PreingestEventArgs {Description="Unpacking the container is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
+                }
+            }
         }
 
-        public void RemoveTarFile()
+        private void ScanPath(UnixDirectoryInfo dirinfo, PreingestEventArgs passEventArgs)
         {
-            string containerFile = Path.Combine(ApplicationSettings.DataFolderName, _tarFile);
-
-            if (File.Exists(containerFile))            
-                File.Delete(containerFile);            
-        }
-
-        private void ScanPath(UnixDirectoryInfo dirinfo)
-        {
+            OnTrigger(passEventArgs);
             dirinfo.FileAccessPermissions = FileAccessPermissions.AllPermissions;
             foreach (var fileinfo in dirinfo.GetFileSystemEntries())
             {                
@@ -90,7 +148,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                         fileinfo.FileAccessPermissions = FileAccessPermissions.AllPermissions;                    
                         break;
                     case FileTypes.Directory:
-                        ScanPath((UnixDirectoryInfo)fileinfo);
+                        ScanPath((UnixDirectoryInfo)fileinfo, passEventArgs);
                         break;
                     default:
                         /* Do nothing for symlinks or other weird things. */

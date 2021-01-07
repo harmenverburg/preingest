@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UserSecretsId>e5ac314a-1cc0-4a33-a354-d7384efe85da</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileRunArguments>-v "D:/data:/data"</DockerfileRunArguments> 
+    <DockerfileRunArguments>-v "D:/data:/data" --network "preingest_devtest_preingest-network"</DockerfileRunArguments> 
     <AssemblyName>Noord.HollandsArchief.Pre.Ingest.WebApi</AssemblyName>
     <RootNamespace>Noord.HollandsArchief.Pre.Ingest.WebApi</RootNamespace>
   </PropertyGroup>
