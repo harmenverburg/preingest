@@ -21,6 +21,8 @@ services:
         - "${ETCFOLDER}:/data/etc"
     expose:
         - "8080" 
+    environment:
+        - "PREINGEST_WEBAPI=http://Noord.HollandsArchief.Pre.Ingest.WebApi"
     ports:
         - "8888:8080"     
     networks :
