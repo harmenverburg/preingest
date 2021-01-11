@@ -1,10 +1,11 @@
-﻿using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.ToPX;
-using Noord.HollandsArchief.Pre.Ingest.Utilities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+
+using Noord.HollandsArchief.Pre.Ingest.Utilities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.ToPX;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure
 {

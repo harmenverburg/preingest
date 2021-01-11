@@ -1,22 +1,19 @@
 ﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Runtime.InteropServices;
-using System.Xml.Linq;
+using System.Collections.Generic;
+
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     //Check 5
     public class SipCreatorHandler : AbstractPreingestHandler
     {
-        public event EventHandler<PreingestEventArgs> PreingestEvents;
-
         public SipCreatorHandler(AppSettings settings) : base(settings)  {  }
 
         private String GetProcessingUrl(string servername, string port, string folder)
@@ -27,8 +24,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         public override void Execute()
         {
+            base.Execute();
+
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
-            OnTrigger(new PreingestEventArgs { Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
+            OnTrigger(new PreingestEventArgs () { Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
 
             var anyMessages = new List<String>();
             bool isSucces = false;
@@ -102,26 +101,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             {
                 if (isSucces)
                     OnTrigger(new PreingestEventArgs { Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
-            }
-        }
-
-        protected void OnTrigger(PreingestEventArgs e)
-        {
-            EventHandler<PreingestEventArgs> handler = PreingestEvents;
-            if (handler != null)
-            {
-                if (e.ActionType == PreingestActionStates.Started)
-                    e.PreingestAction.Summary.Start = e.Initiate;
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                    e.PreingestAction.Summary.End = e.Initiate;
-
-                handler(this, e);
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                {                   
-                    //SaveJson(new DirectoryInfo(sessionFolder), this, e.PreingestAction);
-                }
             }
         }
     }

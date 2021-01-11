@@ -30,7 +30,7 @@
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/api/preingest/check",
       "publishAllPorts": true,
-      "useSSL": true
+      "useSSL": false
     }
   }
 }

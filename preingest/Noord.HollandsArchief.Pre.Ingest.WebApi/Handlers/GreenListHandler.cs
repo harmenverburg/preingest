@@ -1,22 +1,24 @@
 ﻿using CsvHelper;
+
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
+using System.Globalization;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Xml.XPath;
+
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     public class GreenListHandler : AbstractPreingestHandler
     {
-        public event EventHandler<PreingestEventArgs> PreingestEvents;
         public GreenListHandler(AppSettings settings) : base(settings) { }
 
         public String GreenlistLocation()
@@ -55,7 +57,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         }
 
         public override void Execute()
-        { 
+        {
+            base.Execute();
+
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
             OnTrigger(new PreingestEventArgs { Description = "Start compare extensions with greenlist.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
 
@@ -149,26 +153,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 if (isSuccess)
                     OnTrigger(new PreingestEventArgs { Description="Comparing greenlist using CSV from DROID is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });                
             }
-        }
-        protected void OnTrigger(PreingestEventArgs e)
-        {
-            EventHandler<PreingestEventArgs> handler = PreingestEvents;
-            if (handler != null)
-            {
-                if (e.ActionType == PreingestActionStates.Started)
-                    e.PreingestAction.Summary.Start = e.Initiate;
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                    e.PreingestAction.Summary.End = e.Initiate;
-
-                handler(this, e);
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                {
-                    if (e.PreingestAction != null)
-                        SaveJson(new DirectoryInfo(TargetFolder), this, e.PreingestAction);                    
-                }
-            }
-        }
+        }       
     }
 }

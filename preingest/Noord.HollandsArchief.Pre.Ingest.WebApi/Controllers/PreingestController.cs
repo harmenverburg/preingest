@@ -1,14 +1,19 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
-using Noord.HollandsArchief.Pre.Ingest.Utilities;
+using Newtonsoft.Json.Serialization;
+
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.EventHub;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -18,11 +23,60 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
     {
         private readonly ILogger<PreingestController> _logger;
         private AppSettings _settings = null;
+        private readonly IHubContext<PreingestEventHub> _eventHub;
 
-        public PreingestController(ILogger<PreingestController> logger, IOptions<AppSettings> settings)
+        private void Trigger(object sender, PreingestEventArgs e)
+        {
+            if ((sender as IPreingest) == null)
+                return;
+
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy()                    
+                    
+                },
+                Formatting = Formatting.Indented, 
+                NullValueHandling = NullValueHandling.Ignore                
+            };
+
+            _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
+                JsonConvert.SerializeObject(new EventHubMessage
+                {
+                    EventDateTime = e.Initiate,
+                    SessionId = e.PreingestAction.Properties.SessionId,
+                    Name = e.PreingestAction.Properties.ActionName,
+                    State = e.ActionType,
+                    Message = e.Description,
+                    Summary = e.PreingestAction.Summary
+                }, settings)).GetAwaiter().GetResult();
+
+            IPreingest handler = sender as IPreingest;
+            if (handler.ActionProcessId == Guid.Empty) return;
+
+            if (e.ActionType == PreingestActionStates.Started)
+                handler.AddStartState(handler.ActionProcessId);
+            if (e.ActionType == PreingestActionStates.Completed)
+                handler.AddCompleteState(handler.ActionProcessId);
+            if (e.ActionType == PreingestActionStates.Failed)
+            {
+                string message = String.Concat(e.PreingestAction.Properties.Messages);
+                handler.AddFailedState(handler.ActionProcessId, message);
+            }
+            if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
+            {
+                string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultName.ToString() : PreingestActionResults.None.ToString();
+                string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary, settings) : String.Empty;
+                handler.UpdateProcessAction(handler.ActionProcessId, result, summary);
+            }
+        }
+
+        public PreingestController(ILogger<PreingestController> logger, IOptions<AppSettings> settings, IHubContext<PreingestEventHub> eventHub)
         {
             _logger = logger;
             _settings = settings.Value;
+            _eventHub = eventHub;
         }
 
         [HttpGet("check", Name = "API service check", Order = 0)]
@@ -60,58 +114,37 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (String.IsNullOrEmpty(checksum))
                 return BadRequest("Missing checksum name.");
 
-            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
-            if (!exists)
-                return NotFound(String.Format("Session {0} not found.", guid));
-
             ContainerChecksumHandler handler = HttpContext.RequestServices.GetService(typeof(ContainerChecksumHandler)) as ContainerChecksumHandler;  
             if (handler == null)
                 return Problem("Object is not loaded.", typeof(ContainerChecksumHandler).Name);
 
             handler.Logger = _logger;            
             handler.Checksum = checksum;
-            //data map id            
-            handler.SetSessionGuid(guid);
+            
             //database process id
             Guid processId = Guid.Empty;
             try
             {
+                //data map id            
+                handler.SetSessionGuid(guid);
+
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ContainerChecksumHandler).Name, handler.SessionGuid);
 
-                var directory = new DirectoryInfo(_settings.DataFolderName);
-                if (!directory.Exists)
-                    return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
+                processId = handler.AddProcessAction(typeof(ContainerChecksumHandler).Name, String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(ContainerChecksumHandler).Name, ".json"));
 
-                var tarArchives = directory.GetFiles("*.*").Where(s
-                        => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
-                            => new { Tar = item.Name, SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name) }).ToList();
-                
-                handler.TarFilename = tarArchives.First(item => item.SessionId == handler.SessionGuid).Tar;
-
-                if (String.IsNullOrEmpty(handler.TarFilename))
-                    return Problem(String.Format("Tar file not found for GUID '{0}'!", handler.SessionGuid));
-
-                processId = handler.AddProcessAction("Calculate", String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(ContainerChecksumHandler).Name, ".json"));
-
-                handler.PreingestEvents += (object sender, PreingestEventArgs e) =>
+                Task.Run(() =>
                 {
-                    if (e.ActionType == PreingestActionStates.Started)
-                        handler.AddStartState(processId);
-                    if (e.ActionType == PreingestActionStates.Completed)                    
-                        handler.AddCompleteState(processId);                    
-                    if(e.ActionType == PreingestActionStates.Failed)
+                    handler.ActionProcessId = processId;
+                    try
                     {
-                        string message = String.Concat(e.PreingestAction.Properties.Messages);
-                        handler.AddFailedState(processId, message);
+                        handler.PreingestEvents += Trigger;
+                        handler.Execute();
                     }
-                    if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
+                    finally
                     {
-                        string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultName.ToString() : PreingestActionResults.None.ToString();
-                        string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary) : String.Empty;
-                        handler.UpdateProcessAction(processId, result, summary);
+                        handler.PreingestEvents -= Trigger;
                     }
-                };
-                Task.Run(() => handler.Execute());          
+                });                 
             }
             catch (Exception e )
             {
@@ -132,57 +165,34 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
 
-            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
-            if (!exists)
-                return NotFound(String.Format("Session {0} not found.", guid));
-
             UnpackTarHandler handler = HttpContext.RequestServices.GetService(typeof(UnpackTarHandler)) as UnpackTarHandler;
             if (handler == null)
                 return Problem("Object is not loaded.", typeof(UnpackTarHandler).Name);
 
             handler.Logger = _logger;
-
-            var directory = new DirectoryInfo(_settings.DataFolderName);
-            if (!directory.Exists)
-                return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));                       
            
             //database action id
             Guid processId = Guid.Empty;
             try
             { 
                 handler.SetSessionGuid(guid);
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(UnpackTarHandler).Name, handler.SessionGuid);
+                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(UnpackTarHandler).Name, handler.SessionGuid);               
 
-                var tarArchives = directory.GetFiles("*.*").Where(s
-                    => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
-                        => new { Tar = item.Name, SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name) }).ToList();
+                processId = handler.AddProcessAction(typeof(UnpackTarHandler).Name, String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(UnpackTarHandler).Name, ".json"));
 
-                handler.TarFilename = tarArchives.First(item => item.SessionId == handler.SessionGuid).Tar;
-
-                if (String.IsNullOrEmpty(handler.TarFilename))
-                    return Problem(String.Format("Tar file not found for GUID '{0}'!", handler.SessionGuid));
-
-                processId = handler.AddProcessAction("Unpack", String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(UnpackTarHandler).Name, ".json"));
-
-                handler.PreingestEvents += (object sender, PreingestEventArgs e) =>
+                Task.Run(() =>
                 {
-                    if (e.ActionType == PreingestActionStates.Started)
-                        handler.AddStartState(processId);
-                    if (e.ActionType == PreingestActionStates.Completed)                    
-                        handler.AddCompleteState(processId);                    
-                    if (e.ActionType == PreingestActionStates.Failed)
+                    handler.ActionProcessId = processId;
+                    try
                     {
-                        string message = String.Concat(e.PreingestAction.Properties.Messages);
-                        handler.AddFailedState(processId, message);
+                        handler.PreingestEvents += Trigger;
+                        handler.Execute();
                     }
-                    if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
+                    finally
                     {
-                        string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultName.ToString() : PreingestActionResults.None.ToString();
-                        string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary) : String.Empty;
-                        handler.UpdateProcessAction(processId, result, summary);
+                        handler.PreingestEvents -= Trigger;
                     }
-                };
-                Task.Run(() => handler.Execute());
+                });
             }
             catch(Exception e)
             {
@@ -200,15 +210,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
 
-            _logger.LogInformation("Enter VirusScan.");
-       
-            var directory = new DirectoryInfo(_settings.DataFolderName);
-            if (!directory.Exists)
-                return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
-
-            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
-            if (!exists)
-                return NotFound(String.Format("Session {0} not found.", guid));
+            _logger.LogInformation("Enter VirusScan.");      
 
             ScanVirusValidationHandler handler = HttpContext.RequestServices.GetService(typeof(ScanVirusValidationHandler)) as ScanVirusValidationHandler;
             if (handler == null)
@@ -224,33 +226,21 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 handler.SetSessionGuid(guid);
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ScanVirusValidationHandler).Name, guid.ToString());
 
-                var tarArchives = directory.GetFiles("*.*").Where(s
-                   => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
-                       => new { Tar = item.Name, SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name) }).ToList();
+                processId = handler.AddProcessAction(typeof(ScanVirusValidationHandler).Name, String.Format("Scan for virus on folder {0}", guid), String.Concat(typeof(ScanVirusValidationHandler).Name, ".json"));
 
-                handler.TarFilename = tarArchives.First(item => item.SessionId == handler.SessionGuid).Tar;
-
-                processId = handler.AddProcessAction("Virusscan", String.Format("Scan for virus on folder {0}", guid), String.Concat(typeof(ScanVirusValidationHandler).Name, ".json"));
-
-                handler.PreingestEvents += (object sender, PreingestEventArgs e) =>
+                Task.Run(() =>
                 {
-                    if (e.ActionType == PreingestActionStates.Started)
-                        handler.AddStartState(processId);
-                    if (e.ActionType == PreingestActionStates.Completed)
-                        handler.AddCompleteState(processId);
-                    if (e.ActionType == PreingestActionStates.Failed)
+                    handler.ActionProcessId = processId;
+                    try
                     {
-                        string message = String.Concat(e.PreingestAction.Properties.Messages);
-                        handler.AddFailedState(processId, message);
+                        handler.PreingestEvents += Trigger;
+                        handler.Execute();
                     }
-                    if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
+                    finally
                     {
-                        string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultName.ToString() : PreingestActionResults.None.ToString();
-                        string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary) : String.Empty;
-                        handler.UpdateProcessAction(processId, result, summary);
+                        handler.PreingestEvents -= Trigger;
                     }
-                };
-                Task.Run(() => handler.Execute());
+                });
             }
             catch (Exception e)
             {
@@ -268,15 +258,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
 
-            _logger.LogInformation("Enter Naming.");
-
-            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
-            if (!exists)
-                return NotFound(String.Format("Session {0} not found.", guid));
-
-            var directory = new DirectoryInfo(_settings.DataFolderName);
-            if (!directory.Exists)
-                return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
+            _logger.LogInformation("Enter Naming.");          
 
             NamingValidationHandler handler = HttpContext.RequestServices.GetService(typeof(NamingValidationHandler)) as NamingValidationHandler;
             if (handler == null)
@@ -289,37 +271,25 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             try
             {
                 //data map id
-                handler.SetSessionGuid(guid);
-
-                var tarArchives = directory.GetFiles("*.*").Where(s
-                   => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
-                       => new { Tar = item.Name, SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name) }).ToList();
-
-                handler.TarFilename = tarArchives.First(item => item.SessionId == handler.SessionGuid).Tar;
+                handler.SetSessionGuid(guid);               
 
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(NamingValidationHandler).Name, guid.ToString());
                
-                processId = handler.AddProcessAction("Naming", String.Format("Name check on folders, sub-folders and files : folder {0}", guid), String.Concat(typeof(NamingValidationHandler).Name, ".json"));
-
-                handler.PreingestEvents += (object sender, PreingestEventArgs e) =>
+                processId = handler.AddProcessAction(typeof(NamingValidationHandler).Name, String.Format("Name check on folders, sub-folders and files : folder {0}", guid), String.Concat(typeof(NamingValidationHandler).Name, ".json"));
+                       
+                Task.Run(() =>
                 {
-                    if (e.ActionType == PreingestActionStates.Started)
-                        handler.AddStartState(processId);
-                    if (e.ActionType == PreingestActionStates.Completed)
-                        handler.AddCompleteState(processId);
-                    if (e.ActionType == PreingestActionStates.Failed)
+                    handler.ActionProcessId = processId;
+                    try
                     {
-                        string message = String.Concat(e.PreingestAction.Properties.Messages);
-                        handler.AddFailedState(processId, message);
+                        handler.PreingestEvents += Trigger;
+                        handler.Execute();
                     }
-                    if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
+                    finally
                     {
-                        string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultName.ToString() : PreingestActionResults.None.ToString();
-                        string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary) : String.Empty;
-                        handler.UpdateProcessAction(processId, result, summary);
+                        handler.PreingestEvents -= Trigger;
                     }
-                };
-                Task.Run(() => handler.Execute());
+                });
             }
             catch (Exception e)
             {
@@ -337,15 +307,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
 
-            _logger.LogInformation("Enter Sidecar.");
-
-            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
-            if (!exists)            
-                return NotFound(String.Format("Session {0} not found.", guid));
-
-            var directory = new DirectoryInfo(_settings.DataFolderName);
-            if (!directory.Exists)
-                return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
+            _logger.LogInformation("Enter Sidecar.");          
 
             SidecarValidationHandler handler = HttpContext.RequestServices.GetService(typeof(SidecarValidationHandler)) as SidecarValidationHandler;
             if (handler == null)
@@ -360,34 +322,23 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 handler.SetSessionGuid(guid);
 
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SidecarValidationHandler).Name, guid.ToString());
-
-                var tarArchives = directory.GetFiles("*.*").Where(s
-                   => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
-                       => new { Tar = item.Name, SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name) }).ToList();
-
-                handler.TarFilename = tarArchives.First(item => item.SessionId == handler.SessionGuid).Tar;
-
+               
                 //processId = handler.AddProcessAction("Sidecar", String.Format("Sidecar structure check for aggregation and metadata : folder {0}", guid), String.Concat(typeof(SidecarValidationHandler).Name, ".json", ";", typeof(SidecarValidationHandler).Name, ".bin"));
-                processId = handler.AddProcessAction("Sidecar", String.Format("Sidecar structure check for aggregation and metadata : folder {0}", guid), String.Concat(typeof(SidecarValidationHandler).Name, ".json"));
+                processId = handler.AddProcessAction(typeof(SidecarValidationHandler).Name, String.Format("Sidecar structure check for aggregation and metadata : folder {0}", guid), String.Concat(typeof(SidecarValidationHandler).Name, ".json"));
 
-                handler.PreingestEvents += (object sender, PreingestEventArgs e) =>
+                Task.Run(() =>
                 {
-                    if (e.ActionType == PreingestActionStates.Started)
-                        handler.AddStartState(processId);
-                    if (e.ActionType == PreingestActionStates.Completed)
-                        handler.AddCompleteState(processId);
-                    if (e.ActionType == PreingestActionStates.Failed)
+                    handler.ActionProcessId = processId;
+                    try
                     {
-                        string message = String.Concat(e.PreingestAction.Properties.Messages);
-                        handler.AddFailedState(processId, message);
+                        handler.PreingestEvents += Trigger;
+                        handler.Execute();
                     }
-                    if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed) {
-                        string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultName.ToString() : PreingestActionResults.None.ToString();
-                        string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary) : String.Empty;
-                        handler.UpdateProcessAction(processId, result, summary);
-                    }                    
-                };
-                Task.Run(() => handler.Execute());
+                    finally
+                    {
+                        handler.PreingestEvents -= Trigger;
+                    }
+                });
             }
             catch (Exception e)
             {
@@ -406,22 +357,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Enter Profiling.");
 
-            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
-            if (!exists)
-            {
-                return NotFound(String.Format("Session {0} not found.", guid));
-            }
-
             DroidValidationHandler handler = HttpContext.RequestServices.GetService(typeof(DroidValidationHandler)) as DroidValidationHandler;
             if (handler == null)
                 return Problem("Object is not loaded.", typeof(DroidValidationHandler).Name);
 
-            handler.Logger = _logger;
-            handler.SetSessionGuid(guid);
-
+           
             string actionId = string.Empty;
             try
-            {
+            {  
+                handler.Logger = _logger;
+                handler.SetSessionGuid(guid);                
                 _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
                 
                 var result = handler.GetProfiles().Result;
@@ -448,21 +393,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Enter Exporting.");
 
-            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
-            if (!exists)
-            {
-                return NotFound(String.Format("Session {0} not found.", guid));
-            }
-
             DroidValidationHandler handler = HttpContext.RequestServices.GetService(typeof(DroidValidationHandler)) as DroidValidationHandler;
             if (handler == null)
                 return Problem("Object is not loaded.", typeof(DroidValidationHandler).Name);
 
-            handler.Logger = _logger;
-            handler.SetSessionGuid(guid);
             string actionId = string.Empty;
             try
             {
+            
+                handler.Logger = _logger;
+                handler.SetSessionGuid(guid);
                 _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
                 
                 var result = handler.GetExporting().Result;
@@ -488,12 +428,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Enter Reporting.");
 
-            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
-            if (!exists)
-            {
-                return NotFound(String.Format("Session {0} not found.", guid));
-            }
-
             DroidValidationHandler.ReportingStyle style = DroidValidationHandler.ReportingStyle.Pdf;
             switch (type)
             {
@@ -514,13 +448,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (handler == null)
                 return Problem("Object is not loaded.", typeof(DroidValidationHandler).Name);
 
-            handler.Logger = _logger;
-            handler.SetSessionGuid(guid);
-            string actionId = string.Empty;
-
             
+            string actionId = string.Empty;
             try
             {
+                handler.Logger = _logger;
+                handler.SetSessionGuid(guid);
+
                 _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
                 var result = handler.GetReporting(style).Result;
                 _logger.LogInformation("Reporting is completed.");
@@ -546,10 +480,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (handler == null)
                 return Problem("Object is not loaded.", typeof(DroidValidationHandler).Name);
 
-            handler.Logger = _logger;
-            Guid dummyGuid = Guid.NewGuid();
-            handler.SetSessionGuid(dummyGuid);
-                       
+            handler.Logger = _logger;                    
             try
             {
                 _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
@@ -563,7 +494,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Exit SignatureUpdate.");
 
-            return new JsonResult(new { Message = String.Format("Droid signature update check/download is started."), SessionId = dummyGuid, ActionId = "" });
+            return new JsonResult(new { Message = String.Format("Droid signature update check/download is started."), SessionId = "", ActionId = "" });
         }
 
         [HttpPost("greenlist/{guid}", Name = "Greenlist check", Order = 10)]
@@ -572,21 +503,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
 
-            _logger.LogInformation("Enter GreenListCheck.");
-
-            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
-            if (!exists)
-                return NotFound(String.Format("Session {0} not found.", guid));            
+            _logger.LogInformation("Enter GreenListCheck.");                     
 
             GreenListHandler handler = HttpContext.RequestServices.GetService(typeof(GreenListHandler)) as GreenListHandler;
             if (handler == null)
                 return Problem("Object is not loaded.", typeof(GreenListHandler).Name);
 
             handler.Logger = _logger;
-
-            var directory = new DirectoryInfo(_settings.DataFolderName);
-            if (!directory.Exists)
-                return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
+                       
             //database process id
             Guid processId = Guid.Empty;
 
@@ -595,34 +519,22 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 handler.SetSessionGuid(guid);
 
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(GreenListHandler).Name, guid.ToString());
-
-                var tarArchives = directory.GetFiles("*.*").Where(s
-                    => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
-                        => new { Tar = item.Name, SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name) }).ToList();
-
-                handler.TarFilename = tarArchives.First(item => item.SessionId == handler.SessionGuid).Tar;
-
-                processId = handler.AddProcessAction("Greenlist", String.Format("Compare CSV result with greenlist"), String.Concat(typeof(GreenListHandler).Name, ".json"));
-
-                handler.PreingestEvents += (object sender, PreingestEventArgs e) =>
+                
+                processId = handler.AddProcessAction(typeof(GreenListHandler).Name, String.Format("Compare CSV result with greenlist"), String.Concat(typeof(GreenListHandler).Name, ".json"));
+                               
+                Task.Run(() =>
                 {
-                    if (e.ActionType == PreingestActionStates.Started)
-                        handler.AddStartState(processId);
-                    if (e.ActionType == PreingestActionStates.Completed)
-                        handler.AddCompleteState(processId);
-                    if (e.ActionType == PreingestActionStates.Failed)
+                    handler.ActionProcessId = processId;
+                    try
                     {
-                        string message = String.Concat(e.PreingestAction.Properties.Messages);
-                        handler.AddFailedState(processId, message);
+                        handler.PreingestEvents += Trigger;
+                        handler.Execute();
                     }
-                    if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
+                    finally
                     {
-                        string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultName.ToString() : PreingestActionResults.None.ToString();
-                        string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary) : String.Empty;
-                        handler.UpdateProcessAction(processId, result, summary);
+                        handler.PreingestEvents -= Trigger;
                     }
-                };
-                Task.Run(() => handler.Execute());
+                });
             }
             catch (Exception e)
             {
@@ -641,18 +553,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Enter EncodingCheck.");
 
-            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
-            if (!exists)           
-                return NotFound(String.Format("Session {0} not found.", guid));
-
-            var directory = new DirectoryInfo(_settings.DataFolderName);
-            if (!directory.Exists)
-                return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
-
             EncodingHandler handler = HttpContext.RequestServices.GetService(typeof(EncodingHandler)) as EncodingHandler;
             if (handler == null)
                 return Problem("Object is not loaded.", typeof(EncodingHandler).Name);
-
 
             handler.Logger = _logger;
             //database process id
@@ -664,34 +567,22 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 handler.SetSessionGuid(guid);
                 
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(EncodingHandler).Name, guid.ToString());
-
-                var tarArchives = directory.GetFiles("*.*").Where(s
-                   => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
-                       => new { Tar = item.Name, SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name) }).ToList();
-
-                handler.TarFilename = tarArchives.First(item => item.SessionId == handler.SessionGuid).Tar;
-
-                processId = handler.AddProcessAction("Encoding", String.Format("Retrieve the encoding for all metadata files : folder {0}", guid), String.Concat(typeof(EncodingHandler).Name, ".json"));
-
-                handler.PreingestEvents += (object sender, PreingestEventArgs e) =>
+                
+                processId = handler.AddProcessAction(typeof(EncodingHandler).Name, String.Format("Retrieve the encoding for all metadata files : folder {0}", guid), String.Concat(typeof(EncodingHandler).Name, ".json"));
+                                
+                Task.Run(() =>
                 {
-                    if (e.ActionType == PreingestActionStates.Started)
-                        handler.AddStartState(processId);
-                    if (e.ActionType == PreingestActionStates.Completed)
-                        handler.AddCompleteState(processId);
-                    if (e.ActionType == PreingestActionStates.Failed)
+                    handler.ActionProcessId = processId;
+                    try
                     {
-                        string message = String.Concat(e.PreingestAction.Properties.Messages);
-                        handler.AddFailedState(processId, message);
+                        handler.PreingestEvents += Trigger;
+                        handler.Execute();
                     }
-                    if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
+                    finally
                     {
-                        string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultName.ToString() : PreingestActionResults.None.ToString();
-                        string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary) : String.Empty;
-                        handler.UpdateProcessAction(processId, result, summary);
+                        handler.PreingestEvents -= Trigger;
                     }
-                };
-                Task.Run(() => handler.Execute());
+                });
             }
             catch (Exception e)
             {
@@ -708,15 +599,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
 
-            _logger.LogInformation("Enter ValidateMetadata.");
-
-            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
-            if (!exists)            
-                return NotFound(String.Format("Session {0} not found.", guid));
-
-            var directory = new DirectoryInfo(_settings.DataFolderName);
-            if (!directory.Exists)
-                return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
+            _logger.LogInformation("Enter ValidateMetadata.");           
 
             MetadataValidationHandler handler = HttpContext.RequestServices.GetService(typeof(MetadataValidationHandler)) as MetadataValidationHandler;
             if (handler == null)
@@ -731,34 +614,22 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             {
                 handler.SetSessionGuid(guid);
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(MetadataValidationHandler).Name, guid.ToString());
-
-                var tarArchives = directory.GetFiles("*.*").Where(s
-                   => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
-                       => new { Tar = item.Name, SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name) }).ToList();
-
-                handler.TarFilename = tarArchives.First(item => item.SessionId == handler.SessionGuid).Tar;
-
-                processId = handler.AddProcessAction("Metadata", String.Format("Validate all metadata files with XSD schema and schema+ : folder {0}", guid), String.Concat(typeof(MetadataValidationHandler).Name, ".json"));
-
-                handler.PreingestEvents += (object sender, PreingestEventArgs e) =>
+             
+                processId = handler.AddProcessAction(typeof(MetadataValidationHandler).Name, String.Format("Validate all metadata files with XSD schema and schema+ : folder {0}", guid), String.Concat(typeof(MetadataValidationHandler).Name, ".json"));
+                                
+                Task.Run(() =>
                 {
-                    if (e.ActionType == PreingestActionStates.Started)
-                        handler.AddStartState(processId);
-                    if (e.ActionType == PreingestActionStates.Completed)
-                        handler.AddCompleteState(processId);
-                    if (e.ActionType == PreingestActionStates.Failed)
+                    handler.ActionProcessId = processId;
+                    try
                     {
-                        string message = String.Concat(e.PreingestAction.Properties.Messages);
-                        handler.AddFailedState(processId, message);
+                        handler.PreingestEvents += Trigger;
+                        handler.Execute();
                     }
-                    if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
+                    finally
                     {
-                        string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultName.ToString() : PreingestActionResults.None.ToString();
-                        string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary) : String.Empty;
-                        handler.UpdateProcessAction(processId, result, summary);
+                        handler.PreingestEvents -= Trigger;
                     }
-                };
-                Task.Run(() => handler.Execute());
+                });
             }
             catch (Exception e)
             {
@@ -775,15 +646,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
 
-            _logger.LogInformation("Enter TransformXip.");
-
-            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
-            if (!exists)            
-                return NotFound(String.Format("Session {0} not found.", guid));
-
-            var directory = new DirectoryInfo(_settings.DataFolderName);
-            if (!directory.Exists)
-                return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
+            _logger.LogInformation("Enter TransformXip.");         
 
             TransformationHandler handler = HttpContext.RequestServices.GetService(typeof(TransformationHandler)) as TransformationHandler;
             if (handler == null)
@@ -797,35 +660,23 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             {
                 handler.SetSessionGuid(guid);
 
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(TransformationHandler).Name, guid.ToString());
+                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(TransformationHandler).Name, guid.ToString());                                
 
-                var tarArchives = directory.GetFiles("*.*").Where(s
-                   => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
-                       => new { Tar = item.Name, SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name) }).ToList();
-
-                handler.TarFilename = tarArchives.First(item => item.SessionId == handler.SessionGuid).Tar;
-
-                processId = handler.AddProcessAction("TransformXIP", String.Format("Transform metadata files to XIP files : folder {0}", guid), String.Concat(typeof(TransformationHandler).Name, ".json"));
-
-                handler.PreingestEvents += (object sender, PreingestEventArgs e) =>
+                processId = handler.AddProcessAction(typeof(TransformationHandler).Name, String.Format("Transform metadata files to XIP files : folder {0}", guid), String.Concat(typeof(TransformationHandler).Name, ".json"));
+                               
+                Task.Run(() =>
                 {
-                    if (e.ActionType == PreingestActionStates.Started)
-                        handler.AddStartState(processId);
-                    if (e.ActionType == PreingestActionStates.Completed)
-                        handler.AddCompleteState(processId);
-                    if (e.ActionType == PreingestActionStates.Failed)
+                    handler.ActionProcessId = processId;
+                    try
                     {
-                        string message = String.Concat(e.PreingestAction.Properties.Messages);
-                        handler.AddFailedState(processId, message);
+                        handler.PreingestEvents += Trigger;
+                        handler.Execute();
                     }
-                    if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
+                    finally
                     {
-                        string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultName.ToString() : PreingestActionResults.None.ToString();
-                        string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary) : String.Empty;
-                        handler.UpdateProcessAction(processId, result, summary);
+                        handler.PreingestEvents -= Trigger;
                     }
-                };
-                Task.Run(() => handler.Execute());
+                });
             }
             catch (Exception e)
             {
@@ -843,15 +694,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem("Empty GUID is invalid.");
 
             _logger.LogInformation("Enter CreateSip.");
-
-            bool exists = System.IO.Directory.Exists(Path.Combine(_settings.DataFolderName, guid.ToString()));
-            if (!exists)            
-                return NotFound(String.Format("Session {0} not found.", guid));
-
-            var directory = new DirectoryInfo(_settings.DataFolderName);
-            if (!directory.Exists)
-                return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
-
+          
             SipCreatorHandler handler = HttpContext.RequestServices.GetService(typeof(SipCreatorHandler)) as SipCreatorHandler;
             if (handler == null)
                 return Problem("Object is not loaded.", typeof(SipCreatorHandler).Name);
@@ -865,18 +708,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SipCreatorHandler).Name, guid.ToString());
 
-                var tarArchives = directory.GetFiles("*.*").Where(s
-                   => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
-                       => new { Tar = item.Name, SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name) }).ToList();
-
-                handler.TarFilename = tarArchives.First(item => item.SessionId == handler.SessionGuid).Tar;
-
+                /* Should be called by XSLWeb service
                 processId = handler.AddProcessAction("CreateSip", String.Format("Create SIP for Preservica : folder {0}", guid), String.Concat(typeof(SipCreatorHandler).Name, ".json"));
-
                 handler.PreingestEvents += (object sender, PreingestEventArgs e) =>
                 {
-                    //Should be called by XSLWeb service
-                    /*
                     if (e.ActionType == PreingestActionStates.Started)
                         handler.AddStartState(processId);
                     if (e.ActionType == PreingestActionStates.Completed)
@@ -891,9 +726,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                         string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultName.ToString() : PreingestActionResults.None.ToString();
                         string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary) : String.Empty;
                         handler.UpdateProcessAction(processId, result, summary);
-                    }
-                    */
+                    }                    
                 };
+                */
                 Task.Run(() => handler.Execute());
             }
             catch (Exception e)
@@ -903,8 +738,55 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
 
             _logger.LogInformation("Exit CreateSip.");
-            return new JsonResult(new { Message = String.Format("Sip Creator is started."), SessionId = guid, ActionId = processId });
+            return new JsonResult(new { Message = String.Format("Sip creator is started."), SessionId = guid, ActionId = processId });
         }
-                            
-    }        
+
+        [HttpPost("excelcreator/{guid}", Name = "Start to create Excel", Order = 14)]
+        public IActionResult CreateExcel(Guid guid)
+        {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
+            _logger.LogInformation("Enter CreateExcel.");
+
+            ExcelCreatorHandler handler = HttpContext.RequestServices.GetService(typeof(ExcelCreatorHandler)) as ExcelCreatorHandler;
+            if (handler == null)
+                return Problem("Object is not loaded.", typeof(ExcelCreatorHandler).Name);
+
+            handler.Logger = _logger;
+            //database process id
+            Guid processId = Guid.Empty;
+            try
+            {
+                handler.SetSessionGuid(guid);
+
+                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ExcelCreatorHandler).Name, guid.ToString());
+                               
+                //Should be called by XSLWeb service                
+                processId = handler.AddProcessAction(typeof(ExcelCreatorHandler).Name, String.Format("Create Excel from folder {0}", guid), String.Concat(typeof(ExcelCreatorHandler).Name, ".json"));
+                Task.Run(() =>
+                {
+                    handler.ActionProcessId = processId;
+                    try
+                    {
+                        handler.PreingestEvents += Trigger;
+                        handler.Execute();
+                    }
+                    finally
+                    {
+                        handler.PreingestEvents -= Trigger;
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(ExcelCreatorHandler).Name, e.Message);
+                return ValidationProblem(e.Message, typeof(ExcelCreatorHandler).Name);
+            }
+
+            _logger.LogInformation("Exit CreateExcel.");
+            return new JsonResult(new { Message = String.Format("Excel creator is started."), SessionId = guid, ActionId = processId });
+        }
+
+    }
 }

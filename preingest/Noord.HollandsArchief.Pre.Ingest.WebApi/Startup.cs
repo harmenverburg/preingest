@@ -1,20 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
+
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
+
+using System.Text.Json;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi
 {
@@ -31,13 +29,23 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
-            services.AddControllers();
-            services.AddHealthChecks();
+            services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
+           
+            services.AddSignalR();
+            services.AddHealthChecks();            
+
             var appSettingsSection = Configuration.GetSection("AppSettings");
             services.Configure<AppSettings>(appSettingsSection);
 
             var settings = appSettingsSection.Get<AppSettings>();
             services.AddDbContext<Model.PreIngestStatusContext>(options => options.UseSqlite(Configuration.GetConnectionString("Sqlite")));
+
+            services.AddSingleton<PreingestEventHub>();
 
             services.Add(new ServiceDescriptor(typeof(HealthCheckHandler), new HealthCheckHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(ContainerChecksumHandler), new ContainerChecksumHandler(settings)));
@@ -47,9 +55,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
             services.Add(new ServiceDescriptor(typeof(SidecarValidationHandler), new SidecarValidationHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(DroidValidationHandler), new DroidValidationHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(EncodingHandler), new EncodingHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(GreenListHandler), new GreenListHandler(settings)));            
+            services.Add(new ServiceDescriptor(typeof(GreenListHandler), new GreenListHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(MetadataValidationHandler), new MetadataValidationHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(TransformationHandler), new TransformationHandler(settings)));           
+            services.Add(new ServiceDescriptor(typeof(TransformationHandler), new TransformationHandler(settings)));
+            services.Add(new ServiceDescriptor(typeof(SipCreatorHandler), new SipCreatorHandler(settings)));
+            services.Add(new ServiceDescriptor(typeof(ExcelCreatorHandler), new ExcelCreatorHandler(settings)));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -65,22 +75,29 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
+            app.UseDefaultFiles(new DefaultFilesOptions
+            {
+                DefaultFileNames = new List<string> { "index.html" }
+            });
+
             app.UseStaticFiles();
             app.UseRouting();
-            app.UseCors(x => x
-                            .AllowAnyOrigin()
-                            .AllowAnyMethod()
-                            .AllowAnyHeader());            
+
+            var appSettingsSection = Configuration.GetSection("AppSettings");           
+            var settings = appSettingsSection.Get<AppSettings>();
+            var origins = settings.WithOrigins.Split(";");
+
+            app.UseCors(x => x.AllowAnyOrigin().AllowCredentials().AllowAnyMethod().AllowAnyHeader().WithOrigins(origins));
+
             app.UseStatusCodePages();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
                 endpoints.MapHealthChecks("/health");
+                endpoints.MapHub<PreingestEventHub>("/preingestEventHub");
             });
-
-            
         }
     }
 }

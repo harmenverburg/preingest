@@ -1,21 +1,27 @@
-﻿using Microsoft.Extensions.Logging;
-using nClam;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+﻿using nClam;
+
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
+
+using Microsoft.Extensions.Logging;
+
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     //Check 1.0
     public class ScanVirusValidationHandler : AbstractPreingestHandler
     {
-        public event EventHandler<PreingestEventArgs> PreingestEvents;
         public ScanVirusValidationHandler(AppSettings settings) : base(settings) { }
 
         public override void Execute()
         {
+            base.Execute();
+
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
             OnTrigger(new PreingestEventArgs { Description=String.Format("Start scanning for virus in '{0}'.", TargetFolder), Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel }); 
 
@@ -61,7 +67,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     scanResults.Add(new VirusScanItem { IsClean = (scanResult.Result == ClamScanResults.Clean), Description = message, Filename = fullFilename });
                     OnTrigger(new PreingestEventArgs {Description = String.Format("Scan file '{0}'.", fullFilename), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
 
-                    this.Logger.LogInformation("Scan voor virus, resultaat '{0}'", message);
+                    this.Logger.LogInformation("Scan virus result: '{0}'", message);
                 }
 
                 eventModel.Summary.Accepted = scanResults.Where(item => item.IsClean).Count();
@@ -98,27 +104,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             {
                 if (isSucces)
                     OnTrigger(new PreingestEventArgs { Description = "Scanning in folder for virus is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
-            }
-        }
-
-        protected void OnTrigger(PreingestEventArgs e)
-        {
-            EventHandler<PreingestEventArgs> handler = PreingestEvents;
-            if (handler != null)
-            {
-                if (e.ActionType == PreingestActionStates.Started)
-                    e.PreingestAction.Summary.Start = e.Initiate;
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                    e.PreingestAction.Summary.End = e.Initiate;
-
-                handler(this, e);
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                {
-                    if (e.PreingestAction != null)            
-                        SaveJson(new DirectoryInfo(TargetFolder), this, e.PreingestAction);                    
-                }
             }
         }
     }

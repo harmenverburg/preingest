@@ -1,22 +1,22 @@
 ﻿using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Runtime.InteropServices;
-using System.Xml.Linq;
+using System.Collections.Generic;
+
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     //Check 5
     public class MetadataValidationHandler : AbstractPreingestHandler
     {
-        public event EventHandler<PreingestEventArgs> PreingestEvents;
-
         public MetadataValidationHandler(AppSettings settings) : base(settings) {  }
 
         private String GetProcessingUrl(string servername, string port, string pad)
@@ -28,6 +28,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         public override void Execute()
         {
+            base.Execute();
+
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
             OnTrigger(new PreingestEventArgs { Description="Start validate .metadata files.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
 
@@ -160,27 +162,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 if (isSucces)
                     OnTrigger(new PreingestEventArgs { Description = "Validation is done!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
             }
-        }
-
-        protected void OnTrigger(PreingestEventArgs e)
-        {
-            EventHandler<PreingestEventArgs> handler = PreingestEvents;
-            if (handler != null)
-            {
-                if (e.ActionType == PreingestActionStates.Started)
-                    e.PreingestAction.Summary.Start = e.Initiate;
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                    e.PreingestAction.Summary.End = e.Initiate;
-
-                handler(this, e);
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                {
-                    string sessionFolder = Path.Combine(ApplicationSettings.DataFolderName, SessionGuid.ToString());
-                    SaveJson(new DirectoryInfo(sessionFolder), this, e.PreingestAction);
-                }
-            }
-        }
+        }        
     }
 }

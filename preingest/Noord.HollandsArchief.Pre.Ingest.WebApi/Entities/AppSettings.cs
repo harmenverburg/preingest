@@ -4,6 +4,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities
 {
     public class AppSettings
     {
+        public String WithOrigins { get; set; }
         public String DataFolderName { get; set; }
         public String ClamServerNameOrIp { get; set; }
         public String ClamServerPort { get; set; }

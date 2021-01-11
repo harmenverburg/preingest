@@ -17,7 +17,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         }
 
         public override void Execute()
-        {
+        {        
             try
             {
                 using (TcpClient clamav = new TcpClient(_settings.ClamServerNameOrIp, Int32.Parse(_settings.ClamServerPort)))

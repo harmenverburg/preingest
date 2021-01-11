@@ -1,19 +1,21 @@
 ﻿using Microsoft.Extensions.Logging;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Runtime.InteropServices;
+using System.Linq;
 using System.Xml.Linq;
+using System.Collections.Generic;
+
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     //Check 5
     public class TransformationHandler : AbstractPreingestHandler
     {
-        public event EventHandler<PreingestEventArgs> PreingestEvents; 
         public TransformationHandler(AppSettings settings) : base(settings){ }
         private String GetProcessingUrl(string servername, string port, string pad)
         {
@@ -23,6 +25,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         public override void Execute()
         {
+            base.Execute();
+
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
             OnTrigger(new PreingestEventArgs { Description = "Start transforming *.metadata files to *.xip files", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
 
@@ -117,23 +121,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 if (isSucces)
                     OnTrigger(new PreingestEventArgs { Description="Transformation is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
             }           
-        }
-        protected void OnTrigger(PreingestEventArgs e)
-        {
-            EventHandler<PreingestEventArgs> handler = PreingestEvents;
-            if (handler != null)
-            {
-                if (e.ActionType == PreingestActionStates.Started)
-                    e.PreingestAction.Summary.Start = e.Initiate;
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                    e.PreingestAction.Summary.End = e.Initiate;
-
-                handler(this, e);
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)                
-                    SaveJson(new DirectoryInfo(TargetFolder), this, e.PreingestAction);                
-            }
         }
     }
 }

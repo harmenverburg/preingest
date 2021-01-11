@@ -1,21 +1,22 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Net.Http;
+using System.Collections.Generic;
+
 using Newtonsoft.Json;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
-using System.Threading.Tasks;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure;
-using System.Collections.Generic;
-using System.Xml.Linq;
-using System.Net;
-using CsvHelper;
-using System.Globalization;
+
 using Noord.HollandsArchief.Pre.Ingest.Utilities;
-using System.Net.Http;
-using System.Text;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Model;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Output;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -45,56 +46,202 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             {
                 var workingDir = Path.Combine(directory.FullName, ChecksumHelper.GeneratePreingestGuid(item.Name).ToString());
                 if (!Directory.Exists(workingDir))
-                    directory.CreateSubdirectory(ChecksumHelper.GeneratePreingestGuid(item.Name).ToString());                
+                    directory.CreateSubdirectory(ChecksumHelper.GeneratePreingestGuid(item.Name).ToString());
             });
 
-            return new JsonResult(tarArchives.OrderByDescending(item
-                => item.CreationTime).Select(item
-                    => new
+            dynamic dataResults = null;
+            List<JoinedQueryResult> currentActions = new List<JoinedQueryResult>();
+            try
+            {
+                using (var context = new PreIngestStatusContext())
+                {
+                    var query = context.PreingestActionCollection.Where(item => tarArchives.Select(tar
+                        => ChecksumHelper.GeneratePreingestGuid(tar.Name)).ToList().Contains(item.FolderSessionId)).Join(context.ActionStateCollection,
+                        states => states.ProcessId,
+                        actions => actions.ProcessId,
+                        (actions, states)
+                        => new JoinedQueryResult { Actions = actions, States = states }).ToList();
+
+                    currentActions.AddRange(query);
+                }
+
+                if (currentActions != null || currentActions.Count > 0)
+                {
+                    var joinedActions = currentActions.Select(actions => actions.Actions).Distinct().Select(item => new QueryResultAction
                     {
+                        ActionStatus = String.IsNullOrEmpty(item.ActionStatus) ? "None" : item.ActionStatus,
+                        Creation = item.Creation,
+                        Description = item.Description,
+                        FolderSessionId = item.FolderSessionId,
                         Name = item.Name,
-                        SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name),
-                        CreationTime = item.CreationTime,
-                        LastWriteTime = item.LastWriteTime,
-                        LastAccessTime = item.LastAccessTime,
-                        Size = item.Length
-                    }).ToArray()); 
+                        ProcessId = item.ProcessId,
+                        ResultFiles = item.ResultFiles,
+                        Summary = String.IsNullOrEmpty (item.StatisticsSummary) ? null : JsonConvert.DeserializeObject<PreingestStatisticsSummary>(item.StatisticsSummary),
+                        States = currentActions.Select(state
+                            => state.States).Where(state
+                                => state.ProcessId == item.ProcessId).Select(state
+                                    => new QueryResultState
+                                    {
+                                        StatusId = state.StatusId,
+                                        Name = state.Name,
+                                        Creation = state.Creation
+                                    }).ToArray()
+                    });
+
+                    dataResults = tarArchives.OrderByDescending(item
+                    => item.CreationTime).Select(item
+                        => new
+                        {
+                            Name = item.Name,
+                            SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name),
+                            CreationTime = item.CreationTime,
+                            LastWriteTime = item.LastWriteTime,
+                            LastAccessTime = item.LastAccessTime,
+                            Size = item.Length,
+                            OverallStatus = new ContainerStatusRuleHandler(joinedActions.Where(preingestActions
+                                => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetContainerStatus(),
+                            Preingest = joinedActions.Where(preingestActions
+                                => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name)).ToArray()
+                        }).ToArray();
+                }
+                else
+                {
+                    dataResults = tarArchives.OrderByDescending(item
+                    => item.CreationTime).Select(item
+                        => new
+                        {
+                            Name = item.Name,
+                            SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name),
+                            CreationTime = item.CreationTime,
+                            LastWriteTime = item.LastWriteTime,
+                            LastAccessTime = item.LastAccessTime,
+                            Size = item.Length,
+                            OverallStatus = ContainerStatus.New,
+                            Preingest = new object[] { }
+                        }).ToArray();
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace);
+                return ValidationProblem(String.Format("An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace));
+            }
+            finally
+            {
+                _logger.LogInformation("Exit UpdateProcessAction.");
+            }
+            
+            if (dataResults == null)
+                return NotFound("Not collections data found!");
+            
+            return new JsonResult(dataResults);  
         }
 
-        [HttpGet("sessions", Name = "Get working session(s).", Order = 1)]
-        public IActionResult GetSessions()
+        [HttpGet("collection/{guid}", Name = "Get specific collection of tar/tar.gz file.", Order = 1)]
+        public IActionResult GetCollection(Guid guid)
         {
             var directory = new DirectoryInfo(_settings.DataFolderName);
 
             if (!directory.Exists)
                 return Problem(String.Format("Data folder '{0}' not found!", _settings.DataFolderName));
 
-            var tarArchives = directory.GetFiles("*.*").Where(s => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz"));
-
-            var output = tarArchives.Select(item => new { SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name), Tar = item.Name }).ToArray();
-
-            return new JsonResult(output);
-        }
-
-        [HttpGet("results/{guid}", Name = "Get results from a session.", Order = 2)]
-        public IActionResult GetResults(Guid guid)
-        {
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
 
-            var directory = new DirectoryInfo(Path.Combine(_settings.DataFolderName, guid.ToString()));
+            var tarArchives = directory.GetFiles("*.*").Where(s => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz"));
+            bool exists = tarArchives.Select(tar => ChecksumHelper.GeneratePreingestGuid(tar.Name)).Contains(guid);
+            if (!exists)
+                return Problem(String.Format ("No tar container file found with GUID {0}!", guid));
 
-            if (!directory.Exists)
-                return Problem(String.Format("Data folder with session guid '{0}' not found!", directory.FullName));
+            dynamic  dataResults = null;
+            List<JoinedQueryResult> currentActions = new List<JoinedQueryResult>();
+            try
+            {
+                
+                using (var context = new PreIngestStatusContext())
+                {
+                    //compare the tar list with db context if a guid exists in both collection AND then filter Guid from IN parameter
+                    var query = context.PreingestActionCollection.Where(item => item.FolderSessionId == guid).Join(context.ActionStateCollection,
+                        states => states.ProcessId,
+                        actions => actions.ProcessId,
+                        (actions, states)
+                        => new JoinedQueryResult { Actions = actions, States = states }).ToList();
 
-            var files = directory.GetFiles();
-          
-            return new JsonResult(files.OrderByDescending(item 
-                => item.CreationTime).Select(item 
-                    => item.Name).ToArray());
+                    currentActions.AddRange(query);
+                }
+
+                if (currentActions != null || currentActions.Count > 0)
+                {
+                    var joinedActions = currentActions.Select(actions => actions.Actions).Distinct().Select(item => new QueryResultAction
+                    {
+                        ActionStatus = String.IsNullOrEmpty(item.ActionStatus) ? "None" : item.ActionStatus,
+                        Creation = item.Creation,
+                        Description = item.Description,
+                        FolderSessionId = item.FolderSessionId,
+                        Name = item.Name,
+                        ProcessId = item.ProcessId,
+                        ResultFiles = item.ResultFiles,
+                        Summary = String.IsNullOrEmpty(item.StatisticsSummary) ? null : JsonConvert.DeserializeObject<PreingestStatisticsSummary>(item.StatisticsSummary),
+                        States = currentActions.Select(state
+                            => state.States).Where(state
+                                => state.ProcessId == item.ProcessId).Select(state
+                                    => new QueryResultState
+                                    {
+                                        StatusId = state.StatusId,
+                                        Name = state.Name,
+                                        Creation = state.Creation
+                                    }).ToArray()
+                    });
+
+                    dataResults = tarArchives.OrderByDescending(item
+                    => item.CreationTime).Select(item
+                        => new
+                        {
+                            Name = item.Name,
+                            SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name),
+                            CreationTime = item.CreationTime,
+                            LastWriteTime = item.LastWriteTime,
+                            LastAccessTime = item.LastAccessTime,
+                            Size = item.Length,
+                            OverallStatus = new ContainerStatusRuleHandler(joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetContainerStatus(),
+                            Preingest = joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name)).ToArray()
+                        }).FirstOrDefault(item => item.SessionId == guid);
+                }
+                else
+                {
+                    dataResults = tarArchives.OrderByDescending(item
+                    => item.CreationTime).Select(item
+                        => new
+                        {
+                            Name = item.Name,
+                            SessionId = ChecksumHelper.GeneratePreingestGuid(item.Name),
+                            CreationTime = item.CreationTime,
+                            LastWriteTime = item.LastWriteTime,
+                            LastAccessTime = item.LastAccessTime,
+                            Size = item.Length,
+                            OverallStatus = ContainerStatus.New,
+                            Preingest = new object[] { }
+                        }).FirstOrDefault(item => item.SessionId == guid);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace);
+                return ValidationProblem(String.Format("An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace));
+            }
+            finally
+            {
+                _logger.LogInformation("Exit UpdateProcessAction.");
+            }
+            
+            if (dataResults == null)
+                return NotFound(String.Format("Not data found for collection '{0}'!", guid));
+
+
+            return new JsonResult(dataResults);
         }
 
-        [HttpGet("json/{guid}/{json}", Name = "Get json results from a session.", Order = 3)]
+        [HttpGet("json/{guid}/{json}", Name = "Get json results from a session.", Order = 2)]
         public IActionResult GetJson(Guid guid, string json)
         {
             if (guid == Guid.Empty)
@@ -121,7 +268,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return new RandomJsonResponseMessageResult(result);           
         }
 
-        [HttpGet("report/{guid}/{file}", Name = "Get a report as a file from a session.", Order = 4)]
+        [HttpGet("report/{guid}/{file}", Name = "Get a report as a file from a session.", Order = 3)]
         public IActionResult GetReport(Guid guid, string file)
         {
             if (guid == Guid.Empty)
@@ -160,21 +307,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
 
             return new PhysicalFileResult(fileinfo.FullName, contentType);
-        }
-
-        [HttpGet("excel/{guid}", Name = "Get the total report for this current guid session.", Order = 5)]
-        public IActionResult GenerateReportExport(Guid guid)
-        {
-            if (guid == Guid.Empty)
-                return Problem("Empty GUID is invalid.");
-
-            _logger.LogInformation("Enter GenerateReportExport.");
-
-            //TODO execute call to XSL Web for final report in Excel      
-
-            _logger.LogInformation("Exit GenerateReportExport.");
-
-            return new JsonResult(new { });
         }
 
     }

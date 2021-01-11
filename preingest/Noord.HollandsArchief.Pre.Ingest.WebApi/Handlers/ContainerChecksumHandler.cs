@@ -1,53 +1,28 @@
 ﻿using Microsoft.Extensions.Logging;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
-using Noord.HollandsArchief.Pre.Ingest.Utilities;
+
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
+using System.Collections.Generic;
+
+using Noord.HollandsArchief.Pre.Ingest.Utilities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     public class ContainerChecksumHandler : AbstractPreingestHandler
     {
-        public event EventHandler<PreingestEventArgs> PreingestEvents;
-
         public ContainerChecksumHandler(AppSettings settings) : base(settings) { }
-               
+
         public String Checksum { get; set; }
-
-        protected void OnTrigger(PreingestEventArgs e)
-        {
-            EventHandler<PreingestEventArgs> handler = PreingestEvents;
-            if (handler != null)
-            {
-                if (e.ActionType == PreingestActionStates.Started)                
-                    e.PreingestAction.Summary.Start = e.Initiate;
-                
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)                
-                    e.PreingestAction.Summary.End = e.Initiate;
-                
-                handler(this, e);
-
-                if(e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                {
-                    if (e.PreingestAction != null)
-                    {
-                        SaveJson(new DirectoryInfo(TargetFolder), this, e.PreingestAction);
-                    }
-                }
-            }
-        }      
 
         public override void Execute()
         {
+            base.Execute();
+            Logger.LogInformation("Calculate checksum for file : '{0}'", TargetCollection);
+
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
             OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}'.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
-
-            Logger.LogInformation("Calculate checksum for file : '{0}'", TargetCollection);
 
             var anyMessages = new List<String>();
             string currentCalculation = string.Empty;
@@ -55,32 +30,32 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             {
                 if (!File.Exists(TargetCollection))
                     throw new FileNotFoundException(String.Format("Collection not found '{0}'!", TargetCollection));
-                
+
                 switch (Checksum.ToUpperInvariant())
                 {
                     case "MD5":
-                            OnTrigger(new PreingestEventArgs { Description = String.Format("Calculate checksum for container '{0}' with MD5.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
-                            currentCalculation = ChecksumHelper.CreateMD5Checksum(new FileInfo(TargetCollection));
+                        OnTrigger(new PreingestEventArgs { Description = String.Format("Calculate checksum for container '{0}' with MD5.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                        currentCalculation = ChecksumHelper.CreateMD5Checksum(new FileInfo(TargetCollection));
                         break;
                     case "SHA1":
                     case "SHA-1":
-                            OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}' with SHA1.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
-                            currentCalculation = ChecksumHelper.CreateSHA1Checksum(new FileInfo(TargetCollection));
+                        OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}' with SHA1.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                        currentCalculation = ChecksumHelper.CreateSHA1Checksum(new FileInfo(TargetCollection));
                         break;
                     case "SHA256":
                     case "SHA-256":
-                            OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}' with SHA256.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
-                            currentCalculation = ChecksumHelper.CreateSHA256Checksum(new FileInfo(TargetCollection));
+                        OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}' with SHA256.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                        currentCalculation = ChecksumHelper.CreateSHA256Checksum(new FileInfo(TargetCollection));
                         break;
                     case "SHA512":
                     case "SHA-512":
-                            OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}' with SHA512", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
-                            currentCalculation = ChecksumHelper.CreateSHA512Checksum(new FileInfo(TargetCollection));
+                        OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}' with SHA512.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                        currentCalculation = ChecksumHelper.CreateSHA512Checksum(new FileInfo(TargetCollection));
                         break;
                     default:
                         {
                             anyMessages.Add(String.Format("Checksum {0} not defined. No calculation available.", Checksum));
-                            Logger.LogWarning(String.Format("Checksum {0} not defined. No calculation available.", Checksum));                            
+                            Logger.LogWarning(String.Format("Checksum {0} not defined. No calculation available.", Checksum));
                         }
                         break;
                 }
@@ -95,12 +70,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 anyMessages.Add(String.Concat("CreationTime : ", fileInformation.CreationTimeUtc));
                 anyMessages.Add(String.Concat("LastAccessTime : ", fileInformation.LastAccessTimeUtc));
                 anyMessages.Add(String.Concat("LastWriteTime : ", fileInformation.LastWriteTimeUtc));
-                eventModel.Properties.Messages = anyMessages.ToArray();                    
-                    
+                eventModel.Properties.Messages = anyMessages.ToArray();
+
                 var data = new List<String>();
                 data.Add(Checksum);
                 data.Add(currentCalculation);
-                
+
                 eventModel.ActionData = data.ToArray();
             }
             catch (Exception e)

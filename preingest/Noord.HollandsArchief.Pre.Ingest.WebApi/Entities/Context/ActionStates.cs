@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context
 {
-    [Table("Status")]
+    [Table("States")]
     public class ActionStates
     {
         [Key]

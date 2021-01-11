@@ -1,41 +1,26 @@
 ﻿using Microsoft.Extensions.Logging;
+
 using Mono.Unix;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using System.Diagnostics;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
+
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     public class UnpackTarHandler : AbstractPreingestHandler
     {
-        public event EventHandler<PreingestEventArgs> PreingestEvents;
         public UnpackTarHandler(AppSettings settings) : base(settings) { }       
-        protected void OnTrigger(PreingestEventArgs e)
-        {
-            EventHandler<PreingestEventArgs> handler = PreingestEvents;
-            if (handler != null)
-            {
-                if (e.ActionType == PreingestActionStates.Started)
-                    e.PreingestAction.Summary.Start = e.Initiate;
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                    e.PreingestAction.Summary.End = e.Initiate;
-
-                handler(this, e);
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                {
-                    if (e.PreingestAction != null)                    
-                        SaveJson(new DirectoryInfo(TargetFolder), this, e.PreingestAction);                    
-                }
-            }
-        }
 
         public override void Execute()
         {
+            base.Execute();
+
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);  
             OnTrigger(new PreingestEventArgs { Description= String.Format("Start expanding container '{0}'.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
                
@@ -65,7 +50,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 })
                 {
                     tarProcess.Start();
-                    OnTrigger(new PreingestEventArgs { Description="Container is unpacking content.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                    OnTrigger(new PreingestEventArgs { Description="Container is expanding content.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
 
                     this.Logger.LogDebug("Unpacking container '{0}'", TargetCollection);
 
@@ -138,6 +123,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         private void ScanPath(UnixDirectoryInfo dirinfo, PreingestEventArgs passEventArgs)
         {
+            passEventArgs.Description = String.Format("Processing folder '{0}'.", dirinfo.FullName);
             OnTrigger(passEventArgs);
             dirinfo.FileAccessPermissions = FileAccessPermissions.AllPermissions;
             foreach (var fileinfo in dirinfo.GetFileSystemEntries())

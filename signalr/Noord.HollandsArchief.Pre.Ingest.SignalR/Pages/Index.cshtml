@@ -1,0 +1,24 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-center">
+    <div>
+        <ul id="events"></ul>
+    </div>
+    <script type="text/javascript">     
+            var connection = new signalR.HubConnectionBuilder()
+                .withUrl("http://localhost:49160/eventHub/")
+                                 .build();
+
+            connection.on("SendNoticeEventToClient", function (message) {
+                $("#events").append("<li>" + message + "</li>");
+            });
+
+            connection.start().catch(function (err) {
+                return console.error(err.toString());
+            });
+    </script>
+</div>

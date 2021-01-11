@@ -1,13 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.ToPX;
-using Noord.HollandsArchief.Pre.Ingest.Utilities;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using System.Xml.Serialization;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using Noord.HollandsArchief.Pre.Ingest.Utilities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.ToPX;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure
 {

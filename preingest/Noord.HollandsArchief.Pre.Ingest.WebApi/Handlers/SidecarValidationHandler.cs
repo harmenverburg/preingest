@@ -1,19 +1,22 @@
 ﻿using Microsoft.Extensions.Logging;
-using Noord.HollandsArchief.Pre.Ingest.Utilities;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 
+using Noord.HollandsArchief.Pre.Ingest.Utilities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure;
+
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     //Check 5
     public class SidecarValidationHandler : AbstractPreingestHandler
     {
-        public event EventHandler<PreingestEventArgs> PreingestEvents;
         public SidecarValidationHandler(AppSettings settings) : base(settings)  { }
  
         private String CollectionTitlePath(String fullnameLocation)
@@ -22,6 +25,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         }
         public override void Execute()
         {
+            base.Execute();
+
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);            
             OnTrigger(new PreingestEventArgs { Description = "Start sidecar structure validation.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
             bool isSucces = false;
@@ -74,37 +79,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             }
         }
 
-        protected void OnTrigger(PreingestEventArgs e)
-        {
-            EventHandler<PreingestEventArgs> handler = PreingestEvents;
-            if (handler != null)
-            {
-                if (e.ActionType == PreingestActionStates.Started)
-                    e.PreingestAction.Summary.Start = e.Initiate;
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                    e.PreingestAction.Summary.End = e.Initiate;
-
-                handler(this, e);
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                {
-                    if (e.PreingestAction != null)
-                        SaveJson(new DirectoryInfo(TargetFolder), this, e.PreingestAction);
-                    //Save binary with validation
-                    //if (e.SidecarStructure != null)
-                        //SaveBinary(new DirectoryInfo(TargetFolder), this, e.SidecarStructure);
-                }
-            }
-        }
-
         private PairNode<ISidecar> ScanSidecarStructure(DirectoryInfo collection, PreingestEventArgs eventArgs)
         {
-            eventArgs.Description = "Running scan.";
+            eventArgs.Description = "Walking through the folder structure.";
             OnTrigger(eventArgs);
 
             var start = DateTime.Now;
-            Logger.LogInformation("Start scanning sidecare structure in '{0}'.", TargetFolder);
+            Logger.LogInformation("Start scanning sidecar structure in '{0}'.", TargetFolder);
             Logger.LogInformation("Start time {0}", start);
 
             //archief
@@ -122,7 +103,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             DeepScan(collection.FullName, sidecarTreeNode, eventArgs);           
 
             var end = DateTime.Now;
-            Logger.LogInformation("End of scanning sidecare structure.");
+            Logger.LogInformation("End of scanning sidecar structure.");
             Logger.LogInformation("End time {0}", end);
             TimeSpan processTime = (TimeSpan)(end - start);
             Logger.LogInformation(String.Format("Processed in {0} ms.", processTime));
@@ -133,11 +114,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         private void SetSummary(DirectoryInfo collection, PairNode<ISidecar> sidecarTreeNode, PreingestEventArgs eventArgs)
         {
             //trigger event
-            eventArgs.Description = String.Format("Start calculate summary sidecare structure in '{0}'.", TargetFolder);
+            eventArgs.Description = String.Format("Start calculate summary sidecar structure in '{0}'.", TargetFolder);
             OnTrigger(eventArgs);
 
             var start = DateTime.Now;
-            Logger.LogInformation("Start calculate summary sidecare structure in '{0}'.", TargetFolder);
+            Logger.LogInformation("Start calculate summary sidecar structure in '{0}'.", TargetFolder);
             Logger.LogInformation("Start time {0}", start);
 
             var sidecarObjects = sidecarTreeNode.Flatten().Select(item => item.Data).Reverse().ToList();
@@ -162,7 +143,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             eventArgs.PreingestAction.Properties.Messages = messages;
 
             var end = DateTime.Now;
-            Logger.LogInformation("End of calculation of the sidecare structure.");
+            Logger.LogInformation("End of calculation of the sidecar structure.");
             Logger.LogInformation("End time {0}", end);
             TimeSpan processTime = (TimeSpan)(end - start);
             Logger.LogInformation(String.Format("Processed in {0} ms.", processTime));
@@ -170,11 +151,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         private void StartValidation(DirectoryInfo collection, PairNode<ISidecar> sidecarTreeNode, PreingestEventArgs eventArgs)
         {
-            eventArgs.Description = String.Format("Start to validate sidecare structure in '{0}'.", TargetFolder);
+            eventArgs.Description = String.Format("Start validate sidecar structure in '{0}'.", TargetFolder);
             OnTrigger(eventArgs);
 
             var start = DateTime.Now;
-            Logger.LogInformation("Start to validate sidecare structure in '{0}'.", TargetFolder);
+            Logger.LogInformation("Start validate sidecar structure in '{0}'.", TargetFolder);
             Logger.LogInformation("Start time {0}", start);
 
             var sidecarObjects = sidecarTreeNode.Flatten().Select(item => item.Data).Reverse().ToList();
@@ -231,7 +212,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             eventArgs.PreingestAction.ActionData = validationResult.ToArray();
 
             var end = DateTime.Now;
-            Logger.LogInformation("End of the validation for the sidecare structure.");
+            Logger.LogInformation("End of the validation for the sidecar structure.");
             Logger.LogInformation("End time {0}", end);
             TimeSpan processTime = (TimeSpan)(end - start);
             Logger.LogInformation(String.Format("Processed in {0} ms.", processTime));
@@ -239,7 +220,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         
         private void DeepScan(string directory, PairNode<ISidecar> sidecarTreeNode, PreingestEventArgs eventArgs)
         {
-            eventArgs.Description = String.Format("Running deepscan for sidecare structure in '{0}'.", directory);
+            eventArgs.Description = String.Format("Running deepscan for sidecar structure in '{0}'.", directory);
             OnTrigger(eventArgs);
 
             this.Logger.LogDebug("Processing folder '{0}'", directory);
@@ -386,7 +367,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 DeepScan(subdirectory, childSidecarTreeNode, eventArgs);
             }
         }
-
         private String GetEncoding(string metadata)
         {
             string result = string.Empty;

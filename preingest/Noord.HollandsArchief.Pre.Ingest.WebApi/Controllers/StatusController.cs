@@ -1,14 +1,21 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using System.Linq;
+
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Status;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.EventHub;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -16,31 +23,15 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
     [ApiController]
     public class StatusController : ControllerBase
     {
-        public class ActionFormBody
-        {
-            public String Name { get; set; }
-            public String Description { get; set; }
-            public String Result { get; set; }
-        }
-
-        public class ActionUpdateBody
-        {
-            public String Result { get; set; }
-            public String Summary { get; set; }
-        }
-
-        public class ActionMessageBody
-        {
-            public String Message { get; set; }
-        }
-
         private readonly ILogger<StatusController> _logger;
         private AppSettings _settings = null;
+        private readonly IHubContext<PreingestEventHub> _eventHub;
 
-        public StatusController(ILogger<StatusController> logger, IOptions<AppSettings> settings)
+        public StatusController(ILogger<StatusController> logger, IOptions<AppSettings> settings, IHubContext<PreingestEventHub> eventHub)
         {
             _logger = logger;
             _settings = settings.Value;
+            _eventHub = eventHub;
         }
 
         [HttpGet("action/{actionGuid}", Name = "Retrieve an action from a preingest session", Order = 0)]
@@ -53,11 +44,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
 
             PreingestAction action = null;
+            PreingestStatisticsSummary summary = null;
             try
             {
                 using (var context = new PreIngestStatusContext())
                 {
-                    action = context.PreingestActionCollection.Find(actionGuid);                   
+                    action = context.PreingestActionCollection.Find(actionGuid);
+                    if (action != null && action.StatisticsSummary != null)
+                        summary = JsonConvert.DeserializeObject<PreingestStatisticsSummary>(action.StatisticsSummary);
                 }
             }
             catch (Exception e)
@@ -72,7 +66,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (action == null)
                 return NotFound(String.Format("Action not found with ID '{0}'", actionGuid));
 
-            return new JsonResult(new { action.Creation, action.Description, action.FolderSessionId, action.Name, action.ProcessId, action.ResultFiles });
+            if (summary == null)
+                return new JsonResult(new { action.Creation, action.Description, SessionId = action.FolderSessionId, action.Name, ActionId = action.ProcessId, action.ResultFiles, action.ActionStatus });
+            else
+                return new JsonResult(new { action.Creation, action.Description, SessionId = action.FolderSessionId, action.Name, ActionId = action.ProcessId, action.ResultFiles, action.ActionStatus, Summary = summary });
         }
 
         [HttpGet("actions/{folderSessionGuid}", Name = "Retrieve all actions from a preingest session", Order = 1)]
@@ -347,6 +344,34 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return DeleteSession(folderSessionGuid, true);
         }
 
+        [HttpPost("notify/{folderSessionGuid}", Name = "Notify the client about an event", Order = 11)]
+        public IActionResult SendNotification(Guid folderSessionGuid, [FromBody] EventHubMessage message)
+        {
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy()
+
+                },
+                Formatting = Formatting.Indented,
+                NullValueHandling = NullValueHandling.Ignore
+            };
+
+            _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
+                JsonConvert.SerializeObject(new EventHubMessage
+                {
+                    EventDateTime = message.EventDateTime,
+                    SessionId = message.SessionId,
+                    Name = message.Name,
+                    State = message.State,
+                    Message = message.Message,
+                    Summary = message.Summary
+                }, settings)).GetAwaiter().GetResult();
+
+            return Ok();
+        }
+
         private IActionResult AddState(Guid actionGuid, String statusValue, String message = null)
         {
             if (actionGuid == Guid.Empty)
@@ -410,7 +435,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             return result;
         }
-
         private IActionResult DeleteSession(Guid folderSessionGuid, bool deleteFolder = false)
         {
             if (folderSessionGuid == Guid.Empty)
