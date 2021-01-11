@@ -19,8 +19,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         public override void Execute()
         {
-            base.Execute();
-
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);  
             OnTrigger(new PreingestEventArgs { Description= String.Format("Start expanding container '{0}'.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
                
@@ -98,7 +96,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
                 Logger.LogError(e, "Unpack container file: '{0}' failed!", TargetCollection);
                 
-                eventModel.ActionResult.ResultName = PreingestActionResults.Failed;
+                eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Properties.Messages = anyMessages.ToArray();
                 eventModel.Summary.Processed = 1;
                 eventModel.Summary.Accepted = 0;
@@ -110,7 +108,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             {
                 if (isSuccess)
                 {                    
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Success;                    
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Success;                    
                     eventModel.Summary.Processed = 1;
                     eventModel.Summary.Accepted = 1;
                     eventModel.Summary.Rejected = 0;

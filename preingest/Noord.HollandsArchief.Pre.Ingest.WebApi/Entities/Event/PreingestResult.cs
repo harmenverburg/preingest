@@ -13,6 +13,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event
     }
     public class PreingestResult
     {
-        public PreingestActionResults ResultName { get; set; }
+        public PreingestActionResults ResultValue { get; set; }
     }
 }

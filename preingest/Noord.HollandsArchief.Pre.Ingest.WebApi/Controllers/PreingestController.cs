@@ -66,7 +66,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
             {
-                string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultName.ToString() : PreingestActionResults.None.ToString();
+                string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultValue.ToString() : PreingestActionResults.None.ToString();
                 string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary, settings) : String.Empty;
                 handler.UpdateProcessAction(handler.ActionProcessId, result, summary);
             }
@@ -705,31 +705,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             try
             {
                 handler.SetSessionGuid(guid);
-
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SipCreatorHandler).Name, guid.ToString());
-
-                /* Should be called by XSLWeb service
-                processId = handler.AddProcessAction("CreateSip", String.Format("Create SIP for Preservica : folder {0}", guid), String.Concat(typeof(SipCreatorHandler).Name, ".json"));
-                handler.PreingestEvents += (object sender, PreingestEventArgs e) =>
-                {
-                    if (e.ActionType == PreingestActionStates.Started)
-                        handler.AddStartState(processId);
-                    if (e.ActionType == PreingestActionStates.Completed)
-                        handler.AddCompleteState(processId);
-                    if (e.ActionType == PreingestActionStates.Failed)
-                    {
-                        string message = String.Concat(e.PreingestAction.Properties.Messages);
-                        handler.AddFailedState(processId, message);
-                    }
-                    if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
-                    {
-                        string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultName.ToString() : PreingestActionResults.None.ToString();
-                        string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary) : String.Empty;
-                        handler.UpdateProcessAction(processId, result, summary);
-                    }                    
-                };
-                */
-                Task.Run(() => handler.Execute());
+                //Task.Run(() => handler.Execute());
+                handler.Execute();
             }
             catch (Exception e)
             {

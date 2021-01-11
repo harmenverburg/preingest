@@ -18,8 +18,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         public NamingValidationHandler(AppSettings settings) : base(settings) { }
         public override void Execute()
         {
-            base.Execute();
-
             bool isSucces = false;
             var anyMessages = new List<String>();
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
@@ -42,9 +40,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.ActionData = result.ToArray();
 
                 if (eventModel.Summary.Rejected > 0)
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Error;
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Error;
                 else
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Success;
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Success;
 
                 isSucces = true;
             }
@@ -61,7 +59,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.Summary.Accepted = 0;
                 eventModel.Summary.Rejected = eventModel.Summary.Processed;
 
-                eventModel.ActionResult.ResultName = PreingestActionResults.Failed;
+                eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Properties.Messages = anyMessages.ToArray();
 
                 OnTrigger(new PreingestEventArgs { Description = "An exception occured in name check!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });

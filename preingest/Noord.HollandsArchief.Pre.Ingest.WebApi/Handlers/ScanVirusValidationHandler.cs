@@ -20,8 +20,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         public override void Execute()
         {
-            base.Execute();
-
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
             OnTrigger(new PreingestEventArgs { Description=String.Format("Start scanning for virus in '{0}'.", TargetFolder), Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel }); 
 
@@ -76,9 +74,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.ActionData = scanResults.ToArray();
 
                 if (eventModel.Summary.Rejected > 0)
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Error;
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Error;
                 else
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Success;
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Success;
 
                 isSucces = true;
             }
@@ -95,7 +93,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.Summary.Accepted = -1;
                 eventModel.Summary.Rejected = eventModel.Summary.Processed;
 
-                eventModel.ActionResult.ResultName = PreingestActionResults.Failed;
+                eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Properties.Messages = anyMessages.ToArray();
 
                 OnTrigger(new PreingestEventArgs { Description = "An exception occured in scan virus!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });

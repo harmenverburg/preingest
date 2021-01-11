@@ -91,7 +91,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 ActionName = actionName,
                 CreationTimestamp = DateTime.Now
             };
-            eventModel.ActionResult = new PreingestResult() { ResultName = actionResult };
+            eventModel.ActionResult = new PreingestResult() { ResultValue = actionResult };
             eventModel.Summary = new PreingestStatisticsSummary();
 
             return eventModel;

@@ -20,13 +20,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         private String GetProcessingUrl(string servername, string port, string pad)
         {
             string reluri = pad.Remove(0, "/data/".Length);
-            return String.Format(@"http://{0}:{1}/transform/topx2xip?reluri={2}", servername, port,  reluri);
+            //return String.Format(@"http://{0}:{1}/transform/topx2xip?reluri={2}", servername, port,  reluri);
+            //#44
+            return String.Format(@"http://{0}:{1}/transform/topx2xip/{2}", servername, port, reluri);
         }
 
         public override void Execute()
         {
-            base.Execute();
-
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
             OnTrigger(new PreingestEventArgs { Description = "Start transforming *.metadata files to *.xip files", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
 
@@ -91,9 +91,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.ActionData = transformation.ToArray();
 
                 if (eventModel.Summary.Rejected > 0)
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Error;
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Error;
                 else
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Success;
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Success;
 
                 isSucces = true;
             }
@@ -111,7 +111,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.Summary.Accepted = 0;
                 eventModel.Summary.Rejected = eventModel.Summary.Processed;
 
-                eventModel.ActionResult.ResultName = PreingestActionResults.Failed;
+                eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Properties.Messages = anyMessages.ToArray();
 
                 OnTrigger(new PreingestEventArgs { Description = "An exception occured in metadata transformation!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });

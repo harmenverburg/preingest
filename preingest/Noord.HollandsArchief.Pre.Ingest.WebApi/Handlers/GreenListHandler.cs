@@ -58,8 +58,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         public override void Execute()
         {
-            base.Execute();
-
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
             OnTrigger(new PreingestEventArgs { Description = "Start compare extensions with greenlist.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
 
@@ -126,9 +124,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 isSuccess = true;
 
                 if (eventModel.Summary.Rejected > 0)
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Error;
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Error;
                 else
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Success;
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Success;
             }
             catch (Exception e)
             {
@@ -144,7 +142,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.Summary.Rejected = eventModel.Summary.Processed;
 
                 eventModel.Properties.Messages = anyMessages.ToArray();
-                eventModel.ActionResult.ResultName = PreingestActionResults.Failed;               
+                eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;               
 
                 OnTrigger(new PreingestEventArgs { Description="An exception occured while comparing greenlist with CSV!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
             }

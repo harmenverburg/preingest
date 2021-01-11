@@ -18,7 +18,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         public override void Execute()
         {
-            base.Execute();
             Logger.LogInformation("Calculate checksum for file : '{0}'", TargetCollection);
 
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
@@ -88,7 +87,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 Logger.LogError(e, "Calculation checksum from file : '{0}' failed!", TargetCollection);
 
                 eventModel.Properties.Messages = anyMessages.ToArray();
-                eventModel.ActionResult.ResultName = PreingestActionResults.Failed;
+                eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Summary.Processed = 1;
                 eventModel.Summary.Accepted = 0;
                 eventModel.Summary.Rejected = 1;
@@ -99,7 +98,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             {
                 if (!String.IsNullOrEmpty(currentCalculation))
                 {
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Success;
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Success;
                     eventModel.Summary.Processed = 1;
                     eventModel.Summary.Accepted = 1;
                     eventModel.Summary.Rejected = 0;

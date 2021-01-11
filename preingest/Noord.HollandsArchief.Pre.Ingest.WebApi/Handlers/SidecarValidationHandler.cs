@@ -25,8 +25,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         }
         public override void Execute()
         {
-            base.Execute();
-
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);            
             OnTrigger(new PreingestEventArgs { Description = "Start sidecar structure validation.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
             bool isSucces = false;
@@ -46,9 +44,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 StartValidation(collection, sidecarTreeNode, execEventArgs);
                                 
                 if (eventModel.Summary.Rejected > 0)
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Error;
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Error;
                 else
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Success;
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Success;
 
                 isSucces = true;
             }
@@ -67,7 +65,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.Summary.Accepted = -1;
                 eventModel.Summary.Rejected = -1;
 
-                eventModel.ActionResult.ResultName = PreingestActionResults.Failed;
+                eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Properties.Messages = anyMessages.ToArray();
 
                 OnTrigger(new PreingestEventArgs { Description = "An exception occured in sidecar structure validation!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });

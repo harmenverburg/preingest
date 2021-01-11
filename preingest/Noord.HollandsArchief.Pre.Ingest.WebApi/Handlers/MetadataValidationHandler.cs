@@ -23,13 +23,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         {
             string reluri = pad.Remove(0, "/data/".Length);
             //topxvalidatie?reluri=Provincie%20Noord%20Holland/Provincie%20Noord%20%20Holland.metadata&format=json
-            return String.Format(@"http://{0}:{1}/topxvalidatie?format=json&reluri={2}", servername, port,  reluri);
+            //return String.Format(@"http://{0}:{1}/topxvalidatie?format=json&reluri={2}", servername, port,  reluri);
+            //#44
+            return String.Format(@"http://{0}:{1}/topxvalidation/{2}", servername, port, reluri);
         }
 
         public override void Execute()
         {
-            base.Execute();
-
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
             OnTrigger(new PreingestEventArgs { Description="Start validate .metadata files.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
 
@@ -133,9 +133,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.ActionData = validation.ToArray();
 
                 if (eventModel.Summary.Rejected > 0)
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Error;
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Error;
                 else
-                    eventModel.ActionResult.ResultName = PreingestActionResults.Success;
+                    eventModel.ActionResult.ResultValue = PreingestActionResults.Success;
 
                 isSucces = true;
             }
@@ -152,7 +152,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.Summary.Accepted = 0;
                 eventModel.Summary.Rejected = eventModel.Summary.Processed;
 
-                eventModel.ActionResult.ResultName = PreingestActionResults.Failed;
+                eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Properties.Messages = anyMessages.ToArray();
 
                 OnTrigger(new PreingestEventArgs { Description= "An exception occured in metadata validation!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });

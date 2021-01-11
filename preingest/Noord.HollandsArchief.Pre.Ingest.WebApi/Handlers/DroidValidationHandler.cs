@@ -36,7 +36,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         
         public async Task<StatusResult> SetSignatureUpdate()
         {
-            base.Execute();
             StatusResult result = null;
             using (HttpClient client = new HttpClient())
             {
@@ -56,7 +55,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         
         public async Task<StatusResult> GetProfiles()
         {
-            base.Execute();
             StatusResult result = null;
             using (HttpClient client = new HttpClient())
             {
@@ -77,7 +75,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         public async Task<StatusResult> GetExporting()
         {
-            base.Execute();
             StatusResult result = null;
             using (HttpClient client = new HttpClient())
             {
@@ -98,7 +95,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         public async Task<StatusResult> GetReporting(ReportingStyle style)
         {
-            base.Execute();
             string reportType = string.Empty;
             switch (style)
             {
