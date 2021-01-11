@@ -32,8 +32,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             try
             {               
                 string requestUri = GetProcessingUrl(ApplicationSettings.XslWebServerName, ApplicationSettings.XslWebServerPort, SessionGuid);
-                                
-                var filePath = Path.Combine(TargetFolder, "ExcelCreatorHandler.xlsx");
+
+                var filePath = Path.Combine(TargetFolder, String.Format("{0}.xlsx", this.GetType().Name));
                 if (File.Exists(filePath))
                     File.Delete(filePath);
 
@@ -60,9 +60,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             {
                 isSucces = false;
 
-                Logger.LogError(e, "An exception occured in metadata transformation!");
+                Logger.LogError(e, "An exception occured in retrieving Excel file!");
                 anyMessages.Clear();
-                anyMessages.Add("An exception occured in metadata transformation!");
+                anyMessages.Add("An exception occured in retrieving Excel file!");
                 anyMessages.Add(e.Message);
                 anyMessages.Add(e.StackTrace);
 
@@ -73,12 +73,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Properties.Messages = anyMessages.ToArray();
 
-                OnTrigger(new PreingestEventArgs { Description = "An exception occured in metadata transformation!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
+                OnTrigger(new PreingestEventArgs { Description = "An exception occured in retrieving Excel file!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
             }
             finally
             {
                 if (isSucces)
-                    OnTrigger(new PreingestEventArgs { Description = "Transformation is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
+                    OnTrigger(new PreingestEventArgs { Description = "Generate Excel file is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
             }
         }
     }
