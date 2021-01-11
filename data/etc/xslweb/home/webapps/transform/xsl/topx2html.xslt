@@ -11,7 +11,7 @@
     
     <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute('data-uri-prefix')"/>
     
-    <xsl:variable name="reluri" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'reluri']/req:value)"/>
+    <xsl:variable name="reluri" as="xs:string" select="replace(/*/req:path, '^/[^/]+/(.*)$', '$1')"/>
     <xsl:variable name="full-html" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'full-html']/req:value)"/>
     
     <xsl:template match="/">

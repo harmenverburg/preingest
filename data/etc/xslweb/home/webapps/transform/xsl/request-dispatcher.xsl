@@ -14,12 +14,12 @@
   
   <xsl:variable name="DUMP_REQUEST" as="xs:boolean" static="yes" select="false()"/>
 
-  <xsl:variable name="TOPX2XIP" as="xs:string" select="'/topx2xip'"/>
-  <xsl:variable name="TOPX2HTML" as="xs:string" select="'/topx2html'"/>
-  <xsl:variable name="DROID2HTML" as="xs:string" select="'/droid2html'"/>
-  <xsl:variable name="PLANETS2HTML" as="xs:string" select="'/planets2html'"/>
-  <xsl:variable name="TOPX2XIPFOLDER" as="xs:string" select="'/topx2xip-folder'"/>
-  <xsl:variable name="SHOWREQUESTXML" as="xs:string" select="'/request'"/>
+  <xsl:variable name="TOPX2XIP" as="xs:string" select="'/topx2xip/'"/>
+  <xsl:variable name="TOPX2XIPFOLDER" as="xs:string" select="'/topx2xip-folder/'"/>
+  <xsl:variable name="TOPX2HTML" as="xs:string" select="'/topx2html/'"/>
+  <xsl:variable name="DROID2HTML" as="xs:string" select="'/droid2html/'"/>
+  <xsl:variable name="PLANETS2HTML" as="xs:string" select="'/planets2html/'"/>
+  <xsl:variable name="SHOWREQUESTXML" as="xs:string" select="'/request/'"/>
 
   <xsl:variable name="conversions" as="xs:string+" select="($TOPX2XIP, $TOPX2HTML, $DROID2HTML, $PLANETS2HTML, $TOPX2XIPFOLDER, $SHOWREQUESTXML)"/>
   
@@ -34,80 +34,55 @@
     <xsl:apply-templates/>
   </xsl:template>
   
-  <xsl:template match="/req:request[req:path eq $TOPX2XIP]">
-    <xsl:call-template name="parameter-based-template">
-      <xsl:with-param name="paramname" select="'reluri'"/>
-      <xsl:with-param name="stylesheet" select="'topx2xip.xslt'"></xsl:with-param>
-    </xsl:call-template>
+  <xsl:template match="/req:request[starts-with(req:path, $TOPX2XIP)]">
+    <pipeline:pipeline>
+      <pipeline:transformer name="topx2xip" xsl-path="topx2xip.xslt"/>
+      <pipeline:transformer name="xml-response" xsl-path="xml-response.xslt"/>
+    </pipeline:pipeline>
   </xsl:template>
   
-  <xsl:template match="/req:request[req:path eq $TOPX2XIPFOLDER]">
-    <xsl:call-template name="parameter-based-template">
-      <xsl:with-param name="paramname" select="'reluri'"/>
-      <xsl:with-param name="stylesheet" select="'topx2xip-folder.xslt'"></xsl:with-param>
-    </xsl:call-template>
+  <xsl:template match="/req:request[starts-with(req:path, $TOPX2XIPFOLDER)]">
+    <pipeline:pipeline>
+      <pipeline:transformer name="topx2xip" xsl-path="topx2xip-folder.xslt"/>
+      <pipeline:transformer name="xml-response" xsl-path="xml-response.xslt"/>
+    </pipeline:pipeline>
   </xsl:template>
   
-  <xsl:template match="/req:request[req:path eq $TOPX2HTML]">
+  <xsl:template match="/req:request[starts-with(req:path, $TOPX2HTML)]">
     <pipeline:pipeline>
       <pipeline:transformer name="topx2html" xsl-path="topx2html.xslt"/>
       <pipeline:transformer name="html-response" xsl-path="html-response.xslt"/>
     </pipeline:pipeline>
   </xsl:template>
   
-  <xsl:template match="/req:request[req:path eq $DROID2HTML]">
+  <xsl:template match="/req:request[starts-with(req:path, $DROID2HTML)]">
     <pipeline:pipeline>
       <pipeline:transformer name="droid2html" xsl-path="droid2html.xslt"/>
       <pipeline:transformer name="html-response" xsl-path="html-response.xslt"/>
     </pipeline:pipeline>
   </xsl:template>
   
-  <xsl:template match="/req:request[req:path eq $PLANETS2HTML]">
+  <xsl:template match="/req:request[starts-with(req:path, $PLANETS2HTML)]">
     <pipeline:pipeline>
       <pipeline:transformer name="planet2html" xsl-path="planets2html.xslt"/>
       <pipeline:transformer name="html-response" xsl-path="html-response.xslt"/>
     </pipeline:pipeline>
   </xsl:template>
   
-  <xsl:template match="/req:request[req:path eq $SHOWREQUESTXML]">
+  <xsl:template match="/req:request[starts-with(req:path, $SHOWREQUESTXML)]">
     <pipeline:pipeline>
       <pipeline:transformer name="showrequest" xsl-path="show-request.xslt"/>
       <pipeline:transformer name="xml-response" xsl-path="xml-response.xslt"/>
     </pipeline:pipeline>
   </xsl:template>
 
-  <xsl:template match="/req:request[not(req:path = $conversions)]">
+  <xsl:template match="/req:request[not(replace(req:path, '^(/[^/]+/).*$', '$1') = $conversions)]">
     <pipeline:pipeline>
       <pipeline:transformer name="error" xsl-path="error.xslt">
         <pipeline:parameter name="message" type="xs:string">
-          <pipeline:value>Geen transformatie gedefinieerd voor context-pad
-            "{/req:request/req:webapp-path || /req:request/req:path}"</pipeline:value>
+          <pipeline:value>Geen transformatie gedefinieerd voor context-pad "{/req:request/req:webapp-path || /req:request/req:path}"</pipeline:value>
         </pipeline:parameter>
       </pipeline:transformer>
-    </pipeline:pipeline>
-  </xsl:template>
-
-  <xsl:template name="parameter-based-template">
-    <xsl:param name="paramname" as="xs:string" required="yes"/>
-    <xsl:param name="stylesheet" as="xs:string"/>
-    <pipeline:pipeline>
-      <xsl:choose>
-        <xsl:when test="not(/*/req:parameters/req:parameter[@name eq $paramname]/req:value)">
-          <pipeline:transformer name="error" xsl-path="error.xslt">
-            <pipeline:parameter name="message" type="xs:string">
-              <pipeline:value>Request-parameter "{$paramname}" ontbreekt voor context-pad "{/req:request/req:webapp-path ||
-                /req:request/req:path}". Het moet verwijzen naar een bestandsuri relatief t.o.v. de folder "{req:get-attribute('data-uri-prefix')}" in de Dockercontainer.</pipeline:value>
-            </pipeline:parameter>
-            <pipeline:parameter name="error-code" type="xs:string">
-              <pipeline:value>missing-parameter</pipeline:value>
-            </pipeline:parameter>
-          </pipeline:transformer>
-        </xsl:when>
-        <xsl:otherwise>
-          <pipeline:transformer name="topx2xip" xsl-path="{$stylesheet}"/>
-          <pipeline:transformer name="xml-response" xsl-path="xml-response.xslt"/>
-        </xsl:otherwise>
-      </xsl:choose>
     </pipeline:pipeline>
   </xsl:template>
   

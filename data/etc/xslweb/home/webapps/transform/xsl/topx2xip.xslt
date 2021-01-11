@@ -35,7 +35,7 @@
     
     <xsl:template match="/" mode="topx2xip">
         <xsl:try>
-            <xsl:variable name="reluri" as="xs:string" select="/*/req:parameters/req:parameter[@name eq 'reluri']/req:value"/>
+            <xsl:variable name="reluri" as="xs:string" select="replace(/*/req:path, '^/[^/]+/(.*)$', '$1')"/>
             <xsl:call-template name="topx2xip">
                 <xsl:with-param name="absuri" select="$data-uri-prefix || encode-for-uri($reluri)"/>
             </xsl:call-template>

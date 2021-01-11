@@ -67,7 +67,9 @@ function doIt {
     # grep filters out the part "processId":"0b046a2d-26d7-406c-b832-d28b5d136114"
     # sed removes everything but the action guid (processId), even without quotes: 0b046a2d-26d7-406c-b832-d28b5d136114
     echo Retrieve actionguid using $PREINGEST_WEBAPI/api/status/new/$GUID
-    ACTIONGUID=$(curl -s -S -X POST -H "Content-Type: application/json" --data '{ "name": "SipCreatorHandler", "description": "Create a preservica SIP file", "result": "myfile.zip" }' "$PREINGEST_WEBAPI/api/status/new/$GUID" | \
+    resultfile=$OUTPUTFOLDER_BASE/$OUTPUTFOLDER_BASE.zip
+    json="{ \"name\": \"SipCreatorHandler\", \"description\": \"Create a preservica SIP file\", \"result\": \"$resultfile\" }"
+    ACTIONGUID=$(curl -s -S -X POST -H "Content-Type: application/json" --data "$json" "$PREINGEST_WEBAPI/api/status/new/$GUID" | \
                  grep -o '"processId":"[^\"]*"' | \
                  sed -e 's/^.*: *"\([^\"]*\)"$/\1/')
 

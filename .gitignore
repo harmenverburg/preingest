@@ -40,3 +40,5 @@ up-55004.sh
 docker-compose-poort.yml
 
 data/etc/preingest.db
+
+data/etc/xslweb/home/webapps/excelreport/static/excel/excelreport.orig.xlsx

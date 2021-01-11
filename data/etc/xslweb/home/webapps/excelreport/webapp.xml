@@ -25,7 +25,7 @@
     </parameter>
     
     <parameter name="excel-preingest-dir" type="xs:string">
-      <value>static/excel/preingest_resultaten</value>
+      <value>static/excel/excelreport</value>
     </parameter>
   </parameters>
 </webapp>
