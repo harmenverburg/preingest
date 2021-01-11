@@ -719,7 +719,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return new JsonResult(new { Message = String.Format("Sip creator is started."), SessionId = guid, ActionId = processId });
         }
 
-        [HttpPost("excelcreator/{guid}", Name = "Generate Excel report", Order = 14)]
+        [HttpPost("excelcreator/{guid}", Name = "Generate Excel report", Order = 15)]
         public IActionResult CreateExcel(Guid guid)
         {
             if (guid == Guid.Empty)
