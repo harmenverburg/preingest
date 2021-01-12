@@ -15,7 +15,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context
         public ActionStates Status { get; set; }
 
         [Column("Creation")]
-        public DateTime Creation { get; set; }
+        public DateTimeOffset Creation { get; set; }
 
         [Column("Description")]
         public String Description { get; set; }

@@ -21,7 +21,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             Logger.LogInformation("Calculate checksum for file : '{0}'", TargetCollection);
 
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
-            OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}'.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
+            OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}'.", TargetCollection), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
 
             var anyMessages = new List<String>();
             string currentCalculation = string.Empty;
@@ -33,22 +33,22 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 switch (Checksum.ToUpperInvariant())
                 {
                     case "MD5":
-                        OnTrigger(new PreingestEventArgs { Description = String.Format("Calculate checksum for container '{0}' with MD5.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                        OnTrigger(new PreingestEventArgs { Description = String.Format("Calculate checksum for container '{0}' with MD5.", TargetCollection), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
                         currentCalculation = ChecksumHelper.CreateMD5Checksum(new FileInfo(TargetCollection));
                         break;
                     case "SHA1":
                     case "SHA-1":
-                        OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}' with SHA1.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                        OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}' with SHA1.", TargetCollection), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
                         currentCalculation = ChecksumHelper.CreateSHA1Checksum(new FileInfo(TargetCollection));
                         break;
                     case "SHA256":
                     case "SHA-256":
-                        OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}' with SHA256.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                        OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}' with SHA256.", TargetCollection), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
                         currentCalculation = ChecksumHelper.CreateSHA256Checksum(new FileInfo(TargetCollection));
                         break;
                     case "SHA512":
                     case "SHA-512":
-                        OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}' with SHA512.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                        OnTrigger(new PreingestEventArgs { Description = String.Format("Start calculate checksum for container '{0}' with SHA512.", TargetCollection), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
                         currentCalculation = ChecksumHelper.CreateSHA512Checksum(new FileInfo(TargetCollection));
                         break;
                     default:
@@ -92,7 +92,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.Summary.Accepted = 0;
                 eventModel.Summary.Rejected = 1;
 
-                OnTrigger(new PreingestEventArgs { Description = "An exception occured while calculating the checksum!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
+                OnTrigger(new PreingestEventArgs { Description = "An exception occured while calculating the checksum!", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
             }
             finally
             {
@@ -102,7 +102,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     eventModel.Summary.Processed = 1;
                     eventModel.Summary.Accepted = 1;
                     eventModel.Summary.Rejected = 0;
-                    OnTrigger(new PreingestEventArgs { Description = "Checksum calculation is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
+                    OnTrigger(new PreingestEventArgs { Description = "Checksum calculation is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
                 }
             }
         }

@@ -23,7 +23,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
             try
             {  
-                OnTrigger(new PreingestEventArgs { Description=String.Format("Start name check on folders, sub-folders and files in '{0}'", TargetFolder),  Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
+                OnTrigger(new PreingestEventArgs { Description=String.Format("Start name check on folders, sub-folders and files in '{0}'", TargetFolder),  Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
 
                 var collection = new DirectoryInfo(TargetFolder).GetDirectories().First();
                 if (collection == null)
@@ -31,7 +31,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
                 var result = new List<NamingItem>();
 
-                DirectoryRecursion(collection, result, new PreingestEventArgs { Description = "Walk through the folder structure.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                DirectoryRecursion(collection, result, new PreingestEventArgs { Description = "Walk through the folder structure.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
 
                 eventModel.Summary.Processed = result.Count();
                 eventModel.Summary.Accepted = result.Where(item => !item.ContainsDosNames && !item.ContainsInvalidCharacters).Count();
@@ -62,12 +62,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Properties.Messages = anyMessages.ToArray();
 
-                OnTrigger(new PreingestEventArgs { Description = "An exception occured in name check!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
+                OnTrigger(new PreingestEventArgs { Description = "An exception occured in name check!", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
             }
             finally
             {
                 if (isSucces)
-                    OnTrigger(new PreingestEventArgs { Description = "Checking names in files and folders is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
+                    OnTrigger(new PreingestEventArgs { Description = "Checking names in files and folders is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
             }
         }
 

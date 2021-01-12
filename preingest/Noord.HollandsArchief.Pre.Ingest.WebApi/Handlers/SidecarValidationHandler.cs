@@ -26,7 +26,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         public override void Execute()
         {
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);            
-            OnTrigger(new PreingestEventArgs { Description = "Start sidecar structure validation.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
+            OnTrigger(new PreingestEventArgs { Description = "Start sidecar structure validation.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
             bool isSucces = false;
 
             PairNode<ISidecar> sidecarTreeNode = null;
@@ -36,7 +36,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 if (collection == null)
                     throw new DirectoryNotFoundException(String.Format("Folder '{0}' not found!", TargetFolder));
 
-                PreingestEventArgs execEventArgs = new PreingestEventArgs { Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel };
+                PreingestEventArgs execEventArgs = new PreingestEventArgs { Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel };
                 sidecarTreeNode = ScanSidecarStructure(collection, execEventArgs);
                 //Calculate summary and save json
                 SetSummary(collection, sidecarTreeNode, execEventArgs);
@@ -68,12 +68,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Properties.Messages = anyMessages.ToArray();
 
-                OnTrigger(new PreingestEventArgs { Description = "An exception occured in sidecar structure validation!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
+                OnTrigger(new PreingestEventArgs { Description = "An exception occured in sidecar structure validation!", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
             }
             finally
             {
                 if (isSucces)
-                    OnTrigger(new PreingestEventArgs { Description = "Sidecar structure validation is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel, SidecarStructure = sidecarTreeNode });
+                    OnTrigger(new PreingestEventArgs { Description = "Sidecar structure validation is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel, SidecarStructure = sidecarTreeNode });
             }
         }
 

@@ -19,7 +19,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context
         public String Name { get; set; }
 
         [Column("Creation")]
-        public DateTime Creation { get; set; }
+        public DateTimeOffset Creation { get; set; }
 
         [ForeignKey("StatusId")]
         public ICollection<StateMessage> Messages { get; set; }

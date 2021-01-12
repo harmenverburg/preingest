@@ -20,7 +20,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         public override void Execute()
         {
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);  
-            OnTrigger(new PreingestEventArgs { Description= String.Format("Start expanding container '{0}'.", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
+            OnTrigger(new PreingestEventArgs { Description= String.Format("Start expanding container '{0}'.", TargetCollection), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
                
             string output = string.Empty;
             string error = string.Empty;
@@ -48,7 +48,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 })
                 {
                     tarProcess.Start();
-                    OnTrigger(new PreingestEventArgs { Description="Container is expanding content.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                    OnTrigger(new PreingestEventArgs { Description="Container is expanding content.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
 
                     this.Logger.LogDebug("Unpacking container '{0}'", TargetCollection);
 
@@ -79,7 +79,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 {
                     var unixDirInfo = new UnixDirectoryInfo(sessionFolder);
                     //trigger event executing
-                    var passEventArgs = new PreingestEventArgs { Description = String.Format("Execute chmod 777 for container '{0}'", TargetCollection), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel };
+                    var passEventArgs = new PreingestEventArgs { Description = String.Format("Execute chmod 777 for container '{0}'", TargetCollection), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel };
                     OnTrigger(passEventArgs);
                     ScanPath(unixDirInfo, passEventArgs);
                 }
@@ -102,7 +102,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.Summary.Accepted = 0;
                 eventModel.Summary.Rejected = 1;
 
-                OnTrigger(new PreingestEventArgs {Description = "An exception occured while unpacking a container!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
+                OnTrigger(new PreingestEventArgs {Description = "An exception occured while unpacking a container!", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
             }
             finally
             {
@@ -114,7 +114,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     eventModel.Summary.Rejected = 0;
                     eventModel.ActionData = output.Split(Environment.NewLine);
 
-                    OnTrigger(new PreingestEventArgs {Description="Unpacking the container is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
+                    OnTrigger(new PreingestEventArgs {Description="Unpacking the container is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
                 }
             }
         }

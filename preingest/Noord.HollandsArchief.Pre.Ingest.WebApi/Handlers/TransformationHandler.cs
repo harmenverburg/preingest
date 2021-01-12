@@ -28,7 +28,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         public override void Execute()
         {
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
-            OnTrigger(new PreingestEventArgs { Description = "Start transforming *.metadata files to *.xip files", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
+            OnTrigger(new PreingestEventArgs { Description = "Start transforming *.metadata files to *.xip files", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
 
             var anyMessages = new List<String>();
             bool isSucces = false;
@@ -55,9 +55,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                             }
                             else
                             {
+                                //bye bye old xip (to be sure)
                                 if (File.Exists(String.Concat(file, ".xip")))
                                     File.Delete(String.Concat(file, ".xip"));
+                                
+                                //hello xip
                                 xDoc.Save(String.Concat(file, ".xip"));
+
+                                //bye bye metadata
+                                if (File.Exists(file))
+                                    File.Delete(file);
 
                                 transformation.Add(new TransformationItem { IsTranformed = true, MetadataFilename = file, RequestUri = requestUri, ErrorMessage = new string[0] });
                             }
@@ -82,7 +89,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                         });
                     }
 
-                    OnTrigger(new PreingestEventArgs { Description = String.Format("Processing file '{0}'", file), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                    OnTrigger(new PreingestEventArgs { Description = String.Format("Processing file '{0}'", file), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
                 }
 
                 eventModel.Summary.Accepted = transformation.Where(item => item.IsTranformed).Count();
@@ -114,12 +121,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Properties.Messages = anyMessages.ToArray();
 
-                OnTrigger(new PreingestEventArgs { Description = "An exception occured in metadata transformation!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
+                OnTrigger(new PreingestEventArgs { Description = "An exception occured in metadata transformation!", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
             }
             finally
             {
                 if (isSucces)
-                    OnTrigger(new PreingestEventArgs { Description="Transformation is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
+                    OnTrigger(new PreingestEventArgs { Description="Transformation is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
             }           
         }
     }

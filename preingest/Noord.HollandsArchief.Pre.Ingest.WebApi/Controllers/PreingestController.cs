@@ -91,7 +91,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return new JsonResult(new 
             {                
                 Title = "Underlying services health check.",
-                CreationTimestamp = DateTime.Now,
+                CreationTimestamp = DateTimeOffset.Now,
                 ActionName = typeof(HealthCheckHandler).Name,
                 Messages = new string[] {
                     "preingest: available",

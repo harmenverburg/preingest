@@ -22,7 +22,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context
         public String Description { get; set; }
 
         [Column("Creation")]
-        public DateTime Creation { get; set; }
+        public DateTimeOffset Creation { get; set; }
 
         [Column("ResultFiles")]
         public String ResultFiles { get; set; }

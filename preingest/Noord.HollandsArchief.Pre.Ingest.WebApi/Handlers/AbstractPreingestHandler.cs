@@ -89,7 +89,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 SessionId = SessionGuid,
                 CollectionItem = collectionName,
                 ActionName = actionName,
-                CreationTimestamp = DateTime.Now
+                CreationTimestamp = DateTimeOffset.Now
             };
             eventModel.ActionResult = new PreingestResult() { ResultValue = actionResult };
             eventModel.Summary = new PreingestStatisticsSummary();
@@ -142,7 +142,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     FolderSessionId = SessionGuid,
                     Description = description,
                     Name = name,
-                    Creation = DateTime.Now,
+                    Creation = DateTimeOffset.Now,
                     ResultFiles = result
                 };
 
@@ -185,7 +185,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 var currentSession = context.Find<PreingestAction>(processId);
                 if (currentSession != null)
                 {
-                    var item = new ActionStates { StatusId = Guid.NewGuid(), Creation = DateTime.Now, Name = "Started", ProcessId = currentSession.ProcessId, Session = currentSession };
+                    var item = new ActionStates { StatusId = Guid.NewGuid(), Creation = DateTimeOffset.Now, Name = "Started", ProcessId = currentSession.ProcessId, Session = currentSession };
                     context.Add<ActionStates>(item);
                     try
                     {
@@ -203,7 +203,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 var currentSession = context.Find<PreingestAction>(processId);
                 if (currentSession != null)
                 {
-                    var item = new ActionStates { StatusId = Guid.NewGuid(), Creation = DateTime.Now, Name = "Completed", ProcessId = currentSession.ProcessId, Session = currentSession };
+                    var item = new ActionStates { StatusId = Guid.NewGuid(), Creation = DateTimeOffset.Now, Name = "Completed", ProcessId = currentSession.ProcessId, Session = currentSession };
                     context.Add<ActionStates>(item);
 
                     try
@@ -222,7 +222,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 var currentSession = context.Find<PreingestAction>(processId);
                 if (currentSession != null)
                 {
-                    var item = new ActionStates { StatusId = Guid.NewGuid(), Creation = DateTime.Now, Name = "Failed", ProcessId = currentSession.ProcessId, Session = currentSession };
+                    var item = new ActionStates { StatusId = Guid.NewGuid(), Creation = DateTimeOffset.Now, Name = "Failed", ProcessId = currentSession.ProcessId, Session = currentSession };
                     context.Add<ActionStates>(item);
 
                     try
@@ -233,7 +233,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                         {
                             var stateMessage = new StateMessage
                             {
-                                Creation = DateTime.Now,
+                                Creation = DateTimeOffset.Now,
                                 Description = message,
                                 MessageId = Guid.NewGuid(),
                                 Status = item,

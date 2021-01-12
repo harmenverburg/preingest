@@ -214,7 +214,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 FolderSessionId = folderSessionGuid,
                 Description = data.Description,
                 Name = data.Name,
-                Creation = DateTime.Now,
+                Creation = DateTimeOffset.Now,
                 ResultFiles = data.Result
             };
 
@@ -388,7 +388,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 var currentSession = context.Find<PreingestAction>(actionGuid);
                 if (currentSession != null)
                 {
-                    var item = new ActionStates { StatusId = Guid.NewGuid(), Creation = DateTime.Now, Name = statusValue, ProcessId = currentSession.ProcessId, Session = currentSession };
+                    var item = new ActionStates { StatusId = Guid.NewGuid(), Creation = DateTimeOffset.Now, Name = statusValue, ProcessId = currentSession.ProcessId, Session = currentSession };
                     context.Add<ActionStates>(item);
                     StateMessage stateMessage = null;
                     try
@@ -399,7 +399,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                         {
                             stateMessage = new StateMessage
                             {
-                                Creation = DateTime.Now,
+                                Creation = DateTimeOffset.Now,
                                 Description = message,
                                 MessageId = Guid.NewGuid(),
                                 Status = item,

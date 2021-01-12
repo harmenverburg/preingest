@@ -69,7 +69,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 {
                     var joinedActions = currentActions.Select(actions => actions.Actions).Distinct().Select(item => new QueryResultAction
                     {
-                        ActionStatus = String.IsNullOrEmpty(item.ActionStatus) ? "None" : item.ActionStatus,
+                        ActionStatus = String.IsNullOrEmpty(item.ActionStatus) ? "Executing" : item.ActionStatus,
                         Creation = item.Creation,
                         Description = item.Description,
                         FolderSessionId = item.FolderSessionId,
@@ -174,7 +174,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 {
                     var joinedActions = currentActions.Select(actions => actions.Actions).Distinct().Select(item => new QueryResultAction
                     {
-                        ActionStatus = String.IsNullOrEmpty(item.ActionStatus) ? "None" : item.ActionStatus,
+                        ActionStatus = String.IsNullOrEmpty(item.ActionStatus) ? "Executing" : item.ActionStatus,
                         Creation = item.Creation,
                         Description = item.Description,
                         FolderSessionId = item.FolderSessionId,

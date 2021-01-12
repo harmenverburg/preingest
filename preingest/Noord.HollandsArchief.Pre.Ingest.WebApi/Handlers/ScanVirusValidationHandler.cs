@@ -21,7 +21,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         public override void Execute()
         {
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
-            OnTrigger(new PreingestEventArgs { Description=String.Format("Start scanning for virus in '{0}'.", TargetFolder), Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel }); 
+            OnTrigger(new PreingestEventArgs { Description=String.Format("Start scanning for virus in '{0}'.", TargetFolder), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel }); 
 
             var anyMessages = new List<String>();
             var scanResults = new List<VirusScanItem>();
@@ -63,7 +63,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     }
 
                     scanResults.Add(new VirusScanItem { IsClean = (scanResult.Result == ClamScanResults.Clean), Description = message, Filename = fullFilename });
-                    OnTrigger(new PreingestEventArgs {Description = String.Format("Scan file '{0}'.", fullFilename), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                    OnTrigger(new PreingestEventArgs {Description = String.Format("Scan file '{0}'.", fullFilename), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
 
                     this.Logger.LogInformation("Scan virus result: '{0}'", message);
                 }
@@ -96,12 +96,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Properties.Messages = anyMessages.ToArray();
 
-                OnTrigger(new PreingestEventArgs { Description = "An exception occured in scan virus!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
+                OnTrigger(new PreingestEventArgs { Description = "An exception occured in scan virus!", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
             }
             finally
             {
                 if (isSucces)
-                    OnTrigger(new PreingestEventArgs { Description = "Scanning in folder for virus is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
+                    OnTrigger(new PreingestEventArgs { Description = "Scanning in folder for virus is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
             }
         }
     }

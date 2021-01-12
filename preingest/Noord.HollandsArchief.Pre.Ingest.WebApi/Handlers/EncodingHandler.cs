@@ -23,7 +23,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             bool isSucces = false;
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
 
-            OnTrigger(new PreingestEventArgs { Description = "Start encoding check on all metadata files.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
+            OnTrigger(new PreingestEventArgs { Description = "Start encoding check on all metadata files.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
 
             try
             {
@@ -61,7 +61,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     String.IsNullOrEmpty(xml) ? "In XML niet gevonden" : xml)
                     });
 
-                    OnTrigger(new PreingestEventArgs { Description = String.Format("Running encoding check on '{0}'", file), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                    OnTrigger(new PreingestEventArgs { Description = String.Format("Running encoding check on '{0}'", file), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
                 }
 
                 eventModel.Summary.Accepted = data.Where(item => item.IsUtf8).Count();
@@ -92,12 +92,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Properties.Messages = anyMessages.ToArray();
 
-                OnTrigger(new PreingestEventArgs { Description = "An exception occured in get encoding from file!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
+                OnTrigger(new PreingestEventArgs { Description = "An exception occured in get encoding from file!", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
             }
             finally
             {
                 if (isSucces)
-                    OnTrigger(new PreingestEventArgs { Description = "Retrieving encoding on metadata files is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
+                    OnTrigger(new PreingestEventArgs { Description = "Retrieving encoding on metadata files is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
             }
         }
     }

@@ -7,7 +7,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event
     {
         public String Description { get; set; }
         public PreingestActionStates ActionType { get; set; }
-        public DateTime Initiate { get; set; }
+        public DateTimeOffset Initiate { get; set; }
         public PreingestActionModel PreingestAction { get; set; }
         public PairNode<ISidecar> SidecarStructure { get; set; }
     }

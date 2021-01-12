@@ -8,6 +8,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event
         public String ActionName { get; set; }
         public String CollectionItem { get; set; }
         public String[] Messages { get; set; }
-        public DateTime CreationTimestamp { get; set; }
+        public DateTimeOffset CreationTimestamp { get; set; }
     }
 }

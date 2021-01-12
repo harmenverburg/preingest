@@ -25,7 +25,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name); 
             eventModel.Summary.Processed = 1;
 
-            OnTrigger(new PreingestEventArgs { Description = "Start generate Excel report", Initiate = DateTime.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
+            OnTrigger(new PreingestEventArgs { Description = "Start generate Excel report", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Started, PreingestAction = eventModel });
 
             bool isSucces = false;
             var anyMessages = new List<String>();
@@ -39,8 +39,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
                 using (WebClient client = new WebClient())
                 {
-                    client.DownloadFileCompleted += (object sender, System.ComponentModel.AsyncCompletedEventArgs e) => OnTrigger(new PreingestEventArgs { Description = String.Format("Download complete."), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
-                    client.DownloadProgressChanged += (object sender, DownloadProgressChangedEventArgs e) => OnTrigger(new PreingestEventArgs { Description = String.Format("Download progress: '{0}' ({1} / {2})% ", e.ProgressPercentage, e.BytesReceived, e.TotalBytesToReceive), Initiate = DateTime.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });   
+                    client.DownloadFileCompleted += (object sender, System.ComponentModel.AsyncCompletedEventArgs e) => OnTrigger(new PreingestEventArgs { Description = String.Format("Download complete."), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                    client.DownloadProgressChanged += (object sender, DownloadProgressChangedEventArgs e) => OnTrigger(new PreingestEventArgs { Description = String.Format("Download progress: '{0}' ({1} / {2})% ", e.ProgressPercentage, e.BytesReceived, e.TotalBytesToReceive), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });   
                     client.DownloadFile(requestUri, filePath);
                 }
                 
@@ -73,12 +73,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
                 eventModel.Properties.Messages = anyMessages.ToArray();
 
-                OnTrigger(new PreingestEventArgs { Description = "An exception occured in retrieving Excel file!", Initiate = DateTime.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
+                OnTrigger(new PreingestEventArgs { Description = "An exception occured in retrieving Excel file!", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
             }
             finally
             {
                 if (isSucces)
-                    OnTrigger(new PreingestEventArgs { Description = "Generate Excel file is done.", Initiate = DateTime.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
+                    OnTrigger(new PreingestEventArgs { Description = "Generate Excel file is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
             }
         }
     }

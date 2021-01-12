@@ -9,6 +9,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Output
     {
         public Guid StatusId { get; set; }
         public String Name { get; set; }
-        public DateTime Creation { get; set; }
+        public DateTimeOffset Creation { get; set; }
     }
 }
