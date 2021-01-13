@@ -41,6 +41,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Output
                 PreingestActionResults result = currentAvailableStatus.FirstOrDefault();
                 switch(result)
                 {
+                    case PreingestActionResults.Executing:
                     case PreingestActionResults.None:
                         _status = ContainerStatus.Running;
                         break;

@@ -48,7 +48,7 @@ public class ProfilesHandler extends CommandHandler {
 
           result = this.registerNewAction(this._guid, jsonData);
           String processId = result != null ? result.processId : null;
-          runSeperateThread(processId, this._guid, command);
+          runSeperateThread(ProfilesHandler.class.getName(), processId, this._guid, command);
         }
       } catch (IOException ioe) {
         ioe.printStackTrace();

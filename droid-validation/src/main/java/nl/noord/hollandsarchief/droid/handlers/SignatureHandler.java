@@ -15,7 +15,7 @@ public class SignatureHandler extends CommandHandler {
     
     try{
       if (command.length > 0){
-        runSeperateThread(command);
+        runSeperateThread(SignatureHandler.class.getName(), command);
       }
     }
     catch(IOException ioe){
@@ -30,7 +30,7 @@ public class SignatureHandler extends CommandHandler {
     
     try{
       if (command.length > 0){
-      runSeperateThread(command); 
+        runSeperateThread(SignatureHandler.class.getName(), command);
       }
     }
     catch(IOException ioe){

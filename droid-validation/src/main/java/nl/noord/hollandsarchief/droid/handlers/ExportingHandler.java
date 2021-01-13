@@ -30,13 +30,13 @@ public class ExportingHandler extends CommandHandler {
     try {
       if (command.length > 0) {
         BodyAction jsonData = new BodyAction();
-        jsonData.name = "Droid - CSV report";
+        jsonData.name =  ExportingHandler.class.getName() + " - Droid CSV report";
         jsonData.description = String.join(" ", command);
         jsonData.result = "DroidValidationHandler.csv";
 
         result = this.registerNewAction(this._guid, jsonData);
         String processId = result != null ? result.processId : null;
-        runSeperateThread(processId, this._guid, command);
+        runSeperateThread(ExportingHandler.class.getName(), processId, this._guid, command);
       }
     } catch (IOException ioe) {
       ioe.printStackTrace();

@@ -10,6 +10,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event
         Error = 1,
         Failed = 2,
         Success = 3,
+        Executing = 4
     }
     public class PreingestResult
     {
