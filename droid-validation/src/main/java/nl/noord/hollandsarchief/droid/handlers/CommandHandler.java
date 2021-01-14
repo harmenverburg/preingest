@@ -11,6 +11,9 @@ import java.nio.file.StandardCopyOption;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -30,7 +33,7 @@ public abstract class CommandHandler implements ICommandHandler {
   protected String ARCHIVEDATA_LINUX_FOLDER = "/data/";
   protected String DROID_LINUX_FOLDER = "/droid/";
 
-  private DateTimeFormatter _formatter = DateTimeFormatter.ofPattern("yyyy-MM-ddTHH:mm:ss+Z");
+  private DateTimeFormatter _formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS");
 
   public String currentApplicationLocation() {
     return System.getProperty("user.dir");
@@ -64,6 +67,10 @@ public abstract class CommandHandler implements ICommandHandler {
 
   protected void runSeperateThread(String handlerName, String processGuid, String guid, String[] commandArgs) throws IOException {
 
+    ZonedDateTime start = ZonedDateTime.now(ZoneId.of("UTC"));         
+    String startDateTimeNow = start.format(_formatter);
+    
+
     System.out.println(" ");
     System.out.println("==========Arguments Passed From Command line===========");
     for (String args : commandArgs)
@@ -71,15 +78,22 @@ public abstract class CommandHandler implements ICommandHandler {
     System.out.println("=======================================================");
     System.out.println(" ");
 
-    if (guid == null || processGuid == null) {
+    if (guid == null || processGuid == null) {     
+
       final Thread mainThread = new Thread() {
         @Override
         public void run() {
+          
+            UUID uuid = UUID.randomUUID();
+            String randomGuid = uuid.toString();          
+
           try {
-            executeLogic(null, handlerName, commandArgs);
+            notifyClient(randomGuid, handlerName, "Start DROID application.", ActionStateOptions.Started, startDateTimeNow); 
+            executeLogic(randomGuid, handlerName, commandArgs);
           } catch (final Exception e) {
             e.printStackTrace();
           } finally {
+            notifyClient(randomGuid, handlerName, "Done with DROID application.", ActionStateOptions.Completed, startDateTimeNow); 
           }
         }
       };
@@ -89,12 +103,9 @@ public abstract class CommandHandler implements ICommandHandler {
       final Thread mainThread = new Thread() {
         @Override
         public void run() {
+
           boolean isError = false;
-          
-          ZonedDateTime start = ZonedDateTime.now(ZoneId.of("UTC"));         
-          String startDateTimeNow = start.format(_formatter);
           UpdateResult update = UpdateResult.Error;
-          
           try {
             // send start signal
             if (processGuid != null) {
@@ -202,7 +213,7 @@ public abstract class CommandHandler implements ICommandHandler {
       if(update == UpdateResult.Success)
       {
         message.result = UpdateResult.Success.name();
-        message.summary = String.format("{\"processed\": 1,\"accepted\": 1,\"rejected\": 0,\"start\": \"%1$2s\",\"end\": \"%2$2s\"}", new Object[] { start, end});
+        message.summary = String.format("{\"processed\": 1,\"accepted\": 1,\"rejected\": 0,\"start\": \"%1$2s\",\"end\": \"%2$2s\"}", new Object[] { start+"+00:00", end+"+00:00"});
       }
   
       if(update == UpdateResult.Error || update == UpdateResult.Failed)
@@ -213,16 +224,16 @@ public abstract class CommandHandler implements ICommandHandler {
         if(update == UpdateResult.Failed);
           message.result =  UpdateResult.Failed.name();
 
-        message.summary = String.format("{\"processed\": 1,\"accepted\": 0,\"rejected\": 1,\"start\": \"%1$2s\",\"end\": \"%2$2s\"}", new Object[] {start, end});
+        message.summary = String.format("{\"processed\": 1,\"accepted\": 0,\"rejected\": 1,\"start\": \"%1$2s\",\"end\": \"%2$2s\"}", new Object[] {start+"+00:00", end+"+00:00"});
       }
 
       RestTemplate restTemplate = new RestTemplate();
-      BodyUpdateMessage result = restTemplate.postForObject(url, message, BodyUpdateMessage.class);
-      if (result != null) {
-        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-        String json = ow.writeValueAsString(result);
-        System.out.println(json);
-      }
+      Map<String, String> params = new HashMap<String, String>();
+      params.put("actionGuid", actionGuid);
+      
+      restTemplate.put(url, message, params);
+      
+      
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -232,7 +243,7 @@ public abstract class CommandHandler implements ICommandHandler {
     String env = System.getenv("PREINGEST_WEBAPI");
     String url = "";
     if (env != null && env.length() > 0) {
-      url = env + "/api/status/notify/" + folderGuid;
+      url = env + "/api/status/notify/";
     } else {
       System.out.println(" ");
       System.out.println("==========Warning===========");
@@ -250,24 +261,34 @@ public abstract class CommandHandler implements ICommandHandler {
       body.name = name;
       body.state = state.name();
       body.sessionId = folderGuid;
-
+      body.hasSummary = false;
       ZonedDateTime end = ZonedDateTime.now(ZoneId.of("UTC"));         
       String doneDateTimeNow = end.format(_formatter);
 
       if(state == ActionStateOptions.Completed){
-        body.summary = String.format("{\"processed\": 1,\"accepted\": 1,\"rejected\": 0,\"start\": \"%1$2s\",\"end\": \"%2$2s\"}", new Object[] {start, doneDateTimeNow});
+        body.hasSummary = true;
+        body.processed = 1;
+        body.accepted = 1;
+        body.rejected = 0;
+        body.start = start+"+00:00";
+        body.end = doneDateTimeNow+"+00:00";
       }
       if(state == ActionStateOptions.Failed){
-        body.summary = String.format("{\"processed\": 1,\"accepted\": 0,\"rejected\": 1,\"start\": \"%1$2s\",\"end\": \"%2$2s\"}", new Object[] {start, doneDateTimeNow});
-      }
-      else{
-        body.summary = null;
+        body.hasSummary = true;
+        body.processed = 1;
+        body.accepted = 0;
+        body.rejected = 1;
+        body.start = start+"+00:00";
+        body.end = doneDateTimeNow+"+00:00";
       }
 
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-ddTHH:mm:ss+Z");
-      ZonedDateTime currentNow = ZonedDateTime.now(ZoneId.of("UTC"));      
-      String dateTimeNow = currentNow.format(formatter);
-      body.eventDateTime = dateTimeNow;
+      //2021-01-13 16:48:30 +0000
+      //2021-01-11T16:58:36.4297321+00:00    
+      //2021-01-13T17:42:19.741+0000
+      //2021-01-13T17:52:09.6147437+0000
+      ZonedDateTime currentNow = ZonedDateTime.now(ZoneId.of("UTC"));  
+      String dateTimeNow = currentNow.format(_formatter);
+      body.eventDateTime = dateTimeNow+"+00:00";
 
       RestTemplate restTemplate = new RestTemplate();
       BodyNotifyEventMessage result = restTemplate.postForObject(url, body, BodyNotifyEventMessage.class);

@@ -33,7 +33,7 @@ public class ReportingHandler extends CommandHandler {
     try {
       if (command.length > 0) {
         BodyAction jsonData = new BodyAction();
-        jsonData.name = "Droid - PDF report";
+        jsonData.name = ReportingHandler.class.getName() + "- Droid PDF report";
         jsonData.description = String.join(" ", command);
         jsonData.result = "DroidValidationHandler.pdf";
 
@@ -64,7 +64,7 @@ public class ReportingHandler extends CommandHandler {
     try {
       if (command.length > 0) {
         BodyAction jsonData = new BodyAction();
-        jsonData.name = "Droid - Droid XML report";
+        jsonData.name = ReportingHandler.class.getName() + "- Droid XML report";
         jsonData.description = String.join(" ", command);
         jsonData.result = "DroidValidationHandler.droid.xml";
 
@@ -94,7 +94,7 @@ public class ReportingHandler extends CommandHandler {
     try {
       if (command.length > 0) {
         BodyAction jsonData = new BodyAction();
-        jsonData.name = "Droid - Planets XML report";
+        jsonData.name = ReportingHandler.class.getName() + " - Planets XML report";
         jsonData.description = String.join(" ", command);
         jsonData.result = "DroidValidationHandler.planets.xml";
 

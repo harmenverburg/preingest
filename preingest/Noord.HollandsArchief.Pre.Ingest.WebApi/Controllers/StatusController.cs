@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -16,6 +18,7 @@ using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Status;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.EventHub;
+using Noord.HollandsArchief.Pre.Ingest.Utilities;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -80,20 +83,30 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Enter GetActions.");
 
-            JsonResult returnResult = null;
+            List<PreingestAction> actions = new List<PreingestAction>();
+
+            dynamic jsonResult = null;
+
             try
             {
                 using (var context = new PreIngestStatusContext())
                 {
-                    var result = context.PreingestActionCollection.Where(item 
-                        => item.FolderSessionId == folderSessionGuid).Select(item 
-                        => new { item.ProcessId, item.Creation, item.Description, item.Name, item.FolderSessionId, item.ResultFiles }).ToList();
-
-                    if (result == null || result.Count == 0)
-                        returnResult = new JsonResult(new { Message = String.Format("Geen actie(s) gevonden voor map {0}.", folderSessionGuid) });
-
-                    returnResult = new JsonResult(result);
+                    var result = context.PreingestActionCollection.Where(item => item.FolderSessionId == folderSessionGuid).ToList();
+                    if (result != null)
+                        actions.AddRange(result);                 
                 }
+
+                jsonResult = actions.Select(action => new
+                {
+                    action.Creation,
+                    action.Description,
+                    SessionId = action.FolderSessionId,
+                    action.Name,
+                    ActionId = action.ProcessId,
+                    action.ResultFiles,
+                    action.ActionStatus,
+                    Summary = String.IsNullOrEmpty(action.StatisticsSummary) ? new object { } : JsonConvert.DeserializeObject<PreingestStatisticsSummary>(action.StatisticsSummary)
+                }).ToArray();
             }
             catch (Exception e)
             {
@@ -104,94 +117,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Exit GetActions.");
 
-            return returnResult;
+
+            if (jsonResult == null)
+                return new JsonResult(new object[] { });
+
+            return new JsonResult(jsonResult);            
         }
-
-        [HttpGet("result/{actionGuid}", Name = "Retrieve all status for an action", Order = 2)]
-        public IActionResult GetStatus(Guid actionGuid)
-        {
-            if (actionGuid == Guid.Empty)
-                return Problem("Empty GUID is invalid.");
-
-            _logger.LogInformation("Enter GetStatus.");
-
-            JsonResult returnResult = null;
-            try
-            {
-                using (var context = new PreIngestStatusContext())
-                {
-                    var actions = context.ActionStateCollection.Where(item => item.ProcessId == actionGuid)
-                        .Select(status => new { status.Creation, status.Name, status.ProcessId, status.StatusId }).ToList();
-
-                    if (actions == null || actions.Count == 0)
-                        returnResult = new JsonResult(new { Message = String.Format("Geen resultaten gevonden voor actie {0}.", actionGuid) });
-
-                    returnResult = new JsonResult(actions);
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace);
-                return ValidationProblem(String.Format("An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace));
-            }
-            finally { }
-
-            _logger.LogInformation("Exit GetStatus.");
-
-            return returnResult;
-        }
-
-        [HttpGet("complete/{folderSessionGuid}", Name = "Retrieve all information for a session", Order = 3)]
-        public IActionResult GetFullStatus(Guid folderSessionGuid)
-        {
-            if (folderSessionGuid == Guid.Empty)
-                return Problem("Empty GUID is invalid.");
-
-            _logger.LogInformation("Enter GetFullStatus.");
-
-            JsonResult returnResult = null;
-            try
-            {
-                using (var context = new PreIngestStatusContext())
-                {
-                    //inner join and left outer join
-                    var result = context.PreingestActionCollection.Where(item => item.FolderSessionId == folderSessionGuid)
-                    .Join(context.ActionStateCollection,
-                        session => session.ProcessId,
-                        status => status.ProcessId,
-                        (session, status)
-                    => new { Session = session, Statuses = status })
-                    .GroupJoin(context.ActionStateMessageCollection,
-                        join => join.Statuses.StatusId,
-                        message => message.StatusId,
-                        (join, message) => new { join.Session, join.Statuses, Messages = message })
-                    .SelectMany(x => x.Messages.DefaultIfEmpty(),
-                                   (x, y) => new
-                                   {
-                                       Session = new { x.Session.ProcessId, x.Session.Creation, x.Session.Name, x.Session.Description, x.Session.FolderSessionId, x.Session.ResultFiles },
-                                       Status = new { x.Statuses.StatusId, x.Statuses.Creation, x.Statuses.Name, x.Statuses.ProcessId, },
-                                       Message = y != null ? new { y.MessageId, y.Creation, y.Description, y.StatusId } : null
-                                   }).ToList();
-
-                    if (result == null || result.Count == 0)
-                        returnResult = new JsonResult(new { Message = String.Format("Geen resultaten gevonden voor map {0}.", folderSessionGuid) });
-
-                    returnResult = new JsonResult(result);
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace);
-                return ValidationProblem(String.Format("An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace));
-            }
-            finally { }
-
-            _logger.LogInformation("Exit GetFullStatus.");
-
-            return returnResult;
-        }
-
-        [HttpPost("new/{folderSessionGuid}", Name = "Add an action", Order = 4)]
+         
+        [HttpPost("new/{folderSessionGuid}", Name = "Add an action", Order = 3)]
         public IActionResult AddProcessAction(Guid folderSessionGuid, [FromBody] ActionFormBody data)
         {
             if (folderSessionGuid == Guid.Empty)
@@ -239,7 +172,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return new JsonResult(session);
         }
 
-        [HttpPut("update/{actionGuid}", Name = "Update an action status and summary", Order = 5)]
+        [HttpPut("update/{actionGuid}", Name = "Update an action status and summary", Order = 4)]
         public IActionResult UpdateProcessAction(Guid actionGuid, [FromBody] ActionUpdateBody data)
         {
             if (actionGuid == Guid.Empty)
@@ -283,7 +216,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return new JsonResult(currentAction);
         }
 
-        [HttpPost("start/{actionGuid}", Name = "Add a start status", Order = 6)]
+        [HttpPost("start/{actionGuid}", Name = "Add a start status", Order = 5)]
         public IActionResult AddStartState(Guid actionGuid)
         {
             if (actionGuid == Guid.Empty)
@@ -298,7 +231,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return result;
         }
 
-        [HttpPost("completed/{actionGuid}", Name = "Add a completed status", Order = 7)]
+        [HttpPost("completed/{actionGuid}", Name = "Add a completed status", Order = 6)]
         public IActionResult AddCompletedState(Guid actionGuid)
         {
             if (actionGuid == Guid.Empty)
@@ -313,7 +246,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return result;
         }
 
-        [HttpPost("failed/{actionGuid}", Name = "Add a failed status", Order = 8)]
+        [HttpPost("failed/{actionGuid}", Name = "Add a failed status", Order = 7)]
         public IActionResult AddFailedState(Guid actionGuid, [FromBody] ActionMessageBody failMessage)
         {
             if (actionGuid == Guid.Empty)
@@ -332,21 +265,24 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return result;
         }
 
-        [HttpDelete("reset/{folderSessionGuid}", Name = "Clear data for a session folder", Order = 9)]
+        [HttpDelete("reset/{folderSessionGuid}", Name = "Clear data for a session folder", Order = 8)]
         public IActionResult ResetSession(Guid folderSessionGuid)
         {
             return DeleteSession(folderSessionGuid);
         }
 
-        [HttpDelete("remove/{folderSessionGuid}", Name = "Remove session folder and clear the data for session folder", Order = 10)]
+        [HttpDelete("remove/{folderSessionGuid}", Name = "Remove session folder and clear the data for session folder", Order = 9)]
         public IActionResult RemoveSession(Guid folderSessionGuid)
         {
             return DeleteSession(folderSessionGuid, true);
         }
 
-        [HttpPost("notify/{folderSessionGuid}", Name = "Notify the client about an event", Order = 11)]
-        public IActionResult SendNotification(Guid folderSessionGuid, [FromBody] EventHubMessage message)
+        [HttpPost("notify", Name = "Notify the client about an event", Order = 11)]
+        public IActionResult SendNotification([FromBody] ActionEventMessageBody message)
         {
+            if (message == null)
+                return Problem("POST body JSON object is null!");
+
             var settings = new JsonSerializerSettings
             {
                 ContractResolver = new DefaultContractResolver
@@ -358,15 +294,20 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 NullValueHandling = NullValueHandling.Ignore
             };
 
+            object state = null;
+            bool parse = Enum.TryParse(typeof(PreingestActionStates), message.State, out state);
+           if (!parse)
+                return Problem("Parsing state failed!");
+
             _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
                 JsonConvert.SerializeObject(new EventHubMessage
                 {
                     EventDateTime = message.EventDateTime,
                     SessionId = message.SessionId,
                     Name = message.Name,
-                    State = message.State,
+                    State = (PreingestActionStates) state,
                     Message = message.Message,
-                    Summary = message.Summary
+                    Summary = message.HasSummary ? new PreingestStatisticsSummary { Accepted = message.Accepted, Processed = message.Processed, Rejected = message.Rejected, Start = message.Start.Value, End = message.End.Value  } : null
                 }, settings)).GetAwaiter().GetResult();
 
             return Ok();
@@ -422,9 +363,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     finally { }
 
                     if (stateMessage != null)
-                        result = new JsonResult(new {  item.StatusId, item.ProcessId, item.Creation, item.Name, Message = new { stateMessage.Creation, stateMessage.Description, stateMessage.MessageId, stateMessage.StatusId } });
+                        result = new JsonResult(new { item.StatusId, item.ProcessId, item.Creation, item.Name, Message = new { stateMessage.Creation, stateMessage.Description, stateMessage.MessageId, stateMessage.StatusId } });
                     else
-                        result = new JsonResult(new { item.StatusId, item.ProcessId, item.Creation, item.Name });                   
+                        result = new JsonResult(new { item.StatusId, item.ProcessId, item.Creation, item.Name });              
                 }
             }
 
@@ -441,17 +382,29 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem("Empty GUID is invalid.");
 
             _logger.LogInformation("Enter DeleteSession.");
- 
-            using (var context = new PreIngestStatusContext())
-            {               
-                try
-                { 
-                    if (deleteFolder)
+
+            String containerLocation = String.Empty;
+            if (deleteFolder)
+            {
+                var tarArchive = Directory.GetFiles(_settings.DataFolderName, "*.*").Select(i => new FileInfo(i)).Where(s
+                    => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
+                    => new
                     {
-                        System.IO.DirectoryInfo di = new System.IO.DirectoryInfo(System.IO.Path.Combine(_settings.DataFolderName, folderSessionGuid.ToString()));
-                        if (di.Exists)
-                            di.Delete(true);
-                    }
+                        CollectionName = item.Name,
+                        SessionFolderId = ChecksumHelper.GeneratePreingestGuid(item.Name),
+                        CollectionFullName = item.FullName
+                    }).Where(item => item.SessionFolderId == folderSessionGuid).FirstOrDefault();
+
+                if (tarArchive == null)
+                    return Problem(String.Format("Container not found with GUID {0}", folderSessionGuid));
+
+                containerLocation = tarArchive.CollectionFullName;
+            }
+
+            try
+            {
+                using (var context = new PreIngestStatusContext())
+                {
                     var sessions = context.PreingestActionCollection.Where(item => item.FolderSessionId == folderSessionGuid).ToList();
                     var statusus = context.ActionStateCollection.Where(item => sessions.Exists(exists => exists.ProcessId == item.ProcessId)).ToList();
                     var messages = context.ActionStateMessageCollection.Where(item => statusus.Exists(exists => exists.StatusId == item.MessageId)).ToList();
@@ -460,15 +413,31 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     context.RemoveRange(statusus);
                     context.RemoveRange(sessions);
 
+                    context.SavedChanges += (object sender, Microsoft.EntityFrameworkCore.SavedChangesEventArgs e) =>
+                    {
+                        if (deleteFolder)
+                        {
+                            try
+                            {
+                                DirectoryInfo di = new DirectoryInfo(Path.Combine(_settings.DataFolderName, folderSessionGuid.ToString()));
+                                if (di.Exists)
+                                    di.Delete(true);
+
+                                if (System.IO.File.Exists(containerLocation))
+                                    System.IO.File.Delete(containerLocation);
+                            }
+                            finally { }
+                        }
+                    };
                     context.SaveChanges();
                 }
-                catch (Exception e)
-                {
-                    _logger.LogError(e, "An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace);
-                    return ValidationProblem(String.Format("An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace));
-                }
-                finally { }
             }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace);
+                return ValidationProblem(String.Format("An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace));
+            }
+            finally { }            
 
             _logger.LogInformation("Exit DeleteSession.");
 

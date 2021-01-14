@@ -741,7 +741,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ExcelCreatorHandler).Name, guid.ToString());
                                
                 //Should be called by XSLWeb service                
-                processId = handler.AddProcessAction(typeof(ExcelCreatorHandler).Name, String.Format("Create Excel from folder {0}", guid), String.Concat(typeof(ExcelCreatorHandler).Name, ".json"));
+                processId = handler.AddProcessAction(typeof(ExcelCreatorHandler).Name, String.Format("Create Excel from folder {0}", guid), String.Concat(String.Concat(typeof(ExcelCreatorHandler).Name, ".xlsx"),";", String.Concat(typeof(ExcelCreatorHandler).Name, ".json")));
                 Task.Run(() =>
                 {
                     handler.ActionProcessId = processId;
