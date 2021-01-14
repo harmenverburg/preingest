@@ -28,7 +28,7 @@ services:
     networks :
         - preingest-network
   droid:
-    image: "nhapreingest/noordhollandsarchiefdroidvalidationwebapi:development"
+    image: "noordhollandsarchief/droidvalidationwebapi:development"
     container_name: "droid"
     volumes:
         - "${DATAFOLDER}:/data" 
