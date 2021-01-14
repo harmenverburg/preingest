@@ -56,20 +56,6 @@ services:
       - droid
       - clamav
       - xslweb 
-  webtool:
-    image: "nhapreingest/noordhollandsarchiefpreingestwebtool:development"
-    container_name: "Noord.HollandsArchief.Pre.Ingest.WebTool"
-    volumes:
-        - "${DATAFOLDER}:/data"  
-        - "${ETCFOLDER}:/data/etc"
-    expose:
-        - "80"      
-    ports:
-        - "8080:80"     
-    networks :
-        - preingest-network
-    depends_on:
-        - preingest
   frontend:
     image: "noordhollandsarchief/preingest-frontend:development"
     container_name: "preingest-frontend"
