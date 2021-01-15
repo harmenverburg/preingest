@@ -5,7 +5,7 @@ XSLWEB_SRC=$WHEREAMI/xslweb-source/xslweb
 cd "$XSLWEB_SRC"
 
 # Uncomment dit als je XSLWeb moet hercompileren
-mvn clean install
+#mvn clean install
 
 WAR_COUNT=`find target -name '*.war' | wc -l`
 
@@ -23,7 +23,7 @@ cp `which zip` "$WHEREAMI"
 
 cd "$WHEREAMI"
 
-docker build --tag pmasereeuwnha/xslweb .
+docker build --tag noordhollandsarchief/xslweb:development .
 
 rm "$WHEREAMI"/xslweb.war
 rm "$WHEREAMI"/zip

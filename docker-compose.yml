@@ -14,7 +14,7 @@ services:
     networks :
         - preingest-network        
   xslweb:
-    image: "pmasereeuwnha/xslweb"
+    image: "noordhollandsarchief/xslweb:development"
     container_name: "xslweb"
     volumes:
         - "${DATAFOLDER}:/data"
