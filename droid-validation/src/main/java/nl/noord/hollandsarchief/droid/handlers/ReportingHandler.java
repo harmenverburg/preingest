@@ -33,13 +33,13 @@ public class ReportingHandler extends CommandHandler {
     try {
       if (command.length > 0) {
         BodyAction jsonData = new BodyAction();
-        jsonData.name = ReportingHandler.class.getName() + "- Droid PDF report";
+        jsonData.name = ReportingHandler.class.getSimpleName() + "- Droid PDF report";
         jsonData.description = String.join(" ", command);
         jsonData.result = "DroidValidationHandler.pdf";
 
         result = this.registerNewAction(this._guid, jsonData);
         String processId = result != null ? result.processId : null;
-        runSeperateThread(ReportingHandler.class.getName(), processId, this._guid, command);
+        runSeperateThread(ReportingHandler.class.getSimpleName(), processId, this._guid, command);
       }
     } catch (IOException ioe) {
       ioe.printStackTrace();
@@ -64,13 +64,13 @@ public class ReportingHandler extends CommandHandler {
     try {
       if (command.length > 0) {
         BodyAction jsonData = new BodyAction();
-        jsonData.name = ReportingHandler.class.getName() + "- Droid XML report";
+        jsonData.name = ReportingHandler.class.getSimpleName() + "- Droid XML report";
         jsonData.description = String.join(" ", command);
         jsonData.result = "DroidValidationHandler.droid.xml";
 
         result = this.registerNewAction(this._guid, jsonData);
         String processId = result != null ? result.processId : null;
-        runSeperateThread(ReportingHandler.class.getName(), processId, this._guid, command);
+        runSeperateThread(ReportingHandler.class.getSimpleName(), processId, this._guid, command);
       }
     } catch (IOException ioe) {
       ioe.printStackTrace();
@@ -94,13 +94,13 @@ public class ReportingHandler extends CommandHandler {
     try {
       if (command.length > 0) {
         BodyAction jsonData = new BodyAction();
-        jsonData.name = ReportingHandler.class.getName() + " - Planets XML report";
+        jsonData.name = ReportingHandler.class.getSimpleName() + " - Planets XML report";
         jsonData.description = String.join(" ", command);
         jsonData.result = "DroidValidationHandler.planets.xml";
 
         result = this.registerNewAction(this._guid, jsonData);
         String processId = result != null ? result.processId : null;
-        runSeperateThread(ReportingHandler.class.getName(), processId, this._guid, command);
+        runSeperateThread(ReportingHandler.class.getSimpleName(), processId, this._guid, command);
       }
     } catch (IOException ioe) {
       ioe.printStackTrace();

@@ -42,13 +42,13 @@ public class ProfilesHandler extends CommandHandler {
       try {
         if (command.length > 0) {
           BodyAction jsonData = new BodyAction();
-          jsonData.name = ProfilesHandler.class.getName() + "Droid - Profiling";
+          jsonData.name = ProfilesHandler.class.getSimpleName() + " - Droid Profiling";
           jsonData.description = String.join(" ", command);
           jsonData.result = "DroidValidationHandler.droid";
 
           result = this.registerNewAction(this._guid, jsonData);
           String processId = result != null ? result.processId : null;
-          runSeperateThread(ProfilesHandler.class.getName(), processId, this._guid, command);
+          runSeperateThread(ProfilesHandler.class.getSimpleName(), processId, this._guid, command);
         }
       } catch (IOException ioe) {
         ioe.printStackTrace();
