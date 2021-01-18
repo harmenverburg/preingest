@@ -10,11 +10,11 @@ WORKDIR /workspace
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
-# Optimize build image; download dependencies and cache results until pom.xml is changed
-RUN ./mvnw dependency:go-offline
 
+# Optimize build image; download dependencies and cache results until pom.xml is changed
+RUN "./mvnw dependency:go-offline"
 COPY src src
-RUN ./mvnw package -DskipTests
+RUN "./mvnw package -DskipTests"
 
 # Final target image
 FROM openjdk:11

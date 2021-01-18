@@ -14,9 +14,8 @@ public class ProfilesHandler extends CommandHandler {
   }
 
   public NewActionResult execute() {
-    boolean copyResult = copyProfileTemplate(this._guid);
     NewActionResult result = null;
-    if (copyResult) {
+    
       String sessiondId = String.format("%1$2s%2$2s", new Object[] { this.ARCHIVEDATA_LINUX_FOLDER, this._guid });
       String collectionName = "";
 
@@ -53,7 +52,7 @@ public class ProfilesHandler extends CommandHandler {
       } catch (IOException ioe) {
         ioe.printStackTrace();
       }
-    }
+
     return result;
-  }
+    }
 }
