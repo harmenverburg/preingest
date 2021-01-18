@@ -18,11 +18,6 @@ services:
     build:
       context: ./preingest
       dockerfile: Noord.HollandsArchief.Pre.Ingest.WebApi/Dockerfile
-  webtool:
-    # image: "noordhollandsarchief/preingestwebtool:development"
-    build:
-      context: ./preingest
-      dockerfile: Noord.HollandsArchief.Pre.Ingest.WebTool/Dockerfile
   frontend:
     # image: "noordhollandsarchief/preingest-frontend:development"
     build:
