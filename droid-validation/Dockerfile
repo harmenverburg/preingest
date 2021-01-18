@@ -22,6 +22,7 @@ WORKDIR /
 
 # Boldly copy ALL the original DROID application contents, including its GUI
 COPY bin droid
+COPY src/main/resources/template-linux.droid droid
 
 # The build should have created a single JAR file, like droid-0.0.1-SNAPSHOT.jar
 COPY --from=build /workspace/target/droid*.jar app.jar
