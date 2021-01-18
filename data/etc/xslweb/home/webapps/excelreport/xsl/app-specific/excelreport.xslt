@@ -299,6 +299,9 @@
         </xsl:try>
     </xsl:template>
     
+    <!-- Remove column definitions like <col min="1026" max="16384" width="9.140625" style="3"/>, assuming that the value of min identifies them: -->
+    <xsl:template match="col[xs:integer(@min) ge 100]"/>
+    
     <xsl:template match="sheetData">
         <xsl:param name="sheetnum" as="xs:integer" required="yes" tunnel="yes"/>
         <xsl:copy>
