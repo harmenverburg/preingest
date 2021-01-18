@@ -70,9 +70,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return NotFound(String.Format("Action not found with ID '{0}'", actionGuid));
 
             if (summary == null)
-                return new JsonResult(new { action.Creation, action.Description, SessionId = action.FolderSessionId, action.Name, ActionId = action.ProcessId, action.ResultFiles, action.ActionStatus });
+                return new JsonResult(new { action.Creation, action.Description, SessionId = action.FolderSessionId, action.Name, ActionId = action.ProcessId, ResultFiles = action.ResultFiles.Split(";").ToArray(), action.ActionStatus });
             else
-                return new JsonResult(new { action.Creation, action.Description, SessionId = action.FolderSessionId, action.Name, ActionId = action.ProcessId, action.ResultFiles, action.ActionStatus, Summary = summary });
+                return new JsonResult(new { action.Creation, action.Description, SessionId = action.FolderSessionId, action.Name, ActionId = action.ProcessId, ResultFiles = action.ResultFiles.Split(";").ToArray(), action.ActionStatus, Summary = summary });
         }
 
         [HttpGet("actions/{folderSessionGuid}", Name = "Retrieve all actions from a preingest session", Order = 1)]
@@ -376,7 +376,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             return result;
         }
-        private IActionResult DeleteSession(Guid folderSessionGuid, bool deleteFolder = false)
+        private IActionResult DeleteSession(Guid folderSessionGuid, bool fullDelete = false)
         {
             if (folderSessionGuid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
@@ -384,7 +384,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter DeleteSession.");
 
             String containerLocation = String.Empty;
-            if (deleteFolder)
+            if (fullDelete)
             {
                 var tarArchive = Directory.GetFiles(_settings.DataFolderName, "*.*").Select(i => new FileInfo(i)).Where(s
                     => s.Extension.EndsWith(".tar") || s.Extension.EndsWith(".gz")).Select(item
@@ -415,14 +415,18 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
                     context.SavedChanges += (object sender, Microsoft.EntityFrameworkCore.SavedChangesEventArgs e) =>
                     {
-                        if (deleteFolder)
+                        try
+                        {
+                            DirectoryInfo di = new DirectoryInfo(Path.Combine(_settings.DataFolderName, folderSessionGuid.ToString()));
+                            if (di.Exists)
+                                di.Delete(true);
+                        }
+                        finally { }
+
+                        if (fullDelete)
                         {
                             try
                             {
-                                DirectoryInfo di = new DirectoryInfo(Path.Combine(_settings.DataFolderName, folderSessionGuid.ToString()));
-                                if (di.Exists)
-                                    di.Delete(true);
-
                                 if (System.IO.File.Exists(containerLocation))
                                     System.IO.File.Delete(containerLocation);
                             }

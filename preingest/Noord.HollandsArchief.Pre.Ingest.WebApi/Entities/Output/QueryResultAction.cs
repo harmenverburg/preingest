@@ -12,7 +12,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Output
         public Guid FolderSessionId { get; set; }
         public String Name { get; set; }
         public Guid ProcessId { get; set; }
-        public String ResultFiles { get; set; }
+        public String[] ResultFiles { get; set; }
         public PreingestStatisticsSummary Summary { get; set; }
         public QueryResultState[] States { get; set; }
     }

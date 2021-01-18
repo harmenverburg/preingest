@@ -60,6 +60,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
             services.Add(new ServiceDescriptor(typeof(TransformationHandler), new TransformationHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(SipCreatorHandler), new SipCreatorHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(ExcelCreatorHandler), new ExcelCreatorHandler(settings)));
+
+            // Register the Swagger generator, defining 1 or more Swagger documents
+            services.AddSwaggerGen();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -97,6 +100,15 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
                 endpoints.MapControllers();
                 endpoints.MapHealthChecks("/health");
                 endpoints.MapHub<PreingestEventHub>("/preingestEventHub");
+            });
+
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger();
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
+            // specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Preingest API V1");
             });
         }
     }
