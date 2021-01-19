@@ -7,9 +7,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event
     public enum PreingestActionResults
     {
         None = 0,
-        Error = 1,
-        Failed = 2,        
-        Executing = 3,
+        Executing = 1,
+        Error = 2,
+        Failed = 3,
         Success = 4
     }
     public class PreingestResult
