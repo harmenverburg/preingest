@@ -16,6 +16,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         public String Checksum { get; set; }
 
+        public String DeliveredChecksumValue { get; set; }
         public override void Execute()
         {
             Logger.LogInformation("Calculate checksum for file : '{0}'", TargetCollection);
@@ -25,6 +26,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
             var anyMessages = new List<String>();
             string currentCalculation = string.Empty;
+            bool isSuccess = false;
             try
             {
                 if (!File.Exists(TargetCollection))
@@ -75,10 +77,34 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 data.Add(Checksum);
                 data.Add(currentCalculation);
 
+                isSuccess = !String.IsNullOrEmpty(currentCalculation);
+
+                eventModel.ActionResult.ResultValue = PreingestActionResults.Success;
+                eventModel.Summary.Processed = 1;
+                eventModel.Summary.Accepted = 1;
+                eventModel.Summary.Rejected = 0;
+
+                if (!String.IsNullOrEmpty(DeliveredChecksumValue))
+                {
+                    bool isTheSame = DeliveredChecksumValue.Equals(currentCalculation, StringComparison.InvariantCultureIgnoreCase);                    
+                    data.Add(String.Format("{0} {1} {2}", DeliveredChecksumValue, isTheSame ? "=" : "≠", currentCalculation));
+
+                    eventModel.Properties.Messages = anyMessages.ToArray();
+                    if (!isTheSame)
+                    {
+                        eventModel.ActionResult.ResultValue = PreingestActionResults.Error;
+                        eventModel.Summary.Processed = 1;
+                        eventModel.Summary.Accepted = 0;
+                        eventModel.Summary.Rejected = 1;
+                    }
+                }
+
                 eventModel.ActionData = data.ToArray();
             }
             catch (Exception e)
             {
+                isSuccess = false;
+
                 anyMessages.Clear();
                 anyMessages.Add(String.Format("Calculation checksum from file : '{0}' failed!", TargetCollection));
                 anyMessages.Add(e.Message);
@@ -88,22 +114,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
                 eventModel.Properties.Messages = anyMessages.ToArray();
                 eventModel.ActionResult.ResultValue = PreingestActionResults.Failed;
-                eventModel.Summary.Processed = 1;
-                eventModel.Summary.Accepted = 0;
-                eventModel.Summary.Rejected = 1;
+                eventModel.Summary.Processed = -1;
+                eventModel.Summary.Accepted = -1;
+                eventModel.Summary.Rejected = -1;
 
                 OnTrigger(new PreingestEventArgs { Description = "An exception occured while calculating the checksum!", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
             }
             finally
             {
-                if (!String.IsNullOrEmpty(currentCalculation))
-                {
-                    eventModel.ActionResult.ResultValue = PreingestActionResults.Success;
-                    eventModel.Summary.Processed = 1;
-                    eventModel.Summary.Accepted = 1;
-                    eventModel.Summary.Rejected = 0;
+                if (isSuccess)
                     OnTrigger(new PreingestEventArgs { Description = "Checksum calculation is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
-                }
             }
         }
     }

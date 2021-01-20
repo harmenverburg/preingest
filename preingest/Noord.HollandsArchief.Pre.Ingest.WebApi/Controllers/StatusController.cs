@@ -125,7 +125,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         }
          
         [HttpPost("new/{folderSessionGuid}", Name = "Add an action", Order = 3)]
-        public IActionResult AddProcessAction(Guid folderSessionGuid, [FromBody] ActionFormBody data)
+        public IActionResult AddProcessAction(Guid folderSessionGuid, [FromBody] BodyNewAction data)
         {
             if (folderSessionGuid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
@@ -173,7 +173,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         }
 
         [HttpPut("update/{actionGuid}", Name = "Update an action status and summary", Order = 4)]
-        public IActionResult UpdateProcessAction(Guid actionGuid, [FromBody] ActionUpdateBody data)
+        public IActionResult UpdateProcessAction(Guid actionGuid, [FromBody] BodyUpdate data)
         {
             if (actionGuid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
@@ -247,7 +247,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         }
 
         [HttpPost("failed/{actionGuid}", Name = "Add a failed status", Order = 7)]
-        public IActionResult AddFailedState(Guid actionGuid, [FromBody] ActionMessageBody failMessage)
+        public IActionResult AddFailedState(Guid actionGuid, [FromBody] BodyMessage failMessage)
         {
             if (actionGuid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
@@ -278,7 +278,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         }
 
         [HttpPost("notify", Name = "Notify the client about an event", Order = 11)]
-        public IActionResult SendNotification([FromBody] ActionEventMessageBody message)
+        public IActionResult SendNotification([FromBody] BodyEventMessageBody message)
         {
             if (message == null)
                 return Problem("POST body JSON object is null!");

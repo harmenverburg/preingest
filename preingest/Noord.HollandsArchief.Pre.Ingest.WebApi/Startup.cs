@@ -60,7 +60,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
             services.Add(new ServiceDescriptor(typeof(TransformationHandler), new TransformationHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(SipCreatorHandler), new SipCreatorHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(ExcelCreatorHandler), new ExcelCreatorHandler(settings)));
-
+            services.Add(new ServiceDescriptor(typeof(SettingsHandler), new SettingsHandler(settings)));
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen();
         }

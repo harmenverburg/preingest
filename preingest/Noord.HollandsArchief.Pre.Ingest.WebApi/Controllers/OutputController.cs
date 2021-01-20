@@ -98,6 +98,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                             LastWriteTime = item.LastWriteTime,
                             LastAccessTime = item.LastAccessTime,
                             Size = item.Length,
+                            Settings = new SettingsReader(item.DirectoryName, ChecksumHelper.GeneratePreingestGuid(item.Name)).GetSettings(),
                             OverallStatus = new ContainerStatusRuleHandler(joinedActions.Where(preingestActions
                                 => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetContainerStatus(),
                             Preingest = joinedActions.Where(preingestActions
@@ -203,6 +204,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                             LastWriteTime = item.LastWriteTime,
                             LastAccessTime = item.LastAccessTime,
                             Size = item.Length,
+                            Settings = new SettingsReader(item.DirectoryName, ChecksumHelper.GeneratePreingestGuid(item.Name)).GetSettings(),
                             OverallStatus = new ContainerStatusRuleHandler(joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetContainerStatus(),
                             Preingest = joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name)).ToArray()
                         }).FirstOrDefault(item => item.SessionId == guid);

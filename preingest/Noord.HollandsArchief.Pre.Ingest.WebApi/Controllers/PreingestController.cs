@@ -13,6 +13,7 @@ using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.EventHub;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
@@ -103,24 +104,26 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             });
         }
 
-        [HttpGet("calculate/{checksum}/{guid}", Name = "Collection checksum calculation. Options : MD5, SHA1, SHA256, SHA512", Order = 1)]
-        public IActionResult CollectionChecksumCalculation(String checksum, Guid guid)
+        [HttpPost("calculate/{guid}", Name = "Collection checksum calculation. Options : MD5, SHA1, SHA256, SHA512", Order = 1)]
+        public IActionResult CollectionChecksumCalculation(Guid guid, [FromBody] BodyChecksum checksum)
         {
             _logger.LogInformation("Enter CollectionChecksumCalculation.");
+            if(checksum == null)
+                return Problem("Post Json body is null!");
 
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
 
-            if (String.IsNullOrEmpty(checksum))
-                return BadRequest("Missing checksum name.");
+            if (String.IsNullOrEmpty(checksum.ChecksumType))
+                return BadRequest("Missing checksum type.");
 
             ContainerChecksumHandler handler = HttpContext.RequestServices.GetService(typeof(ContainerChecksumHandler)) as ContainerChecksumHandler;  
             if (handler == null)
                 return Problem("Object is not loaded.", typeof(ContainerChecksumHandler).Name);
 
             handler.Logger = _logger;            
-            handler.Checksum = checksum;
-            
+            handler.Checksum = checksum.ChecksumType;
+            handler.DeliveredChecksumValue = checksum.InputChecksumValue;
             //database process id
             Guid processId = Guid.Empty;
             try
@@ -471,7 +474,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return new JsonResult(new { Message = String.Format("Droid reporting ({0}) is started.", style), SessionId = handler.SessionGuid, ActionId = actionId });
         }
 
-        [HttpPost("signature/update", Name = "Droid signature update", Order = 9)]
+        [HttpPut("signature/update", Name = "Droid signature update", Order = 9)]
         public IActionResult SignatureUpdate()
         {
             _logger.LogInformation("Enter SignatureUpdate.");
@@ -494,7 +497,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Exit SignatureUpdate.");
 
-            return new JsonResult(new { Message = String.Format("Droid signature update check/download is started."), SessionId = "", ActionId = "" });
+            return Ok();
         }
 
         [HttpPost("greenlist/{guid}", Name = "Greenlist check", Order = 10)]
@@ -766,5 +769,52 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return new JsonResult(new { Message = String.Format("Excel creator is started."), SessionId = guid, ActionId = processId });
         }
 
+        [HttpPut("settings/{guid}", Name = "Save preingest extra setting(s)", Order = 16)]
+        public IActionResult PutSettings(Guid guid, [FromBody] BodySettings settings)
+        {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
+            _logger.LogInformation("Enter PutSettings.");
+
+            SettingsHandler handler = HttpContext.RequestServices.GetService(typeof(SettingsHandler)) as SettingsHandler;
+            if (handler == null)
+                return Problem("Object is not loaded.", typeof(SettingsHandler).Name);
+
+            handler.Logger = _logger;
+            //database process id
+            Guid processId = Guid.Empty;
+            try
+            {
+                handler.SetSessionGuid(guid);
+                handler.CurrentSettings = settings;
+
+                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SettingsHandler).Name, guid.ToString());
+
+                //Should be called by XSLWeb service                
+                processId = handler.AddProcessAction(typeof(SettingsHandler).Name, String.Format("Save user input setting(s) for folder {0}", guid), String.Concat(typeof(SettingsHandler).Name, ".json"));
+                Task.Run(() =>
+                {
+                    handler.ActionProcessId = processId;
+                    try
+                    {
+                        handler.PreingestEvents += Trigger;
+                        handler.Execute();
+                    }
+                    finally
+                    {
+                        handler.PreingestEvents -= Trigger;
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(SettingsHandler).Name, e.Message);
+                return ValidationProblem(e.Message, typeof(SettingsHandler).Name);
+            }
+
+            _logger.LogInformation("Exit PutSettings.");
+            return new JsonResult(new { Message = String.Format("Settings is stored."), SessionId = guid, ActionId = processId });
+        }
     }
 }

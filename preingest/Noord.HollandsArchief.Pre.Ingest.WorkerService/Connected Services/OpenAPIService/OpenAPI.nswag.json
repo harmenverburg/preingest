@@ -1,0 +1,1067 @@
+﻿{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Noord.HollandsArchief.Pre.Ingest.WebApi",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/Output/collections": {
+      "get": {
+        "tags": [
+          "Output"
+        ],
+        "operationId": "Get collections of tar/tar.gz files.",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Output/collection/{guid}": {
+      "get": {
+        "tags": [
+          "Output"
+        ],
+        "operationId": "Get specific collection of tar/tar.gz file.",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Output/json/{guid}/{json}": {
+      "get": {
+        "tags": [
+          "Output"
+        ],
+        "operationId": "Get json results from a session.",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "json",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Output/report/{guid}/{file}": {
+      "get": {
+        "tags": [
+          "Output"
+        ],
+        "operationId": "Get a report as a file from a session.",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "file",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/check": {
+      "get": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "API service check",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/calculate/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Collection checksum calculation. Options : MD5, SHA1, SHA256, SHA512",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyChecksum"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyChecksum"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyChecksum"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/unpack/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Unpack tar collection",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/virusscan/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Virusscan check",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/naming/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Naming check",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/sidecar/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Sidecar check",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/profiling/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Droid create profile",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/exporting/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Droid exporting result (CSV)",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/reporting/{type}/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Droid reporting PDF/Droid (XML)/Planets (XML)",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/signature/update": {
+      "put": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Droid signature update",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/greenlist/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Greenlist check",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/encoding/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Encoding check .metadata files",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/validate/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Validate .metadata files",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/transform/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Transform .metadata files to .xip",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/sipcreator/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Start to create sip",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/excelcreator/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Generate Excel report",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/settings/{guid}": {
+      "put": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Save preingest extra setting(s)",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodySettings"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodySettings"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodySettings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Service/autorun/{guid}": {
+      "put": {
+        "tags": [
+          "Service"
+        ],
+        "operationId": "Auto run preingest by worker service",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyExecutionPlan"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyExecutionPlan"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyExecutionPlan"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Status/action/{actionGuid}": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "operationId": "Retrieve an action from a preingest session",
+        "parameters": [
+          {
+            "name": "actionGuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Status/actions/{folderSessionGuid}": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "operationId": "Retrieve all actions from a preingest session",
+        "parameters": [
+          {
+            "name": "folderSessionGuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Status/new/{folderSessionGuid}": {
+      "post": {
+        "tags": [
+          "Status"
+        ],
+        "operationId": "Add an action",
+        "parameters": [
+          {
+            "name": "folderSessionGuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyNewAction"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyNewAction"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyNewAction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Status/update/{actionGuid}": {
+      "put": {
+        "tags": [
+          "Status"
+        ],
+        "operationId": "Update an action status and summary",
+        "parameters": [
+          {
+            "name": "actionGuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyUpdate"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyUpdate"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Status/start/{actionGuid}": {
+      "post": {
+        "tags": [
+          "Status"
+        ],
+        "operationId": "Add a start status",
+        "parameters": [
+          {
+            "name": "actionGuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Status/completed/{actionGuid}": {
+      "post": {
+        "tags": [
+          "Status"
+        ],
+        "operationId": "Add a completed status",
+        "parameters": [
+          {
+            "name": "actionGuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Status/failed/{actionGuid}": {
+      "post": {
+        "tags": [
+          "Status"
+        ],
+        "operationId": "Add a failed status",
+        "parameters": [
+          {
+            "name": "actionGuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyMessage"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyMessage"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyMessage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Status/reset/{folderSessionGuid}": {
+      "delete": {
+        "tags": [
+          "Status"
+        ],
+        "operationId": "Clear data for a session folder",
+        "parameters": [
+          {
+            "name": "folderSessionGuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Status/remove/{folderSessionGuid}": {
+      "delete": {
+        "tags": [
+          "Status"
+        ],
+        "operationId": "Remove session folder and clear the data for session folder",
+        "parameters": [
+          {
+            "name": "folderSessionGuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Status/notify": {
+      "post": {
+        "tags": [
+          "Status"
+        ],
+        "operationId": "Notify the client about an event",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyEventMessageBody"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyEventMessageBody"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyEventMessageBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BodyChecksum": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "checksumType": {
+            "type": "string",
+            "nullable": true
+          },
+          "inputChecksumValue": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "BodySettings": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "checksumType": {
+            "type": "string",
+            "nullable": true
+          },
+          "checksumValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "preservicaTarget": {
+            "type": "string",
+            "nullable": true
+          },
+          "preservicaSecurityTag": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "BodyPlan": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "executionOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "actionName": {
+            "type": "string",
+            "nullable": true
+          },
+          "continueOnError": {
+            "type": "boolean"
+          },
+          "continueOnFailed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "BodyExecutionPlan": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "workflow": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/BodyPlan"
+            }
+          }
+        }
+      },
+      "BodyNewAction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "result": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "BodyUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "result": {
+            "type": "string",
+            "nullable": true
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "BodyMessage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "BodyEventMessageBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "eventDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "state": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasSummary": {
+            "type": "boolean"
+          },
+          "processed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "accepted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rejected": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      }
+    }
+  }
+}
