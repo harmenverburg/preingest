@@ -27,8 +27,7 @@
     
     <xsl:variable name="LETTERS" as="xs:string" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"/>
     
-    <xsl:variable name="COLUMNKEYS1" as="xs:string*" select="('SessionId', 'Code', 'ActionName', 'CollectionItem', 'Message', 'Messages', 'CreationTimestamp')"/>
-    <xsl:variable name="COLUMNKEYS2" as="xs:string*" select="('sessionId', 'code', 'actionName', 'collectionItem', 'message', 'messages', 'creationTimestamp')"/>
+    <xsl:variable name="TEXT_EMPTY" as="xs:string" select="'Geen bijzonderheden'"/>
     
     <xsl:variable name="workdir-guid" as="xs:string" select="replace(/*/req:path, '^.*/([-a-z0-9]+)$', '$1')"/>
     
@@ -79,6 +78,16 @@
         </row>
     </xsl:function>
     
+    <xsl:function name="nha:cellValue" as="xs:string">
+        <xsl:param name="value" as="item()*"/>
+        <xsl:choose>
+            <xsl:when test="$value instance of array(*)">
+                <xsl:value-of select="string-join($value, '&#10;')"/>
+            </xsl:when>
+            <xsl:otherwise><xsl:value-of select="$value"/></xsl:otherwise>
+        </xsl:choose>
+    </xsl:function>
+    
     <xsl:function name="nha:worksheet-jsonmap" as="element(row)*">
         <xsl:param name="excel-rownum" as="xs:integer"/>
         <xsl:param name="json-rownum" as="xs:integer"/>
@@ -87,20 +96,47 @@
         
         <xsl:variable name="columnValues" as="xs:string*">
             <xsl:for-each select="$columnKeys">
-                <xsl:value-of select="$jsonMap => map:get(.)"/>
+                <xsl:variable name="value" as="item()*" select="$jsonMap => map:get(.)"/>
+                <xsl:value-of select="nha:cellValue($value)"/>
             </xsl:for-each>
         </xsl:variable>
+        <!--<xsl:sequence select="log:log('INFO', 'column values: ' || string-join($columnValues, ', '))"/>-->
         <xsl:sequence select="nha:row($excel-rownum + $json-rownum, $columnValues)"/>
     </xsl:function>
     
-    <xsl:function name="nha:worksheet-jsonarray" as="element(row)*">
+    <xsl:function name="nha:worksheet-jsonstringarray" as="element(row)*">
+        <xsl:param name="excel-rownum" as="xs:integer"/>
+        <xsl:param name="jsonArray" as="array(xs:string)"/>
+        
+        <xsl:variable name="base-json-file" as="xs:string" select="'UnpackTarHandler.json'"/>
+        <xsl:try>
+            <xsl:choose>
+                <!-- Starting at row 1 (Excel second row) because the first row (Excel 0) is the header row. -->
+                <xsl:when test="array:size($jsonArray) eq 0">
+                    <xsl:sequence select="nha:row(1, ($TEXT_EMPTY))"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:for-each select="1 to array:size($jsonArray)">
+                        <xsl:variable name="json-rownum" as="xs:integer" select="."/>
+                        <xsl:variable name="excel-rownum" as="xs:integer" select="1 + $json-rownum"/>
+                        <xsl:sequence select="nha:row($excel-rownum, $jsonArray($json-rownum))"/>
+                    </xsl:for-each>
+                </xsl:otherwise>
+            </xsl:choose>   
+            <xsl:catch>
+                <xsl:sequence select="nha:error-row(1, $err:code, $err:description, $err:line-number, $err:module)"/>
+            </xsl:catch>
+        </xsl:try>   
+    </xsl:function>
+    
+    <xsl:function name="nha:worksheet-jsonmaparray" as="element(row)*">
         <xsl:param name="excel-rownum" as="xs:integer"/>
         <xsl:param name="jsonArray" as="array(map(*))"/>
         <xsl:param name="columnKeys" as="xs:string*"/>
         
         <xsl:choose>
             <xsl:when test="array:size($jsonArray) eq 0">
-                <xsl:sequence select="nha:row($excel-rownum + 0, ('Geen bijzonderheden'))"/>
+                <xsl:sequence select="nha:row($excel-rownum + 0, ($TEXT_EMPTY))"/>
             </xsl:when>
             <xsl:otherwise>
                 <xsl:for-each select="1 to array:size($jsonArray)">
@@ -114,110 +150,85 @@
         </xsl:choose>        
     </xsl:function>
     
-    <xsl:function name="nha:worksheet-commontype" as="element(row)*">
-        <xsl:param name="base-json-file" as="xs:string"/>
-        
-        <xsl:try>
-            <xsl:variable name="json-uri" as="xs:string" select="$jsondoc-uri-prefix || $base-json-file"/>
-            <xsl:sequence select="log:log('INFO', 'Accessing JSON-uri ' || $json-uri)"/>
-            <xsl:variable name="jsonArray" as="array(map(*))" select="json-doc($json-uri)"/>
-            
-            <xsl:sequence select="nha:worksheet-jsonarray(1, $jsonArray, $COLUMNKEYS1)"/> <!-- Start at row 1 (Excel 2) because the top row is a header row. -->
-            <xsl:catch>
-                <xsl:sequence select="log:log('ERROR', 'Error code: ' || $err:code || ', description: ' || $err:description || ', at line ' || $err:line-number || ' of module ' || $err:module)"/>
-            </xsl:catch>
-        </xsl:try>        
+    <xsl:function name="nha:error-row">
+        <xsl:param name="excel-rownum" as="xs:integer"/>
+        <xsl:param name="code" as="xs:QName"/>
+        <xsl:param name="description" as="xs:string"/>
+        <xsl:param name="line-number" as="xs:integer"/>
+        <xsl:param name="module" as="xs:string"/>
+        <xsl:variable name="errormessage" as="xs:string" select="'Error code: ' || $code || ', description: ' || $description || ', at line ' || $line-number || ' of module ' || $module"/>
+        <xsl:sequence select="log:log('ERROR', $errormessage)"/>
+        <xsl:sequence select="nha:row($excel-rownum, $errormessage)"/>
     </xsl:function>
     
-    <xsl:function name="nha:worksheet-1" as="element(row)*">
+    <xsl:function name="nha:worksheet-commontype" as="element(row)*">
+        <xsl:param name="base-json-file" as="xs:string"/>
+        <xsl:param name="columnKeys" as="xs:string+"/>
         <xsl:try>
-            <xsl:sequence select="nha:row(1, ('sessionId', 'TODO'))"/>
-            <xsl:sequence select="nha:row(2, ('code', 'TODO'))"/>
-            <xsl:sequence select="nha:row(3, ('actionName', 'TODO'))"/>
-            <xsl:sequence select="nha:row(4, ('collectionItem', 'TODO'))"/>
-            <xsl:sequence select="nha:row(5, ('message', 'TODO'))"/>
-            <xsl:sequence select="nha:row(6, ('messages', 'TODO'))"/>
-            <xsl:sequence select="nha:row(7, ('creationTimestamp', 'TODO'))"/>
+            <xsl:variable name="actionDataArray" as="array(*)" select="nha:load-json-action-data-array($base-json-file)"/>
+            <xsl:sequence select="nha:worksheet-jsonmaparray(1, $actionDataArray, $columnKeys)"/> <!-- Start at row 1 (Excel 2) because the top row is a header row. -->
             <xsl:catch>
-                <xsl:sequence select="log:log('ERROR', 'Error code: ' || $err:code || ', description: ' || $err:description || ', at line ' || $err:line-number || ' of module ' || $err:module)"/>
+                <xsl:sequence select="nha:error-row(1, $err:code, $err:description, $err:line-number, $err:module)"/>
             </xsl:catch>
         </xsl:try>
     </xsl:function>
     
-    <xsl:function name="nha:worksheet-2" as="element(row)*">
-        <xsl:try>
-            <xsl:variable name="base-json-file" as="xs:string" select="'UnpackTarHandler.json'"/>
+    <xsl:function name="nha:load-json-action-data-array" as="array(*)">
+        <xsl:param name="base-json-file" as="xs:string"/>
+        
+        <xsl:variable name="json-uri" as="xs:string" select="$jsondoc-uri-prefix || $base-json-file"/>
+        <xsl:sequence select="log:log('INFO', 'Accessing JSON-uri ' || $json-uri)"/>
+        <xsl:variable name="jsonMap" as="map(*)" select="json-doc($json-uri)"/>
+        <xsl:variable name="actionDataArray" as="array(*)" select="$jsonMap?actionData"/>
+        
+        <xsl:sequence select="$actionDataArray"/>
+    </xsl:function>
+    
+    <xsl:function name="nha:worksheet-1" as="element(row)*">
+        <xsl:for-each select="('UnpackTarHandler.json', 'ScanVirusValidationHandler.json', 'NamingValidationHandler.json', 'MetadataValidationHandler.json', 'SidecarValidationHandler.json', 'GreenListHandler.json', 'EncodingHandler.json')">
+            <xsl:variable name="num" as="xs:integer" select="position()"/>
+            
+            <xsl:variable name="base-json-file" as="xs:string" select="."/>
             <xsl:variable name="json-uri" as="xs:string" select="$jsondoc-uri-prefix || $base-json-file"/>
             <xsl:sequence select="log:log('INFO', 'Accessing JSON-uri ' || $json-uri)"/>
-            <xsl:variable name="jsonMap" as="map(*)" select="json-doc($json-uri)"/>
             
-            <xsl:sequence select="nha:row(1, ('SessionId', $jsonMap?SessionId))"/>
-            <xsl:sequence select="nha:row(2, ('Code', $jsonMap?Code))"/>
-            <xsl:sequence select="nha:row(3, ('ActionName', $jsonMap?ActionName))"/>
-            <xsl:sequence select="nha:row(4, ('CollectionItem', $jsonMap?CollectionItem))"/>
-            <xsl:sequence select="nha:row(5, ('Message', $jsonMap?Message))"/>
-            <xsl:sequence select="nha:row(6, ('Messages', $jsonMap?Messages))"/>
-            <xsl:sequence select="nha:row(7, ('CreationTimestamp', $jsonMap?CreationTimestamp))"/>
+            <xsl:try>
+                <xsl:variable name="jsonMap" as="map(*)" select="json-doc($json-uri)"/>
+                <xsl:sequence select="nha:row($num, ($base-json-file, nha:cellValue($jsonMap?summary?start), nha:cellValue($jsonMap?summary?end), nha:cellValue($jsonMap?summary?processed), nha:cellValue($jsonMap?summary?accepted), nha:cellValue($jsonMap?summary?rejected),
+                    nha:cellValue($jsonMap?actionResult?resultValue),
+                    nha:cellValue($jsonMap?properties?sessionId), nha:cellValue($jsonMap?properties?actionName), nha:cellValue($jsonMap?properties?collectionItem), nha:cellValue($jsonMap?properties?messages), nha:cellValue($jsonMap?properties?creationTimestamp) ))"/>
+                <xsl:catch>
+                    <xsl:sequence select="nha:error-row($num, $err:code, $err:description, $err:line-number, $err:module)"/>
+                </xsl:catch>
+            </xsl:try>
+        </xsl:for-each>
+    </xsl:function>
+    
+    <xsl:function name="nha:worksheet-2" as="element(row)*">
+        <xsl:variable name="base-json-file" as="xs:string" select="'UnpackTarHandler.json'"/>
+        <xsl:try>
+            <xsl:variable name="actionDataArray" as="array(*)" select="nha:load-json-action-data-array($base-json-file)"/>
+            <xsl:sequence select="nha:worksheet-jsonstringarray(1, $actionDataArray)"/>
             <xsl:catch>
-                <xsl:sequence select="log:log('ERROR', 'Error code: ' || $err:code || ', description: ' || $err:description || ', at line ' || $err:line-number || ' of module ' || $err:module)"/>
+                <xsl:sequence select="nha:error-row(1, $err:code, $err:description, $err:line-number, $err:module)"/>
             </xsl:catch>
         </xsl:try>
     </xsl:function>
     
     <xsl:function name="nha:worksheet-3" as="element(row)*">
-        <xsl:variable name="base-json-file" as="xs:string" select="'ScanVirusValidationHandler.json'"/>
-        <!-- TODO test with real data -->
-        <xsl:sequence select="nha:worksheet-commontype($base-json-file)"/>
+        <xsl:sequence select="nha:worksheet-commontype('ScanVirusValidationHandler.json', ('isClean', 'description', 'filename'))"/>
     </xsl:function>
     
     <xsl:function name="nha:worksheet-4" as="element(row)*">
-        <xsl:variable name="base-json-file" as="xs:string" select="'NamingValidationHandler.json'"/>
-        <xsl:sequence select="nha:worksheet-commontype($base-json-file)"/>
+        <xsl:sequence select="nha:worksheet-commontype('NamingValidationHandler.json', ('containsInvalidCharacters', 'containsDosNames', 'name', 'errorMessages'))"/>
     </xsl:function>
     
     <xsl:function name="nha:worksheet-5" as="element(row)*">
-        <xsl:variable name="base-json-file" as="xs:string" select="'MetadataValidationHandler.json'"/>
-        <xsl:sequence select="nha:worksheet-commontype($base-json-file)"/>
+        <xsl:sequence select="nha:worksheet-commontype('MetadataValidationHandler.json', ('isValidated', 'isConfirmSchema', 'errorMessages', 'metadataFilename', 'requestUri'))"/>
     </xsl:function>
     
     <xsl:function name="nha:worksheet-6" as="element(row)*">
-        <!-- Deze functie wacht op issue # 40 "Same JSON-format for all SidecarValidationHandler" -->
-        <xsl:try>
-            <xsl:iterate select="(
-                'SidecarValidationHandler_Samenvatting.json',
-                'SidecarValidationHandler_Archief.json',
-                'SidecarValidationHandler_Series.json',
-                'SidecarValidationHandler_Dossier.json',
-                'SidecarValidationHandler_Record.json',
-                'SidecarValidationHandler_Bestand.json',
-                'SidecarValidationHandler_Onbekend.json'
-                )">
-                <xsl:param name="start-rownum" as="xs:integer" select="1"/> <!-- Row 0 (Excel 1) is header row -->
-                <xsl:variable name="base-json-file" as="xs:string" select="."/>
-                <xsl:variable name="json-uri" as="xs:string" select="$jsondoc-uri-prefix || $base-json-file"/>
-                <xsl:variable name="jsonArrayOrMap" select="json-doc($json-uri)"/>
-                <xsl:variable name="isMap" as="xs:boolean" select="$jsonArrayOrMap instance of map(*)"/>
-                <xsl:sequence select="log:log('INFO', 'Accessing JSON-uri ' || $json-uri || ', isMap=' || $isMap || ', starting at row # ' || $start-rownum || ' (Excel row # ' || $start-rownum + 1 || ')')"/>
-                <xsl:choose>
-                    <xsl:when test="$isMap">
-                        <xsl:sequence select="nha:worksheet-jsonmap($start-rownum, 0, $jsonArrayOrMap, $COLUMNKEYS2)"/>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <!-- Array -->
-                        <xsl:sequence select="nha:worksheet-jsonarray($start-rownum, $jsonArrayOrMap, $COLUMNKEYS2)"/>
-                    </xsl:otherwise>
-                </xsl:choose>
-                
-                <xsl:variable name="increment" as="xs:integer" select="if ($isMap) then 1 else array:size($jsonArrayOrMap)"/>
-
-                <xsl:next-iteration>
-                    <xsl:with-param name="start-rownum" select="$start-rownum + $increment"/>
-                </xsl:next-iteration>
-            </xsl:iterate>
-            <xsl:catch>
-                <xsl:sequence select="log:log('ERROR', 'Error code: ' || $err:code || ', description: ' || $err:description || ', at line ' || $err:line-number || ' of module ' || $err:module)"/>
-            </xsl:catch>
-        </xsl:try>
+        <xsl:sequence select="nha:worksheet-commontype('SidecarValidationHandler.json', ('level', 'isCorrect', 'titlePath', 'errorMessages'))"/>
     </xsl:function>
     
     <xsl:function name="nha:worksheet-7" as="element(row)*">
@@ -240,28 +251,18 @@
                 <xsl:if test="exists($columnValues)"><xsl:sequence select="nha:row($rownum, $columnValues)"/></xsl:if>
             </xsl:for-each>
             <xsl:catch>
-                <xsl:sequence select="log:log('ERROR', 'Error code: ' || $err:code || ', description: ' || $err:description || ', at line ' || $err:line-number || ' of module ' || $err:module)"/>
+                <xsl:sequence select="nha:error-row(1, $err:code, $err:description, $err:line-number, $err:module)"/>
             </xsl:catch>
         </xsl:try>
     </xsl:function>
     
     <xsl:function name="nha:worksheet-8" as="element(row)*">
-        <xsl:try>
-            <xsl:variable name="base-json-file" as="xs:string" select="'GreenListHandler.json'"/>
-            <xsl:variable name="json-uri" as="xs:string" select="$jsondoc-uri-prefix || $base-json-file"/>
-            <xsl:sequence select="log:log('INFO', 'Accessing JSON-uri ' || $json-uri)"/>
-            <xsl:variable name="jsonArray" as="array(map(*))" select="json-doc($json-uri)"/>
-            <!-- Start at row 1 (Excel 2), because the first row is a header row. -->
-            <xsl:sequence select="nha:worksheet-jsonarray(1, $jsonArray, ('SessionId', 'Location', 'Name', 'Extension', 'FormatName', 'FormatVersion', 'Puid', 'InGreenList'))"/>
-            <xsl:catch>
-                <xsl:sequence select="log:log('ERROR', 'Error code: ' || $err:code || ', description: ' || $err:description || ', at line ' || $err:line-number || ' of module ' || $err:module)"/>
-            </xsl:catch>
-        </xsl:try>
+        <!-- Wacht op issue #58 -->
+        <xsl:sequence select="nha:worksheet-commontype('GreenListHandler.json', ('inGreenList', 'location', 'name', 'extension', 'formatName', 'formatVersion', 'puid'))"/>
     </xsl:function>
     
     <xsl:function name="nha:worksheet-9" as="element(row)*">
-        <xsl:variable name="base-json-file" as="xs:string" select="'EncodingHandler.json'"/>
-        <xsl:sequence select="nha:worksheet-commontype($base-json-file)"/>
+        <xsl:sequence select="nha:worksheet-commontype('EncodingHandler.json', ('isUtf8', 'metadataFile', 'description'))"/>
     </xsl:function>
     
     <xsl:template match="/req:request">
