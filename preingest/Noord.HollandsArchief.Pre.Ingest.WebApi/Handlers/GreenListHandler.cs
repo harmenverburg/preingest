@@ -110,8 +110,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                         OnTrigger(new PreingestEventArgs { Description = "Compare both lists.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
 
                         var endResult = doesContainsGreenListResult.Select(item
-                            => new { item, InGreenList = true }).Concat(doNotcontainsGreenListResult.Select(item
-                                => new { item, InGreenList = false })).ToList();
+                            => new { item.SessionId, item.Puid, item.Name, item.Location, item.FormatVersion, item.FormatName, item.Extension, InGreenList = true })
+                            .Concat(doNotcontainsGreenListResult.Select(item
+                            => new { item.SessionId, item.Puid, item.Name, item.Location, item.FormatVersion, item.FormatName, item.Extension, InGreenList = false }))
+                            .ToList();
 
                         OnTrigger(new PreingestEventArgs { Description = "Done comparing both lists.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
                         
