@@ -33,11 +33,17 @@ public class DroidController
   @GetMapping({"/profiles/{guid}"})
   public StatusResult profiling(@PathVariable String guid) {
     ProfilesHandler handler = new ProfilesHandler(guid);
+    
     if (!handler.existsArchiveFolder()) {
       return new StatusResult("Archive folder not found!", false, null);
     }
     if (!handler.existsDroidFolder()) {
       return new StatusResult("Droid folder not found!", false, null);
+    }
+    
+    boolean copyResult = handler.copyProfileTemplate(guid);
+    if(!copyResult) {
+      return new StatusResult("Copy profile template droid file failed!", false, null);
     }
 
     NewActionResult result = handler.execute();

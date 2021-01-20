@@ -440,7 +440,7 @@ public abstract class CommandHandler implements ICommandHandler {
     return result;
   }
 
-  protected boolean copyProfileTemplate(String guid) {
+  public boolean copyProfileTemplate(String guid) {
     boolean result = false;
     try {
       Path source = Paths.get(String.format("%1$2stemplate-linux.droid", new Object[] { this.DROID_LINUX_FOLDER }),
