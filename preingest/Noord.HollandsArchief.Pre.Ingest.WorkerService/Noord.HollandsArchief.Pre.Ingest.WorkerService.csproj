@@ -12,6 +12,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Entities\CommandKey\DroidReportingKey.cs~RF2ee6d6.TMP" />
+    <None Remove="Handler\AbstractPreingestCommand.cs~RFab265a9.TMP" />
+    <None Remove="Handler\Command\DroidPlanetsReportingCommand.cs~RF151576.TMP" />
+    <None Remove="Handler\Command\XipCreateCommand.cs~RF2426c2.TMP" />
+    <None Remove="Handler\Creator\PreingestCommandCreator.cs~RFab86d6c.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.2">
       <PrivateAssets>all</PrivateAssets>
@@ -39,5 +47,9 @@
 
   <ItemGroup>
     <WCFMetadata Include="Connected Services" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Entities\Context\" />
   </ItemGroup>
 </Project>

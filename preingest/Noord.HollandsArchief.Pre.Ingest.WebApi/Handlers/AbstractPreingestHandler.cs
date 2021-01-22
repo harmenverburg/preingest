@@ -18,7 +18,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     public abstract class AbstractPreingestHandler : IPreingest
     {
-        private AppSettings _settings = null;
+        private readonly AppSettings _settings = null;
         protected Guid _guidSessionFolder = Guid.Empty;
         private ILogger _logger = null;
 
@@ -114,19 +114,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
             return outputFile;
         }
-        protected String SaveBinary(DirectoryInfo outputFolder, String typeName, PairNode<ISidecar> data, bool useTimestamp = false)
-        {
-            string fileName = new FileInfo(Path.GetTempFileName()).Name;
 
-            if (!String.IsNullOrEmpty(typeName))
-                fileName = typeName;
-
-            string outputFile = useTimestamp ? Path.Combine(outputFolder.FullName, String.Concat(fileName, "_", DateTime.Now.ToFileTime().ToString(), ".bin")) : Path.Combine(outputFolder.FullName, String.Concat(fileName, ".bin"));
-
-            Utilities.SerializerHelper.SerializeObjectToBinaryFile<PairNode<ISidecar>>(outputFile, data, false);
-
-            return outputFile;
-        }
         public Guid AddProcessAction(String name, String description, String result)
         {
             var processId = Guid.NewGuid();

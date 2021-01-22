@@ -1,7 +1,9 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Service
+using System;
+
+namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.CommandKey
 {
     [JsonConverter(typeof(StringEnumConverter))]
     public enum ValidationActionType
@@ -23,12 +25,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Service
         SipCreatorHandler,
         TransformationHandler
     }
-
-
-    public class BodyPlan
+    public interface IKey
     {
-        public ValidationActionType ActionName { get; set; }
-        public bool ContinueOnFailed { get; set; }
-        public bool ContinueOnError { get; set; }
+        ValidationActionType Name { get; set; }
     }
 }

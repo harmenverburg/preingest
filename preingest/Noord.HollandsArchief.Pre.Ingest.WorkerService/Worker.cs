@@ -21,8 +21,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService
             _eventHandler.CurrentLogger = logger;
         }        
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            
+        {            
             while (!stoppingToken.IsCancellationRequested)
             {
                 await _eventHandler.Connect(stoppingToken);

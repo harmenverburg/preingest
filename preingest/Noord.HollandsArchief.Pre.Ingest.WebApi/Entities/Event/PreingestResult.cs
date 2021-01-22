@@ -8,8 +8,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event
     {
         None = 0,
         Executing = 1,
-        Error = 2,
-        Failed = 3,
+        Failed = 2,
+        Error = 3,        
         Success = 4
     }
     public class PreingestResult

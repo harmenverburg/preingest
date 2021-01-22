@@ -9,9 +9,10 @@ using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Service;
 
 using System;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Output;
+using System.Linq;
+
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Model;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -20,7 +21,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
     public class ServiceController : ControllerBase
     {
         private readonly ILogger<ServiceController> _logger;
-        private AppSettings _settings = null;
+        private readonly AppSettings _settings = null;
         private readonly IHubContext<PreingestEventHub> _eventHub;
 
         public ServiceController(ILogger<ServiceController> logger, IOptions<AppSettings> settings, IHubContext<PreingestEventHub> eventHub)
@@ -30,8 +31,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _eventHub = eventHub;
         }
 
-        [HttpPut("autorun/{guid}", Name = "Auto run preingest by worker service", Order = 1)]
-        public IActionResult AutoRun(Guid guid, [FromBody] BodyExecutionPlan workflow)
+        [HttpPost("startplan/{guid}", Name = "Auto run preingest by worker service", Order = 1)]
+        public IActionResult StartPlan(Guid guid, [FromBody] BodyExecutionPlan workflow)
         {
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
@@ -39,33 +40,76 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if(workflow == null)
                 return Problem("Empty execution plan is invalid.");
 
-            _logger.LogInformation("Enter AutoRun.");      
+            _logger.LogInformation("Enter StartPlan.");      
             try
             {
-                var jsonSettings = new JsonSerializerSettings
+                using (var context = new PreIngestStatusContext())
                 {
-                    ContractResolver = new DefaultContractResolver
+                    var plan = workflow.Workflow.Select(item => new ExecutionPlan
                     {
-                        NamingStrategy = new CamelCaseNamingStrategy()
-                    },
-                    Formatting = Formatting.Indented,
-                    NullValueHandling = NullValueHandling.Ignore
-                };
+                        ActionName = item.ActionName.ToString(),
+                        SessionId = guid,
+                        ContinueOnError = item.ContinueOnError,
+                        ContinueOnFailed = item.ContinueOnFailed
+                    });
 
-                var preingestSettings = new SettingsReader(_settings.DataFolderName, guid);
-                if (preingestSettings == null)
-                    throw new ApplicationException("The preingest settings file 'SettingsHandler.json' is not set or found! Please save the settings before running the worker service.");
-                
-                String jsonMessage = JsonConvert.SerializeObject(new { Settings = preingestSettings, Workflow = workflow }, jsonSettings);
-                _eventHub.Clients.All.SendAsync(nameof(IEventHub.PushInQueue), jsonMessage, jsonSettings).GetAwaiter().GetResult();
+                    context.ExecutionPlanCollection.AddRange(plan);
+
+                    try
+                    {
+                        context.SaveChanges();
+                    }
+                    catch(Exception e)
+                    {
+                        return Problem("Failed to save the plan! " + e.Message);
+                    }
+                }
+
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.StartWorker), guid).GetAwaiter().GetResult();
             }
             catch (Exception e)
             {
-                _logger.LogInformation("Exit AutoRun.");
+                _logger.LogInformation("Exit StartPlan.");
                 return ValidationProblem(e.Message);
             }
 
-            _logger.LogInformation("Exit AutoRun.");
+            _logger.LogInformation("Exit StartPlan.");
+            return Ok();
+        }
+
+        [HttpDelete("cancelplan/{guid}", Name = "Delete an autorun preingest in worker service by GUID", Order = 2)]
+        public IActionResult CancelPlan(Guid guid)
+        {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
+            _logger.LogInformation("Enter CancelPlan.");
+            try
+            {
+                using (var context = new PreIngestStatusContext())
+                {
+                    var items = context.ExecutionPlanCollection.Where(item => item.SessionId == guid).ToArray();
+
+                    if (items != null && items.Length > 0)
+                        context.ExecutionPlanCollection.RemoveRange(items);
+
+                    try
+                    {
+                        context.SaveChanges();
+                    }
+                    catch (Exception e)
+                    {
+                        return Problem("Failed to remove the plan! " + e.Message);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogInformation("Exit CancelPlan.");
+                return ValidationProblem(e.Message);
+            }
+
+            _logger.LogInformation("Exit CancelPlan.");
             return Ok();
         }
     }

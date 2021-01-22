@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 using Noord.HollandsArchief.Pre.Ingest.WorkerService.Model;
 using Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.EventHub;
+using Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
 {
@@ -19,10 +20,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
 
         private Uri WebApiUrl { get; set; }
 
+        private ICommandCreator Creator { get; set; }
         public PreingestEventHubHandler(String eventHubUrl, String webApiUrl)
         {
             WebApiUrl = new Uri(webApiUrl);
-            Init(eventHubUrl);               
+            Init(eventHubUrl);
+
+            Creator = new PreingestCommandCreator();            
         }
 
         private void Init(String url)
@@ -38,11 +42,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             Connection.Closed += Closed;
             Connection.Reconnected += Reconnected;
             Connection.Reconnecting += Reconnecting;
-            Connection.On<string>("SendNoticeEventToClient", (message) => Next(message));
-            Connection.On<string>("PushInQueue", (message) => Push(message));
+            Connection.On<string>("RunNext", (message) => RunNext(message));
+            Connection.On<string>("StartWorker", (message) => StartFirstOne(message));
 
-            using (var dbContext = new WorkerServiceContext())
-                dbContext.Database.EnsureCreated();
+            //using (var dbContext = new WorkerServiceContext())
+                //dbContext.Database.EnsureCreated();
         }
 
         private Task Reconnecting(Exception arg)
@@ -75,36 +79,35 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             await Task.Delay(5000);
         }
 
-        private void Next(string message)
+        private void RunNext(string message)
         {
-            CurrentLogger.LogInformation("Hub incoming message - {0}", message);
-
             if (String.IsNullOrEmpty(message))
                 return;
+
+            CurrentLogger.LogInformation("Hub incoming message - {0}", message);
 
             EventMessage next = JsonConvert.DeserializeObject<EventMessage>(message);
             if (next.State != ActionStates.Completed || next.State != ActionStates.Failed)
                 return;
 
-
-
-            using (HttpClient client = new HttpClient())
+            IPreingestCommand command = Creator.FactoryMethod(next);
+            if (command != null)
             {
-                OpenAPIService.Client apiService = new OpenAPIService.Client(WebApiUrl.ToString(), client);
-                
+                using (HttpClient client = new HttpClient())
+                {
+                    command.Execute(client);
+                }
             }
         }
 
-        private void Push(string message)
-        {
-            CurrentLogger.LogInformation("Hub incoming message - {0}", message);
-
+        private void StartFirstOne(string message)
+        {            
             if (String.IsNullOrEmpty(message))
                 return;
 
-            //ToDo actions
-            dynamic push = JsonConvert.DeserializeObject<dynamic>(message);
+            CurrentLogger.LogInformation("Hub incoming message - {0}", message);
 
+            //ToDo actions
 
         }
 
@@ -148,7 +151,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             {
                 var dispose = Connection.DisposeAsync();
                 if (dispose.GetAwaiter().IsCompleted)
-                    Connection = null;                
+                {
+                    GC.SuppressFinalize(Connection);
+                    Connection = null;
+                }
             }
         }
     }

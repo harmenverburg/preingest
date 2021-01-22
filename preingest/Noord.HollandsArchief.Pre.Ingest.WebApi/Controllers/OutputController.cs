@@ -17,6 +17,7 @@ using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Output;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -25,7 +26,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
     public class OutputController : ControllerBase
     {
         private readonly ILogger<OutputController> _logger;
-        private AppSettings _settings = null;
+        private readonly AppSettings _settings = null;
         public OutputController(ILogger<OutputController> logger, IOptions<AppSettings> settings)
         {
             _logger = logger;
@@ -51,6 +52,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             dynamic dataResults = null;
             List<JoinedQueryResult> currentActions = new List<JoinedQueryResult>();
+            List<ExecutionPlan> executionPlan = new List<ExecutionPlan>();
             try
             {
                 using (var context = new PreIngestStatusContext())
@@ -62,7 +64,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                         (actions, states)
                         => new JoinedQueryResult { Actions = actions, States = states }).ToList();
 
-                    currentActions.AddRange(query);
+                    if (query != null && query.Count > 0)
+                        currentActions.AddRange(query);
+
+                    var plans = context.ExecutionPlanCollection.Where(item => tarArchives.Select(tar
+                       => ChecksumHelper.GeneratePreingestGuid(tar.Name)).ToList().Contains(item.SessionId)).ToArray();
+
+                    if (plans != null && plans.Length > 0)
+                        executionPlan.AddRange(plans);
                 }
 
                 if (currentActions != null || currentActions.Count > 0)
@@ -97,9 +106,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                             CreationTime = item.CreationTime,
                             LastWriteTime = item.LastWriteTime,
                             LastAccessTime = item.LastAccessTime,
-                            Size = item.Length,
+                            Size = item.Length,                            
                             Settings = new SettingsReader(item.DirectoryName, ChecksumHelper.GeneratePreingestGuid(item.Name)).GetSettings(),
-                            OverallStatus = new ContainerStatusRuleHandler(joinedActions.Where(preingestActions
+                            ScheduledPlan = new ScheduledPlanStatusHandler(executionPlan, joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))),
+                            OverallStatus = new ContainerOverallStatusHandler(joinedActions.Where(preingestActions
                                 => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetContainerStatus(),
                             Preingest = joinedActions.Where(preingestActions
                                 => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name)).ToArray()
@@ -156,6 +166,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             dynamic  dataResults = null;
             List<JoinedQueryResult> currentActions = new List<JoinedQueryResult>();
+            List<ExecutionPlan> executionPlan = new List<ExecutionPlan>();
+
             try
             {
                 
@@ -168,7 +180,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                         (actions, states)
                         => new JoinedQueryResult { Actions = actions, States = states }).ToList();
 
-                    currentActions.AddRange(query);
+                    if (query != null && query.Count > 0)
+                        currentActions.AddRange(query);
+
+                    var plans = context.ExecutionPlanCollection.Where(item => item.SessionId == guid).ToArray();
+
+                    if (plans != null && plans.Length > 0)
+                        executionPlan.AddRange(plans);
                 }
 
                 if (currentActions != null || currentActions.Count > 0)
@@ -205,7 +223,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                             LastAccessTime = item.LastAccessTime,
                             Size = item.Length,
                             Settings = new SettingsReader(item.DirectoryName, ChecksumHelper.GeneratePreingestGuid(item.Name)).GetSettings(),
-                            OverallStatus = new ContainerStatusRuleHandler(joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetContainerStatus(),
+                            ScheduledPlan = new ScheduledPlanStatusHandler(executionPlan, joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))),
+                            OverallStatus = new ContainerOverallStatusHandler(joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetContainerStatus(),
                             Preingest = joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name)).ToArray()
                         }).FirstOrDefault(item => item.SessionId == guid);
                 }

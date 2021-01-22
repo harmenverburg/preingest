@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Noord.HollandsArchief.Pre.Ingest.WorkerService.Model;
 using Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler;
 using Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WorkerService
 {
@@ -29,7 +30,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService
                     var settings = appSettingsSection.Get<AppSettings>();
                     //create database instance
                     services.AddDbContext<WorkerServiceContext>(options => options.UseSqlite(hostContext.Configuration.GetConnectionString("Sqlite")));
-
+                                        
                     //create event hub
                     services.Add(new ServiceDescriptor(typeof(PreingestEventHubHandler), new PreingestEventHubHandler(settings.EventHubUrl, settings.WebApiUrl)));                   
 

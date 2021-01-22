@@ -42,16 +42,27 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 NullValueHandling = NullValueHandling.Ignore                
             };
 
-            _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
-                JsonConvert.SerializeObject(new EventHubMessage
-                {
-                    EventDateTime = e.Initiate,
-                    SessionId = e.PreingestAction.Properties.SessionId,
-                    Name = e.PreingestAction.Properties.ActionName,
-                    State = e.ActionType,
-                    Message = e.Description,
-                    Summary = e.PreingestAction.Summary
-                }, settings)).GetAwaiter().GetResult();
+            
+            if (e.ActionType == PreingestActionStates.Started || e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
+            {
+                //send only these three states to the client
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
+                    JsonConvert.SerializeObject(new EventHubMessage
+                    {
+                        EventDateTime = e.Initiate,
+                        SessionId = e.PreingestAction.Properties.SessionId,
+                        Name = e.PreingestAction.Properties.ActionName,
+                        State = e.ActionType,
+                        Message = e.Description,
+                        Summary = e.PreingestAction.Summary
+                    }, settings)).GetAwaiter().GetResult();
+
+                //trigger workerservice
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient), e.PreingestAction.Properties.SessionId).GetAwaiter().GetResult();
+               
+                //trigger update collections status and collection/{guid} status
+                //TODO
+            }
 
             IPreingest handler = sender as IPreingest;
             if (handler.ActionProcessId == Guid.Empty) return;

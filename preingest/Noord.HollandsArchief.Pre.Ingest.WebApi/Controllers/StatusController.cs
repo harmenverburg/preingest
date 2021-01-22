@@ -296,20 +296,22 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             object state = null;
             bool parse = Enum.TryParse(typeof(PreingestActionStates), message.State, out state);
-           if (!parse)
+            if (!parse)
                 return Problem("Parsing state failed!");
 
-            _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
-                JsonConvert.SerializeObject(new EventHubMessage
-                {
-                    EventDateTime = message.EventDateTime,
-                    SessionId = message.SessionId,
-                    Name = message.Name,
-                    State = (PreingestActionStates) state,
-                    Message = message.Message,
-                    Summary = message.HasSummary ? new PreingestStatisticsSummary { Accepted = message.Accepted, Processed = message.Processed, Rejected = message.Rejected, Start = message.Start.Value, End = message.End.Value  } : null
-                }, settings)).GetAwaiter().GetResult();
-
+            if ((PreingestActionStates)state != PreingestActionStates.Executing)
+            {//executing triggers too much event... disabled for now
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
+                    JsonConvert.SerializeObject(new EventHubMessage
+                    {
+                        EventDateTime = message.EventDateTime,
+                        SessionId = message.SessionId,
+                        Name = message.Name,
+                        State = (PreingestActionStates)state,
+                        Message = message.Message,
+                        Summary = message.HasSummary ? new PreingestStatisticsSummary { Accepted = message.Accepted, Processed = message.Processed, Rejected = message.Rejected, Start = message.Start.Value, End = message.End.Value } : null
+                    }, settings)).GetAwaiter().GetResult();
+            }
             return Ok();
         }
 
