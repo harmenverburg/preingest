@@ -54,15 +54,18 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                         State = e.ActionType,
                         Message = e.Description,
                         Summary = e.PreingestAction.Summary
-                    }, settings)).GetAwaiter().GetResult();
-                //notify workerservice
-                _eventHub.Clients.All.SendAsync(nameof(IEventHub.RunNext), e.PreingestAction.Properties.SessionId).GetAwaiter().GetResult();
+                    }, settings)).GetAwaiter().GetResult();               
                 //notify client update collections status
                 string collectionsData = JsonConvert.SerializeObject(_preingestCollection.GetCollections(), settings);
                 _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendCollectionsStatus), collectionsData).GetAwaiter().GetResult();
                 //notify client collection /{ guid} status
                 string collectionData = JsonConvert.SerializeObject(_preingestCollection.GetCollection(e.PreingestAction.Properties.SessionId), settings);
                 _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendCollectionStatus), e.PreingestAction.Properties.SessionId, collectionData).GetAwaiter().GetResult();                               
+            }
+            if( e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
+            {
+                //notify workerservice
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.RunNext), e.PreingestAction.Properties.SessionId).GetAwaiter().GetResult();
             }
 
             IPreingest handler = sender as IPreingest;

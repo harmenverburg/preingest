@@ -1581,15 +1581,15 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.OpenAPIService
     
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public System.Threading.Tasks.Task ApiServiceAutorunAsync(System.Guid guid, BodyExecutionPlan body)
+        public System.Threading.Tasks.Task ApiServiceStartplanAsync(System.Guid guid, BodyExecutionPlan body)
         {
-            return ApiServiceAutorunAsync(guid, body, System.Threading.CancellationToken.None);
+            return ApiServiceStartplanAsync(guid, body, System.Threading.CancellationToken.None);
         }
     
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public async System.Threading.Tasks.Task ApiServiceAutorunAsync(System.Guid guid, BodyExecutionPlan body, System.Threading.CancellationToken cancellationToken)
+        public async System.Threading.Tasks.Task ApiServiceStartplanAsync(System.Guid guid, BodyExecutionPlan body, System.Threading.CancellationToken cancellationToken)
         {
             if (guid == null)
                 throw new System.ArgumentNullException("guid");
@@ -1598,7 +1598,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.OpenAPIService
                 throw new System.ArgumentNullException("body");
     
             var urlBuilder_ = new System.Text.StringBuilder();
-            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/api/Service/autorun/{guid}");
+            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/api/Service/startplan/{guid}");
             urlBuilder_.Replace("{guid}", System.Uri.EscapeDataString(ConvertToString(guid, System.Globalization.CultureInfo.InvariantCulture)));
     
             var client_ = _httpClient;
@@ -1610,7 +1610,79 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.OpenAPIService
                     var content_ = new System.Net.Http.StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(body, _settings.Value));
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
-                    request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
+    
+                    PrepareRequest(client_, request_, urlBuilder_);
+                    
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+    
+                    PrepareRequest(client_, request_, url_);
+    
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = System.Linq.Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+    
+                        ProcessResponse(client_, response_);
+    
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false); 
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+    
+        /// <returns>Success</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public System.Threading.Tasks.Task ApiServiceCancelplanAsync(System.Guid guid)
+        {
+            return ApiServiceCancelplanAsync(guid, System.Threading.CancellationToken.None);
+        }
+    
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Success</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public async System.Threading.Tasks.Task ApiServiceCancelplanAsync(System.Guid guid, System.Threading.CancellationToken cancellationToken)
+        {
+            if (guid == null)
+                throw new System.ArgumentNullException("guid");
+    
+            var urlBuilder_ = new System.Text.StringBuilder();
+            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/api/Service/cancelplan/{guid}");
+            urlBuilder_.Replace("{guid}", System.Uri.EscapeDataString(ConvertToString(guid, System.Globalization.CultureInfo.InvariantCulture)));
+    
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("DELETE");
     
                     PrepareRequest(client_, request_, urlBuilder_);
                     
@@ -2536,22 +2608,70 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.OpenAPIService
     }
     
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.3.3.0 (Newtonsoft.Json v12.0.0.2)")]
+    public enum ValidationActionType
+    {
+        [System.Runtime.Serialization.EnumMember(Value = @"ContainerChecksumHandler")]
+        ContainerChecksumHandler = 0,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"ExportingHandler")]
+        ExportingHandler = 1,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"ReportingPdfHandler")]
+        ReportingPdfHandler = 2,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"ReportingDroidXmlHandler")]
+        ReportingDroidXmlHandler = 3,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"ReportingPlanetsXmlHandler")]
+        ReportingPlanetsXmlHandler = 4,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"ProfilesHandler")]
+        ProfilesHandler = 5,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"EncodingHandler")]
+        EncodingHandler = 6,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"UnpackTarHandler")]
+        UnpackTarHandler = 7,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"MetadataValidationHandler")]
+        MetadataValidationHandler = 8,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"NamingValidationHandler")]
+        NamingValidationHandler = 9,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"GreenListHandler")]
+        GreenListHandler = 10,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"ExcelCreatorHandler")]
+        ExcelCreatorHandler = 11,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"ScanVirusValidationHandler")]
+        ScanVirusValidationHandler = 12,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"SidecarValidationHandler")]
+        SidecarValidationHandler = 13,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"SipCreatorHandler")]
+        SipCreatorHandler = 14,
+    
+        [System.Runtime.Serialization.EnumMember(Value = @"TransformationHandler")]
+        TransformationHandler = 15,
+    
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.3.3.0 (Newtonsoft.Json v12.0.0.2)")]
     public partial class BodyPlan 
     {
-        [Newtonsoft.Json.JsonProperty("sessionId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Guid SessionId { get; set; }
-    
-        [Newtonsoft.Json.JsonProperty("executionOrder", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public int ExecutionOrder { get; set; }
-    
-        [Newtonsoft.Json.JsonProperty("actionName", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string ActionName { get; set; }
-    
-        [Newtonsoft.Json.JsonProperty("continueOnError", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public bool ContinueOnError { get; set; }
+        [Newtonsoft.Json.JsonProperty("actionName", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+        public ValidationActionType ActionName { get; set; }
     
         [Newtonsoft.Json.JsonProperty("continueOnFailed", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool ContinueOnFailed { get; set; }
+    
+        [Newtonsoft.Json.JsonProperty("continueOnError", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool ContinueOnError { get; set; }
     
     
     }

@@ -26,7 +26,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             WebApiUrl = new Uri(webApiUrl);
             Init(eventHubUrl);
 
-            Creator = new PreingestCommandCreator();            
+            Creator = new PreingestCommandCreator(WebApiUrl);            
         }
 
         private void Init(String url)
@@ -42,8 +42,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             Connection.Closed += Closed;
             Connection.Reconnected += Reconnected;
             Connection.Reconnecting += Reconnecting;
-            Connection.On<string>("RunNext", (message) => RunNext(message));
-            Connection.On<string>("StartWorker", (message) => StartFirstOne(message));
+            Connection.On<string>("RunNext", (guid) => RunNext(guid));
+            Connection.On<string>("StartWorker", (guid) => StartFirstOne(guid));
 
             //using (var dbContext = new WorkerServiceContext())
                 //dbContext.Database.EnsureCreated();
@@ -79,24 +79,32 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             await Task.Delay(5000);
         }
 
-        private void RunNext(string message)
+        private void RunNext(string guid)
         {
-            if (String.IsNullOrEmpty(message))
+            if (String.IsNullOrEmpty(guid))
                 return;
 
-            CurrentLogger.LogInformation("Hub incoming message - {0}", message);
+            CurrentLogger.LogInformation("Hub incoming message - {0}.", guid);
 
-            EventMessage next = JsonConvert.DeserializeObject<EventMessage>(message);
-            if (next.State != ActionStates.Completed || next.State != ActionStates.Failed)
+            //EventMessage next = JsonConvert.DeserializeObject<EventMessage>(message);
+            //if (next.State != ActionStates.Completed || next.State != ActionStates.Failed)
+            //    return;
+
+            Guid parser = Guid.Empty;
+            bool isParsed = Guid.TryParse(guid, out parser);
+            if (!isParsed)
+            {
+                CurrentLogger.LogInformation("Parsing GUID failed with incoming valie - {0}.", guid);
                 return;
+            }
 
-            IPreingestCommand command = Creator.FactoryMethod(next);
+            IPreingestCommand command = null;
+            using (HttpClient client = new HttpClient())
+                 = Creator.FactoryMethod(parser, client);
             if (command != null)
             {
-                using (HttpClient client = new HttpClient())
-                {
-                    command.Execute(client);
-                }
+                using (HttpClient client = new HttpClient())                
+                    command.Execute(client);                
             }
         }
 

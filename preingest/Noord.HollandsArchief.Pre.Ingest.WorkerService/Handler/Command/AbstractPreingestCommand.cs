@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
 {
     public abstract class AbstractPreingestCommand : IPreingestCommand
     {
-        public AbstractPreingestCommand()
+        protected Uri WebApi { get; set; }
+
+        public AbstractPreingestCommand(Uri webApiUrl)
         {
-        
+            WebApi = webApiUrl;
         }
 
         public abstract void Execute(HttpClient client);

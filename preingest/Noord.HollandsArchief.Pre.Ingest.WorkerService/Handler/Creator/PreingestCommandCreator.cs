@@ -1,45 +1,48 @@
 ﻿using Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Command;
-using Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.CommandKey;
 
 using System;
 using System.Linq;
+using System.Net.Http;
 using System.Collections.Generic;
-using Noord.HollandsArchief.Pre.Ingest.WorkerService.Model;
-
 
 namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
 {
     public class PreingestCommandCreator : CommandCreator
     {
         private readonly IDictionary<IKey, IPreingestCommand> _executionCommand = null;
-        public PreingestCommandCreator()
+        private Uri _webapiUrl = null;
+        public PreingestCommandCreator(Uri webapiUrl)
         {
+            _webapiUrl = webapiUrl;
+
             _executionCommand = new Dictionary<IKey, IPreingestCommand>();
-            _executionCommand.Add(new DefaultKey(ValidationActionType.ContainerChecksumHandler), new CalculateChecksumCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.ExportingHandler), new DroidCsvExportingCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.ReportingPdfHandler), new DroidPdfReportingCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.ReportingDroidXmlHandler), new DroidXmlReportingCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.ReportingPlanetsXmlHandler), new DroidPlanetsReportingCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.ProfilesHandler), new DroidProfilingCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.EncodingHandler), new EncodingCheckCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.UnpackTarHandler), new ExpandArchiveCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.MetadataValidationHandler), new MetadataSchemaCheckCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.NamingValidationHandler), new NamingCheckCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.GreenListHandler), new NhaGreenlistCheckCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.ExcelCreatorHandler), new PreingestExcelReportingCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.ScanVirusValidationHandler), new ScanVirusCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.SidecarValidationHandler), new SidecarCheckCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.SipCreatorHandler), new SipCreateCommand());
-            _executionCommand.Add(new DefaultKey(ValidationActionType.TransformationHandler), new XipCreateCommand());
+            _executionCommand.Add(new DefaultKey(ValidationActionType.ContainerChecksumHandler), new CalculateChecksumCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.ExportingHandler), new DroidCsvExportingCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.ReportingPdfHandler), new DroidPdfReportingCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.ReportingDroidXmlHandler), new DroidXmlReportingCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.ReportingPlanetsXmlHandler), new DroidPlanetsReportingCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.ProfilesHandler), new DroidProfilingCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.EncodingHandler), new EncodingCheckCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.UnpackTarHandler), new ExpandArchiveCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.MetadataValidationHandler), new MetadataSchemaCheckCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.NamingValidationHandler), new NamingCheckCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.GreenListHandler), new NhaGreenlistCheckCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.ExcelCreatorHandler), new PreingestExcelReportingCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.ScanVirusValidationHandler), new ScanVirusCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.SidecarValidationHandler), new SidecarCheckCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.SipCreatorHandler), new SipCreateCommand(webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.TransformationHandler), new XipCreateCommand(webapiUrl));
         }
 
-        public override IPreingestCommand FactoryMethod(EventMessage eve)
+        public override IPreingestCommand FactoryMethod(Guid guid, HttpClient client)
         {
             bool mayContinue = false;
             String nextActionName = String.Empty;
            
-            //ToDO
+            //ToDO determine next scheduled action/task through getcollections
+
+
           
             //if (mayContinue && !String.IsNullOrEmpty(nextActionName))
             //{

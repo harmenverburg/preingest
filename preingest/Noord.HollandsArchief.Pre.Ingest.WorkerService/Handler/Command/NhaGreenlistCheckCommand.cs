@@ -5,6 +5,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Command
 {
     public class NhaGreenlistCheckCommand : AbstractPreingestCommand
     {
+        public NhaGreenlistCheckCommand(Uri webapi) : base(webapi) { }
         public override void Execute(HttpClient client)
         {
 
