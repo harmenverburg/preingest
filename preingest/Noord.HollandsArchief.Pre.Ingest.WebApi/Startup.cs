@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 using Microsoft.EntityFrameworkCore;
 
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
@@ -46,6 +48,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
             services.AddDbContext<Model.PreIngestStatusContext>(options => options.UseSqlite(Configuration.GetConnectionString("Sqlite")));
 
             services.AddSingleton<PreingestEventHub>();
+            services.AddSingleton<CollectionHandler>();
 
             services.Add(new ServiceDescriptor(typeof(HealthCheckHandler), new HealthCheckHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(ContainerChecksumHandler), new ContainerChecksumHandler(settings)));

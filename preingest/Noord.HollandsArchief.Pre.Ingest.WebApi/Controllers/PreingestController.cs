@@ -25,6 +25,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         private readonly ILogger<PreingestController> _logger;
         private AppSettings _settings = null;
         private readonly IHubContext<PreingestEventHub> _eventHub;
+        private readonly CollectionHandler _preingestCollection = null;
 
         private void Trigger(object sender, PreingestEventArgs e)
         {
@@ -35,13 +36,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             {
                 ContractResolver = new DefaultContractResolver
                 {
-                    NamingStrategy = new CamelCaseNamingStrategy()                    
-                    
+                    NamingStrategy = new CamelCaseNamingStrategy() 
                 },
                 Formatting = Formatting.Indented, 
                 NullValueHandling = NullValueHandling.Ignore                
             };
-
             
             if (e.ActionType == PreingestActionStates.Started || e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
             {
@@ -56,12 +55,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                         Message = e.Description,
                         Summary = e.PreingestAction.Summary
                     }, settings)).GetAwaiter().GetResult();
-
-                //trigger workerservice
-                _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient), e.PreingestAction.Properties.SessionId).GetAwaiter().GetResult();
-               
-                //trigger update collections status and collection/{guid} status
-                //TODO
+                //notify workerservice
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.RunNext), e.PreingestAction.Properties.SessionId).GetAwaiter().GetResult();
+                //notify client update collections status
+                string collectionsData = JsonConvert.SerializeObject(_preingestCollection.GetCollections(), settings);
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendCollectionsStatus), collectionsData).GetAwaiter().GetResult();
+                //notify client collection /{ guid} status
+                string collectionData = JsonConvert.SerializeObject(_preingestCollection.GetCollection(e.PreingestAction.Properties.SessionId), settings);
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendCollectionStatus), e.PreingestAction.Properties.SessionId, collectionData).GetAwaiter().GetResult();                               
             }
 
             IPreingest handler = sender as IPreingest;
@@ -84,11 +85,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
         }
 
-        public PreingestController(ILogger<PreingestController> logger, IOptions<AppSettings> settings, IHubContext<PreingestEventHub> eventHub)
+        public PreingestController(ILogger<PreingestController> logger, IOptions<AppSettings> settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection)
         {
             _logger = logger;
             _settings = settings.Value;
             _eventHub = eventHub;
+            _preingestCollection = preingestCollection;            
         }
 
         [HttpGet("check", Name = "API service check", Order = 0)]

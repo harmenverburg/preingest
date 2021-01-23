@@ -43,6 +43,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter StartPlan.");      
             try
             {
+                //save scheduled/execution plan in db
                 using (var context = new PreIngestStatusContext())
                 {
                     var plan = workflow.Workflow.Select(item => new ExecutionPlan
@@ -64,7 +65,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                         return Problem("Failed to save the plan! " + e.Message);
                     }
                 }
-
+                // notify client 
                 _eventHub.Clients.All.SendAsync(nameof(IEventHub.StartWorker), guid).GetAwaiter().GetResult();
             }
             catch (Exception e)
