@@ -108,7 +108,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                             LastAccessTime = item.LastAccessTime,
                             Size = item.Length,                            
                             Settings = new SettingsReader(item.DirectoryName, ChecksumHelper.GeneratePreingestGuid(item.Name)).GetSettings(),
-                            ScheduledPlan = new ScheduledPlanStatusHandler(executionPlan, joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))),
+                            ScheduledPlan = new ScheduledPlanStatusHandler(executionPlan.Where(ep
+                            => ep.SessionId == ChecksumHelper.GeneratePreingestGuid(item.Name)).ToList(), joinedActions.Where(preingestActions 
+                            => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetExecutionPlan(),
                             OverallStatus = new ContainerOverallStatusHandler(joinedActions.Where(preingestActions
                                 => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetContainerStatus(),
                             Preingest = joinedActions.Where(preingestActions
@@ -127,6 +129,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                             LastWriteTime = item.LastWriteTime,
                             LastAccessTime = item.LastAccessTime,
                             Size = item.Length,
+                            Settings = new SettingsReader(item.DirectoryName, ChecksumHelper.GeneratePreingestGuid(item.Name)).GetSettings(),
+                            ScheduledPlan = new ScheduledPlanStatusHandler(executionPlan.Where(ep => ep.SessionId == ChecksumHelper.GeneratePreingestGuid(item.Name)).ToList()).GetExecutionPlan(),
                             OverallStatus = ContainerStatus.New,
                             Preingest = new object[] { }
                         }).ToArray();
@@ -223,7 +227,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                             LastAccessTime = item.LastAccessTime,
                             Size = item.Length,
                             Settings = new SettingsReader(item.DirectoryName, ChecksumHelper.GeneratePreingestGuid(item.Name)).GetSettings(),
-                            ScheduledPlan = new ScheduledPlanStatusHandler(executionPlan, joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))),
+                            ScheduledPlan = new ScheduledPlanStatusHandler(executionPlan, joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetExecutionPlan(),
                             OverallStatus = new ContainerOverallStatusHandler(joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetContainerStatus(),
                             Preingest = joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name)).ToArray()
                         }).FirstOrDefault(item => item.SessionId == guid);
@@ -240,6 +244,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                             LastWriteTime = item.LastWriteTime,
                             LastAccessTime = item.LastAccessTime,
                             Size = item.Length,
+                            Settings = new SettingsReader(item.DirectoryName, ChecksumHelper.GeneratePreingestGuid(item.Name)).GetSettings(),
+                            ScheduledPlan = new ScheduledPlanStatusHandler(executionPlan.Where(ep => ep.SessionId == ChecksumHelper.GeneratePreingestGuid(item.Name)).ToList()).GetExecutionPlan(),
                             OverallStatus = ContainerStatus.New,
                             Preingest = new object[] { }
                         }).FirstOrDefault(item => item.SessionId == guid);
