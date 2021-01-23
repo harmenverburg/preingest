@@ -100,7 +100,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
 
             IPreingestCommand command = null;
             using (HttpClient client = new HttpClient())
-                 = Creator.FactoryMethod(parser, client);
+                command = Creator.FactoryMethod(parser, client);
+
             if (command != null)
             {
                 using (HttpClient client = new HttpClient())                
