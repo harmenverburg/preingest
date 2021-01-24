@@ -9,10 +9,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub
     {
         // here place some method(s) for message from server to client
         Task SendNoticeEventToClient(string message);
-        Task StartWorker(string message);
-        Task RunNext(string message);
-        Task SendCollectionsStatus(string message);
-        Task SendCollectionStatus(Guid guid, string message);
+        Task CollectionsStatus(string jsonData);
+        Task CollectionStatus(Guid guid, string jsonData);
     }
        
     public class PreingestEventHub : Hub<IEventHub>

@@ -11,14 +11,15 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
+using Noord.HollandsArchief.Pre.Ingest.Utilities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Model;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Status;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.EventHub;
-using Noord.HollandsArchief.Pre.Ingest.Utilities;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -29,12 +30,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         private readonly ILogger<StatusController> _logger;
         private AppSettings _settings = null;
         private readonly IHubContext<PreingestEventHub> _eventHub;
+        private readonly CollectionHandler _preingestCollection = null;
 
-        public StatusController(ILogger<StatusController> logger, IOptions<AppSettings> settings, IHubContext<PreingestEventHub> eventHub)
+        public StatusController(ILogger<StatusController> logger, IOptions<AppSettings> settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection)
         {
             _logger = logger;
             _settings = settings.Value;
             _eventHub = eventHub;
+            _preingestCollection = preingestCollection;
         }
 
         [HttpGet("action/{actionGuid}", Name = "Retrieve an action from a preingest session", Order = 0)]
@@ -299,18 +302,22 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (!parse)
                 return Problem("Parsing state failed!");
 
-            if ((PreingestActionStates)state != PreingestActionStates.Executing)
-            {//executing triggers too much event... disabled for now
-                _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
-                    JsonConvert.SerializeObject(new EventHubMessage
-                    {
-                        EventDateTime = message.EventDateTime,
-                        SessionId = message.SessionId,
-                        Name = message.Name,
-                        State = (PreingestActionStates)state,
-                        Message = message.Message,
-                        Summary = message.HasSummary ? new PreingestStatisticsSummary { Accepted = message.Accepted, Processed = message.Processed, Rejected = message.Rejected, Start = message.Start.Value, End = message.End.Value } : null
-                    }, settings)).GetAwaiter().GetResult();
+            //trigger full events
+            _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
+                JsonConvert.SerializeObject(new EventHubMessage
+                {
+                    EventDateTime = message.EventDateTime,
+                    SessionId = message.SessionId,
+                    Name = message.Name,
+                    State = (PreingestActionStates)state,
+                    Message = message.Message,
+                    Summary = message.HasSummary ? new PreingestStatisticsSummary { Accepted = message.Accepted, Processed = message.Processed, Rejected = message.Rejected, Start = message.Start.Value, End = message.End.Value } : null
+                }, settings)).GetAwaiter().GetResult();            
+
+            if ((PreingestActionStates)state == PreingestActionStates.Failed || (PreingestActionStates)state == PreingestActionStates.Completed)
+            {
+                string collectionData = JsonConvert.SerializeObject(_preingestCollection.GetCollection(message.SessionId), settings);
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionStatus), message.SessionId, collectionData).GetAwaiter().GetResult();
             }
             return Ok();
         }

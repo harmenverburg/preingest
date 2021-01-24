@@ -41,32 +41,18 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 Formatting = Formatting.Indented, 
                 NullValueHandling = NullValueHandling.Ignore                
             };
-            
-            if (e.ActionType == PreingestActionStates.Started || e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
-            {
-                //send only these three states to the client
-                _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
-                    JsonConvert.SerializeObject(new EventHubMessage
-                    {
-                        EventDateTime = e.Initiate,
-                        SessionId = e.PreingestAction.Properties.SessionId,
-                        Name = e.PreingestAction.Properties.ActionName,
-                        State = e.ActionType,
-                        Message = e.Description,
-                        Summary = e.PreingestAction.Summary
-                    }, settings)).GetAwaiter().GetResult();               
-                //notify client update collections status
-                string collectionsData = JsonConvert.SerializeObject(_preingestCollection.GetCollections(), settings);
-                _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendCollectionsStatus), collectionsData).GetAwaiter().GetResult();
-                //notify client collection /{ guid} status
-                string collectionData = JsonConvert.SerializeObject(_preingestCollection.GetCollection(e.PreingestAction.Properties.SessionId), settings);
-                _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendCollectionStatus), e.PreingestAction.Properties.SessionId, collectionData).GetAwaiter().GetResult();                               
-            }
-            if( e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
-            {
-                //notify workerservice
-                _eventHub.Clients.All.SendAsync(nameof(IEventHub.RunNext), e.PreingestAction.Properties.SessionId).GetAwaiter().GetResult();
-            }
+                        
+            //send notifications events to client
+            _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
+                JsonConvert.SerializeObject(new EventHubMessage
+                {
+                    EventDateTime = e.Initiate,
+                    SessionId = e.PreingestAction.Properties.SessionId,
+                    Name = e.PreingestAction.Properties.ActionName,
+                    State = e.ActionType,
+                    Message = e.Description,
+                    Summary = e.PreingestAction.Summary
+                }, settings)).GetAwaiter().GetResult();             
 
             IPreingest handler = sender as IPreingest;
             if (handler.ActionProcessId == Guid.Empty) return;
@@ -85,6 +71,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultValue.ToString() : PreingestActionResults.None.ToString();
                 string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary, settings) : String.Empty;
                 handler.UpdateProcessAction(handler.ActionProcessId, result, summary);
+                
+                //notify client update collections status
+                string collectionsData = JsonConvert.SerializeObject(_preingestCollection.GetCollections(), settings);
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionsStatus), collectionsData).GetAwaiter().GetResult();
+                //notify client collection /{ guid} status
+                string collectionData = JsonConvert.SerializeObject(_preingestCollection.GetCollection(e.PreingestAction.Properties.SessionId), settings);
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionStatus), e.PreingestAction.Properties.SessionId, collectionData).GetAwaiter().GetResult();    
             }
         }
 

@@ -8,7 +8,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Command
         public SidecarCheckCommand(Uri webapi) : base(webapi) { }
         public override void Execute(HttpClient client)
         {
-
+            OpenAPIService.Client api = new OpenAPIService.Client(WebApi.ToString(), client);
+            api.ApiPreingestSidecarAsync(this.CurrentSessionId).GetAwaiter().GetResult();
         }
     }
 }

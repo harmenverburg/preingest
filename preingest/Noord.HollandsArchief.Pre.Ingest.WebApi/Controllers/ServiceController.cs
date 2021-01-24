@@ -4,15 +4,18 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Model;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Service;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context;
 
 using System;
 using System.Linq;
 
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Model;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -23,12 +26,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         private readonly ILogger<ServiceController> _logger;
         private readonly AppSettings _settings = null;
         private readonly IHubContext<PreingestEventHub> _eventHub;
+        private readonly CollectionHandler _preingestCollection = null;
 
-        public ServiceController(ILogger<ServiceController> logger, IOptions<AppSettings> settings, IHubContext<PreingestEventHub> eventHub)
+        public ServiceController(ILogger<ServiceController> logger, IOptions<AppSettings> settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection)
         {
             _logger = logger;
             _settings = settings.Value;
             _eventHub = eventHub;
+            _preingestCollection = preingestCollection;
         }
 
         [HttpPost("startplan/{guid}", Name = "Auto run preingest by worker service", Order = 1)]
@@ -43,30 +48,47 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter StartPlan.");      
             try
             {
-                //save scheduled/execution plan in db
-                using (var context = new PreIngestStatusContext())
-                {
-                    var plan = workflow.Workflow.Select(item => new ExecutionPlan
-                    {
-                        ActionName = item.ActionName.ToString(),
-                        SessionId = guid,
-                        ContinueOnError = item.ContinueOnError,
-                        ContinueOnFailed = item.ContinueOnFailed
-                    });
+                var currentArchive = _preingestCollection.GetCollection(guid);
 
-                    context.ExecutionPlanCollection.AddRange(plan);
+                if (currentArchive.ScheduledPlan == null) {
+                    //save scheduled/execution plan in db
+                    using (var context = new PreIngestStatusContext())
+                    {
+                        var plan = workflow.Workflow.Select(item => new ExecutionPlan
+                        {
+                            ActionName = item.ActionName.ToString(),
+                            SessionId = guid,
+                            ContinueOnError = item.ContinueOnError,
+                            ContinueOnFailed = item.ContinueOnFailed
+                        });
 
-                    try
-                    {
-                        context.SaveChanges();
+                        context.ExecutionPlanCollection.AddRange(plan);
+
+                        try
+                        {
+                            context.SaveChanges();
+                        }
+                        catch (Exception e)
+                        {
+                            return Problem("Failed to save the plan! " + e.Message);
+                        }
                     }
-                    catch(Exception e)
-                    {
-                        return Problem("Failed to save the plan! " + e.Message);
-                    }
+                    //reload
+                    currentArchive = _preingestCollection.GetCollection(guid);
                 }
-                // notify client 
-                _eventHub.Clients.All.SendAsync(nameof(IEventHub.StartWorker), guid).GetAwaiter().GetResult();
+
+                var settings = new JsonSerializerSettings
+                {
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new CamelCaseNamingStrategy()
+                    },
+                    Formatting = Formatting.Indented,
+                    NullValueHandling = NullValueHandling.Ignore
+                };
+
+                string collectionData = JsonConvert.SerializeObject(currentArchive, settings);
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionStatus), guid, collectionData).GetAwaiter().GetResult();
             }
             catch (Exception e)
             {

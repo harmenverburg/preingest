@@ -25,7 +25,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.CommandKey
         SipCreatorHandler,
         TransformationHandler
     }
-    public interface IKey
+    public interface IKey : IEquatable<IKey>
     {
         ValidationActionType Name { get; set; }
     }

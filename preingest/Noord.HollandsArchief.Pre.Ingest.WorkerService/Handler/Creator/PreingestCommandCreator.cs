@@ -1,10 +1,13 @@
 ﻿using Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Command;
+using Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.CommandKey;
 
 using System;
 using System.Linq;
 using System.Net.Http;
 using System.Collections.Generic;
+
+using Newtonsoft.Json;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
 {
@@ -35,20 +38,116 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
             _executionCommand.Add(new DefaultKey(ValidationActionType.TransformationHandler), new XipCreateCommand(webapiUrl));
         }
 
-        public override IPreingestCommand FactoryMethod(Guid guid, HttpClient client)
+        public override IPreingestCommand FactoryMethod(Guid guid, dynamic data)
         {
-            bool mayContinue = false;
-            String nextActionName = String.Empty;
-           
-            //ToDO determine next scheduled action/task through getcollections
+            if (data == null)
+                return null;
 
+            Plan[] plans = data.scheduledPlan == null ? null : JsonConvert.DeserializeObject<Plan[]>(data.scheduledPlan.ToString());
+            Settings settings = data.settings == null ? null : JsonConvert.DeserializeObject<Settings>(data.settings.ToString());
+            PreingestAction[] actions = data.preingest == null ? null : JsonConvert.DeserializeObject<PreingestAction[]>(data.preingest.ToString());
 
-          
-            //if (mayContinue && !String.IsNullOrEmpty(nextActionName))
-            //{
-            //    IKey key = new DefaultKey(nextActionName);
-            //    return this._executionCommand.First(item => item.Key == key).Value;
-            //}
+            if (plans == null)
+                return null;
+
+            Queue<Plan> queue = new Queue<Plan>(plans);
+
+            Plan next = null;
+            Plan previous = null;
+            foreach(var item in queue.AsEnumerable())
+            {
+                //found one running (should not), just break it
+                if (item.Status == ExecutionStatus.Executing)
+                    break;
+
+                //found one done (previous), peek if null done else next
+                if (item.Status == ExecutionStatus.Done)
+                {
+                    previous = queue.Dequeue();
+                    Plan peek = queue.Peek();
+                    if (peek == null) //done just exit
+                        return null;
+
+                    if (peek.Status == ExecutionStatus.Pending)
+                    {
+                        next = queue.Dequeue();
+                        break;
+                    }
+                }
+                //found one pending, just fire next
+                if(item.Status == ExecutionStatus.Pending)                
+                    next = queue.Dequeue();                
+            }
+
+            if (next == null)
+            {
+                return null;
+            }
+
+            if (previous == null && next != null)
+            {
+                IKey key = new DefaultKey(next.ActionName);
+                if (!this._executionCommand.ContainsKey(key))
+                    return null;
+
+                IPreingestCommand command = this._executionCommand[key];
+                if (command != null)
+                {
+                    command.CurrentSettings = settings;
+                    command.CurrentSessionId = guid;
+                }
+                return command;
+            }
+
+            if (previous != null && next != null)
+            {
+                if (actions == null)
+                    return null;
+
+                var action = actions.Where(item => item.Name == previous.ActionName.ToString()).FirstOrDefault();
+                if (action == null)
+                    return null;
+
+                switch(action.ActionStatus)
+                {
+                    case "Error":
+                        if(previous.ContinueOnError)
+                        {
+                            IKey key = new DefaultKey(next.ActionName);
+                            if (!this._executionCommand.ContainsKey(key))
+                                return null;
+
+                            IPreingestCommand command = this._executionCommand[key];
+                            if (command != null)
+                            {
+                                command.CurrentSettings = settings;
+                                command.CurrentSessionId = guid;
+                            }
+                            return command;
+                        }
+                        break;
+                    case "Failed":
+                        if (previous.ContinueOnFailed)
+                        {
+                            IKey key = new DefaultKey( next.ActionName);
+                            if (!this._executionCommand.ContainsKey(key))
+                                return null;
+
+                            IPreingestCommand command = this._executionCommand[key];
+                            if (command != null)
+                            {
+                                command.CurrentSettings = settings;
+                                command.CurrentSessionId = guid;
+                            }                            
+                            return command;
+                        }
+                        break;
+                    case "Success":
+                        break;
+                    default:
+                        return null;
+                }
+            }
 
             return null;
         }

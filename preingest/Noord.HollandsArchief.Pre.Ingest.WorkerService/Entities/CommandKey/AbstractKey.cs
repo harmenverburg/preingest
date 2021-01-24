@@ -10,9 +10,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.CommandKey
     {
         public ValidationActionType Name { get; set; }
 
+        public bool Equals(IKey other)
+        {
+            return other != null && other.Name == this.Name;
+        }
+
         public override int GetHashCode()
         {
-            return this.Name.GetHashCode();
+            return this.Name.ToString().GetHashCode();
         }
     }
 }

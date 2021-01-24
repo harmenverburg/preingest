@@ -6,6 +6,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
     public interface ICommandCreator
     {
 
-        public IPreingestCommand FactoryMethod(Guid guid, HttpClient client);
+        public IPreingestCommand FactoryMethod(Guid guid, dynamic data);
     }
 }

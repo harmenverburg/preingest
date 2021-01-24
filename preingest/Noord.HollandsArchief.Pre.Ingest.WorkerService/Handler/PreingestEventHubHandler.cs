@@ -42,8 +42,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             Connection.Closed += Closed;
             Connection.Reconnected += Reconnected;
             Connection.Reconnecting += Reconnecting;
-            Connection.On<string>("RunNext", (guid) => RunNext(guid));
-            Connection.On<string>("StartWorker", (guid) => StartFirstOne(guid));
+            Connection.On<Guid, String>("CollectionStatus", (guid, jsonData) => RunNext(guid, jsonData));
 
             //using (var dbContext = new WorkerServiceContext())
                 //dbContext.Database.EnsureCreated();
@@ -79,45 +78,29 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             await Task.Delay(5000);
         }
 
-        private void RunNext(string guid)
+        private void RunNext(Guid guid, string jsonData)
         {
-            if (String.IsNullOrEmpty(guid))
-                return;
-
             CurrentLogger.LogInformation("Hub incoming message - {0}.", guid);
 
-            //EventMessage next = JsonConvert.DeserializeObject<EventMessage>(message);
-            //if (next.State != ActionStates.Completed || next.State != ActionStates.Failed)
-            //    return;
-
-            Guid parser = Guid.Empty;
-            bool isParsed = Guid.TryParse(guid, out parser);
-            if (!isParsed)
+            try
             {
-                CurrentLogger.LogInformation("Parsing GUID failed with incoming valie - {0}.", guid);
-                return;
+                dynamic data = JsonConvert.DeserializeObject<dynamic>(jsonData);
+                IPreingestCommand command = null;
+                command = Creator.FactoryMethod(guid, data);
+
+                if (command != null)
+                {
+                    using (HttpClient client = new HttpClient())
+                        command.Execute(client);
+                }
             }
-
-            IPreingestCommand command = null;
-            using (HttpClient client = new HttpClient())
-                command = Creator.FactoryMethod(parser, client);
-
-            if (command != null)
+            catch (Exception e)
             {
-                using (HttpClient client = new HttpClient())                
-                    command.Execute(client);                
+                CurrentLogger.LogInformation("An exception occurred with SessionId {0}.", guid);
+                CurrentLogger.LogInformation(e.Message);
+                CurrentLogger.LogInformation(e.StackTrace);
             }
-        }
-
-        private void StartFirstOne(string message)
-        {            
-            if (String.IsNullOrEmpty(message))
-                return;
-
-            CurrentLogger.LogInformation("Hub incoming message - {0}", message);
-
-            //ToDo actions
-
+            finally { }
         }
 
         public ILogger<Worker> CurrentLogger { get; set; }
