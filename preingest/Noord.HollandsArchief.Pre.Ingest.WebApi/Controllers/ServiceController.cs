@@ -50,7 +50,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             {
                 var currentArchive = _preingestCollection.GetCollection(guid);
 
-                if (currentArchive.ScheduledPlan == null) {
+                if (currentArchive.ScheduledPlan == null || currentArchive.ScheduledPlan.Length == 0) {
                     //save scheduled/execution plan in db
                     using (var context = new PreIngestStatusContext())
                     {

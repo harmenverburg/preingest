@@ -415,12 +415,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 using (var context = new PreIngestStatusContext())
                 {
                     var sessions = context.PreingestActionCollection.Where(item => item.FolderSessionId == folderSessionGuid).ToList();
-                    var statusus = context.ActionStateCollection.Where(item => sessions.Exists(exists => exists.ProcessId == item.ProcessId)).ToList();
-                    var messages = context.ActionStateMessageCollection.Where(item => statusus.Exists(exists => exists.StatusId == item.MessageId)).ToList();
+                    var statusesIds = sessions.Select(item => item.ProcessId).ToArray();
 
-                    context.RemoveRange(messages);
-                    context.RemoveRange(statusus);
-                    context.RemoveRange(sessions);
+                    var statusus = context.ActionStateCollection.Where(item => statusesIds.Contains(item.ProcessId)).ToList();
+                    var messagesIds = statusus.Select(item => item.StatusId).ToArray();
+
+                    var messages = context.ActionStateMessageCollection.Where(item => messagesIds.Contains(item.StatusId)).ToList();
+
+                    context.ActionStateMessageCollection.RemoveRange(messages);
+                    context.ActionStateCollection.RemoveRange(statusus);
+                    context.PreingestActionCollection.RemoveRange(sessions);
 
                     context.SavedChanges += (object sender, Microsoft.EntityFrameworkCore.SavedChangesEventArgs e) =>
                     {

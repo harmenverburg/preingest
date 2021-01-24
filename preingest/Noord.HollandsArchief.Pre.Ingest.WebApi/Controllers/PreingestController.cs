@@ -71,13 +71,17 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultValue.ToString() : PreingestActionResults.None.ToString();
                 string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary, settings) : String.Empty;
                 handler.UpdateProcessAction(handler.ActionProcessId, result, summary);
-                
-                //notify client update collections status
-                string collectionsData = JsonConvert.SerializeObject(_preingestCollection.GetCollections(), settings);
-                _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionsStatus), collectionsData).GetAwaiter().GetResult();
-                //notify client collection /{ guid} status
-                string collectionData = JsonConvert.SerializeObject(_preingestCollection.GetCollection(e.PreingestAction.Properties.SessionId), settings);
-                _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionStatus), e.PreingestAction.Properties.SessionId, collectionData).GetAwaiter().GetResult();    
+
+                var settingsHandler = (handler as SettingsHandler);
+                if (settingsHandler == null)//don;t trigger if is just saving settings
+                {
+                    //notify client update collections status
+                    string collectionsData = JsonConvert.SerializeObject(_preingestCollection.GetCollections(), settings);
+                    _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionsStatus), collectionsData).GetAwaiter().GetResult();
+                    //notify client collection /{ guid} status
+                    string collectionData = JsonConvert.SerializeObject(_preingestCollection.GetCollection(e.PreingestAction.Properties.SessionId), settings);
+                    _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionStatus), e.PreingestAction.Properties.SessionId, collectionData).GetAwaiter().GetResult();
+                }
             }
         }
 

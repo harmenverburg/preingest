@@ -54,8 +54,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
 
             Plan next = null;
             Plan previous = null;
-            foreach(var item in queue.AsEnumerable())
+            while(queue.Peek() != null)
             {
+                Plan item = queue.Peek();
                 //found one running (should not), just break it
                 if (item.Status == ExecutionStatus.Executing)
                     break;
@@ -64,9 +65,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
                 if (item.Status == ExecutionStatus.Done)
                 {
                     previous = queue.Dequeue();
-                    Plan peek = queue.Peek();
+                    Plan peek = queue.Count > 0 ? queue.Peek() : null;
+
                     if (peek == null) //done just exit
                         return null;
+
+                    if (peek.Status == ExecutionStatus.Done)                    
+                        continue;                    
 
                     if (peek.Status == ExecutionStatus.Pending)
                     {
@@ -75,8 +80,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
                     }
                 }
                 //found one pending, just fire next
-                if(item.Status == ExecutionStatus.Pending)                
-                    next = queue.Dequeue();                
+                if (item.Status == ExecutionStatus.Pending)
+                {
+                    next = queue.Dequeue();
+                    break;
+                }
             }
 
             if (next == null)
@@ -107,6 +115,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
                 var action = actions.Where(item => item.Name == previous.ActionName.ToString()).FirstOrDefault();
                 if (action == null)
                     return null;
+
 
                 switch(action.ActionStatus)
                 {
@@ -143,6 +152,19 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
                         }
                         break;
                     case "Success":
+                        {
+                            IKey key = new DefaultKey(next.ActionName);
+                            if (!this._executionCommand.ContainsKey(key))
+                                return null;
+
+                            IPreingestCommand command = this._executionCommand[key];
+                            if (command != null)
+                            {
+                                command.CurrentSettings = settings;
+                                command.CurrentSessionId = guid;
+                            }
+                            return command;
+                        }
                         break;
                     default:
                         return null;
