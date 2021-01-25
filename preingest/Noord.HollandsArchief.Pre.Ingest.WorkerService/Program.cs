@@ -30,9 +30,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService
                     var settings = appSettingsSection.Get<AppSettings>();
                     //create database instance
                     services.AddDbContext<WorkerServiceContext>(options => options.UseSqlite(hostContext.Configuration.GetConnectionString("Sqlite")));
-                                        
+
                     //create event hub
-                    services.Add(new ServiceDescriptor(typeof(PreingestEventHubHandler), new PreingestEventHubHandler(settings.EventHubUrl, settings.WebApiUrl)));                   
+                    services.Add(new ServiceDescriptor(typeof(AppSettings), settings));
+                    services.AddSingleton<PreingestEventHubHandler>();
+                    //services.Add(new ServiceDescriptor(typeof(PreingestEventHubHandler), new PreingestEventHubHandler(settings.EventHubUrl, settings.WebApiUrl)));                   
 
                 }).ConfigureAppConfiguration((hostingContext, config) =>
                  {

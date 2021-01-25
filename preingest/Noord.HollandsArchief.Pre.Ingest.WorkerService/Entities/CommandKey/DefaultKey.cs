@@ -12,5 +12,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.CommandKey
         {
             this.Name = name;
         }
+
+        public override string ToString()
+        {
+            return Name.ToString();
+        }
     }
 }

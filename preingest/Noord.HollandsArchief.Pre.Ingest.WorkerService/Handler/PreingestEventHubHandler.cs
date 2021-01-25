@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 using Noord.HollandsArchief.Pre.Ingest.WorkerService.Model;
 using Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.EventHub;
+using Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities;
 using Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
@@ -17,16 +18,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
     public class PreingestEventHubHandler : IDisposable
     {
         private HubConnection Connection { get; set; }
-
         private Uri WebApiUrl { get; set; }
+        protected ILogger<PreingestEventHubHandler> CurrentLogger { get; set; }
 
         private ICommandCreator Creator { get; set; }
-        public PreingestEventHubHandler(String eventHubUrl, String webApiUrl)
+        public PreingestEventHubHandler(ILogger<PreingestEventHubHandler> logger, AppSettings appSettings)
         {
-            WebApiUrl = new Uri(webApiUrl);
-            Init(eventHubUrl);
-
-            Creator = new PreingestCommandCreator(WebApiUrl);            
+            WebApiUrl = new Uri(appSettings.WebApiUrl);
+            Init(appSettings.EventHubUrl);
+            CurrentLogger = logger;
+            Creator = new PreingestCommandCreator(logger, WebApiUrl);            
         }
 
         private void Init(String url)
@@ -81,7 +82,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
         private void RunNext(Guid guid, string jsonData)
         {
             CurrentLogger.LogInformation("Hub incoming message - {0}.", guid);
-
             try
             {
                 dynamic data = JsonConvert.DeserializeObject<dynamic>(jsonData);
@@ -97,13 +97,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             catch (Exception e)
             {
                 CurrentLogger.LogInformation("An exception occurred with SessionId {0}.", guid);
-                CurrentLogger.LogInformation(e.Message);
-                CurrentLogger.LogInformation(e.StackTrace);
+                CurrentLogger.LogError(e, e.Message);
             }
             finally { }
         }
-
-        public ILogger<Worker> CurrentLogger { get; set; }
 
         public async Task<bool> Connect(CancellationToken token)
         {
