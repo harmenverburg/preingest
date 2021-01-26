@@ -76,15 +76,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
                 app.UseDeveloperExceptionPage();
             }
             else
-            {
-                //app.UseExceptionHandler("/Home/Error");
+            {                
                 app.UseHsts();
             }
 
             //app.UseHttpsRedirection();
             app.UseDefaultFiles(new DefaultFilesOptions
             {
-                DefaultFileNames = new List<string> { "index.html" }
+                DefaultFileNames = new List<string> { "events.html", "collection.html", "collections.html" }
             });
 
             app.UseStaticFiles();

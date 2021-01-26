@@ -18,6 +18,11 @@ services:
     build:
       context: ./preingest
       dockerfile: Noord.HollandsArchief.Pre.Ingest.WebApi/Dockerfile
+  workerservice:
+    # image: "nhapreingest/noordhollandsarchiefpreingestworkerservice:development"
+    build:
+      context: ./preingest
+      dockerfile: Noord.HollandsArchief.Pre.Ingest.WorkerService/Dockerfile      
   frontend:
     # image: "noordhollandsarchief/preingest-frontend:development"
     build:

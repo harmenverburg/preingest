@@ -18,7 +18,7 @@
     <script src="/lib/jquery/dist/jquery.min.js"></script>
     <script src="/js/signalr/signalr.min.js"></script>
     <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/site.js" asp-append-version="true"></script>
+    <script src="/js/site.js"></script>
     <div class="container-fluid">
         <main role="main" class="pb-0">
             <div class="text-left">
@@ -30,8 +30,8 @@
                         .withUrl("/preingestEventHub/")
                         .build();
 
-                    connection.on("SendNoticeEventToClient", function (message) {
-                        $("#events").prepend("<li>" + message + "</li>");
+                    connection.on("CollectionStatus", function (guid, jsonData) {
+                        $("#events").prepend("<li> <b>" + guid + "</b> : " + jsonData + "</li>");
                     });
 
                     connection.start().catch(function (err) {
