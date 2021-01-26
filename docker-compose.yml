@@ -8,7 +8,6 @@ services:
     container_name: "clamav"
     volumes:
         - "${DATAFOLDER}:/data"
-        - "${ETCFOLDER}:/data/etc"
     expose :
         - "3310"        
     networks :
@@ -31,8 +30,7 @@ services:
     image: "noordhollandsarchief/droidvalidationwebapi:development"
     container_name: "droid"
     volumes:
-        - "${DATAFOLDER}:/data" 
-        - "${ETCFOLDER}:/data/etc"
+        - "${DATAFOLDER}:/data"
     expose:
         - "8080"
     environment:
@@ -43,8 +41,7 @@ services:
     image: "nhapreingest/noordhollandsarchiefpreingestwebapi:development"
     container_name: "Noord.HollandsArchief.Pre.Ingest.WebApi"
     volumes:
-        - "${DATAFOLDER}:/data"  
-        - "${ETCFOLDER}:/data/etc"
+        - "${DATAFOLDER}:/data"
     expose:
         - "80"
     # Only (temporarily) mapped here for direct debugging access to the API's HTTP endpoints
