@@ -11,14 +11,15 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
+using Noord.HollandsArchief.Pre.Ingest.Utilities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Model;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Status;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.EventHub;
-using Noord.HollandsArchief.Pre.Ingest.Utilities;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -29,12 +30,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         private readonly ILogger<StatusController> _logger;
         private AppSettings _settings = null;
         private readonly IHubContext<PreingestEventHub> _eventHub;
+        private readonly CollectionHandler _preingestCollection = null;
 
-        public StatusController(ILogger<StatusController> logger, IOptions<AppSettings> settings, IHubContext<PreingestEventHub> eventHub)
+        public StatusController(ILogger<StatusController> logger, IOptions<AppSettings> settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection)
         {
             _logger = logger;
             _settings = settings.Value;
             _eventHub = eventHub;
+            _preingestCollection = preingestCollection;
         }
 
         [HttpGet("action/{actionGuid}", Name = "Retrieve an action from a preingest session", Order = 0)]
@@ -125,7 +128,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         }
          
         [HttpPost("new/{folderSessionGuid}", Name = "Add an action", Order = 3)]
-        public IActionResult AddProcessAction(Guid folderSessionGuid, [FromBody] ActionFormBody data)
+        public IActionResult AddProcessAction(Guid folderSessionGuid, [FromBody] BodyNewAction data)
         {
             if (folderSessionGuid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
@@ -173,7 +176,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         }
 
         [HttpPut("update/{actionGuid}", Name = "Update an action status and summary", Order = 4)]
-        public IActionResult UpdateProcessAction(Guid actionGuid, [FromBody] ActionUpdateBody data)
+        public IActionResult UpdateProcessAction(Guid actionGuid, [FromBody] BodyUpdate data)
         {
             if (actionGuid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
@@ -247,7 +250,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         }
 
         [HttpPost("failed/{actionGuid}", Name = "Add a failed status", Order = 7)]
-        public IActionResult AddFailedState(Guid actionGuid, [FromBody] ActionMessageBody failMessage)
+        public IActionResult AddFailedState(Guid actionGuid, [FromBody] BodyMessage failMessage)
         {
             if (actionGuid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
@@ -278,7 +281,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         }
 
         [HttpPost("notify", Name = "Notify the client about an event", Order = 11)]
-        public IActionResult SendNotification([FromBody] ActionEventMessageBody message)
+        public IActionResult SendNotification([FromBody] BodyEventMessageBody message)
         {
             if (message == null)
                 return Problem("POST body JSON object is null!");
@@ -296,20 +299,26 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             object state = null;
             bool parse = Enum.TryParse(typeof(PreingestActionStates), message.State, out state);
-           if (!parse)
+            if (!parse)
                 return Problem("Parsing state failed!");
 
+            //trigger full events
             _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
                 JsonConvert.SerializeObject(new EventHubMessage
                 {
                     EventDateTime = message.EventDateTime,
                     SessionId = message.SessionId,
                     Name = message.Name,
-                    State = (PreingestActionStates) state,
+                    State = (PreingestActionStates)state,
                     Message = message.Message,
-                    Summary = message.HasSummary ? new PreingestStatisticsSummary { Accepted = message.Accepted, Processed = message.Processed, Rejected = message.Rejected, Start = message.Start.Value, End = message.End.Value  } : null
-                }, settings)).GetAwaiter().GetResult();
+                    Summary = message.HasSummary ? new PreingestStatisticsSummary { Accepted = message.Accepted, Processed = message.Processed, Rejected = message.Rejected, Start = message.Start.Value, End = message.End.Value } : null
+                }, settings)).GetAwaiter().GetResult();            
 
+            if ((PreingestActionStates)state == PreingestActionStates.Failed || (PreingestActionStates)state == PreingestActionStates.Completed)
+            {
+                string collectionData = JsonConvert.SerializeObject(_preingestCollection.GetCollection(message.SessionId), settings);
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionStatus), message.SessionId, collectionData).GetAwaiter().GetResult();
+            }
             return Ok();
         }
 
@@ -406,12 +415,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 using (var context = new PreIngestStatusContext())
                 {
                     var sessions = context.PreingestActionCollection.Where(item => item.FolderSessionId == folderSessionGuid).ToList();
-                    var statusus = context.ActionStateCollection.Where(item => sessions.Exists(exists => exists.ProcessId == item.ProcessId)).ToList();
-                    var messages = context.ActionStateMessageCollection.Where(item => statusus.Exists(exists => exists.StatusId == item.MessageId)).ToList();
+                    var statusesIds = sessions.Select(item => item.ProcessId).ToArray();
 
-                    context.RemoveRange(messages);
-                    context.RemoveRange(statusus);
-                    context.RemoveRange(sessions);
+                    var statusus = context.ActionStateCollection.Where(item => statusesIds.Contains(item.ProcessId)).ToList();
+                    var messagesIds = statusus.Select(item => item.StatusId).ToArray();
+
+                    var messages = context.ActionStateMessageCollection.Where(item => messagesIds.Contains(item.StatusId)).ToList();
+
+                    context.ActionStateMessageCollection.RemoveRange(messages);
+                    context.ActionStateCollection.RemoveRange(statusus);
+                    context.PreingestActionCollection.RemoveRange(sessions);
 
                     context.SavedChanges += (object sender, Microsoft.EntityFrameworkCore.SavedChangesEventArgs e) =>
                     {

@@ -14,7 +14,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure
     public abstract class Sidecar : ISidecar, IDisposable
     {
         private Guid _internalId = Guid.Empty;
-        private List<SidecarException> _exception = null;
+        private readonly List<SidecarException> _exception = null;
 
         public Sidecar(String name, String path, ISidecar parent, bool loadOnScan = false)
         {
@@ -171,7 +171,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure
         {
             string xsd = "ToPX-2.3_2.xsd";
 
-            var exePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
+            var exePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             Regex appPathMatcher = new Regex(@"(?<!fil)[A-Za-z]:\\+[\S\s]*?(?=\\+bin)");
             var appRoot = appPathMatcher.Match(exePath).Value;
 

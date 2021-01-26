@@ -20,12 +20,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Output
         None = -1
     }
 
-    public class ContainerStatusRuleHandler
+    public class ContainerOverallStatusHandler
     {
-        private ContainerStatus _status = ContainerStatus.None;
-        public ContainerStatusRuleHandler(IEnumerable<QueryResultAction> actions)
+        private readonly ContainerStatus _status = ContainerStatus.None;
+        public ContainerOverallStatusHandler(IEnumerable<QueryResultAction> actions)
         {
-            if (_status == ContainerStatus.None && actions.Count() == 0)
+            if (_status == ContainerStatus.None && actions.ToList().Count == 0)
             {
                 _status = ContainerStatus.New;
             }

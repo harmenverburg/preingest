@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 using Microsoft.EntityFrameworkCore;
 
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
@@ -46,6 +48,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
             services.AddDbContext<Model.PreIngestStatusContext>(options => options.UseSqlite(Configuration.GetConnectionString("Sqlite")));
 
             services.AddSingleton<PreingestEventHub>();
+            services.AddSingleton<CollectionHandler>();
 
             services.Add(new ServiceDescriptor(typeof(HealthCheckHandler), new HealthCheckHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(ContainerChecksumHandler), new ContainerChecksumHandler(settings)));
@@ -60,7 +63,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
             services.Add(new ServiceDescriptor(typeof(TransformationHandler), new TransformationHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(SipCreatorHandler), new SipCreatorHandler(settings)));
             services.Add(new ServiceDescriptor(typeof(ExcelCreatorHandler), new ExcelCreatorHandler(settings)));
-
+            services.Add(new ServiceDescriptor(typeof(SettingsHandler), new SettingsHandler(settings)));
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen();
         }
@@ -73,15 +76,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
                 app.UseDeveloperExceptionPage();
             }
             else
-            {
-                //app.UseExceptionHandler("/Home/Error");
+            {                
                 app.UseHsts();
             }
 
             //app.UseHttpsRedirection();
             app.UseDefaultFiles(new DefaultFilesOptions
             {
-                DefaultFileNames = new List<string> { "index.html" }
+                DefaultFileNames = new List<string> { "events.html", "collection.html", "collections.html" }
             });
 
             app.UseStaticFiles();

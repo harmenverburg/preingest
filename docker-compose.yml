@@ -8,7 +8,6 @@ services:
     container_name: "clamav"
     volumes:
         - "${DATAFOLDER}:/data"
-        - "${ETCFOLDER}:/data/etc"
     expose :
         - "3310"        
     networks :
@@ -31,8 +30,7 @@ services:
     image: "noordhollandsarchief/droidvalidationwebapi:development"
     container_name: "droid"
     volumes:
-        - "${DATAFOLDER}:/data" 
-        - "${ETCFOLDER}:/data/etc"
+        - "${DATAFOLDER}:/data"
     expose:
         - "8080"
     environment:
@@ -43,19 +41,29 @@ services:
     image: "nhapreingest/noordhollandsarchiefpreingestwebapi:development"
     container_name: "Noord.HollandsArchief.Pre.Ingest.WebApi"
     volumes:
-        - "${DATAFOLDER}:/data"  
-        - "${ETCFOLDER}:/data/etc"
+        - "${DATAFOLDER}:/data"
     expose:
         - "80"
     # Only (temporarily) mapped here for direct debugging access to the API's HTTP endpoints
     ports:
       - "8000:80"
+    env_file:
+        - "preingest_webapi.env"  
     networks :
         - preingest-network          
     depends_on:
       - droid
       - clamav
-      - xslweb 
+      - xslweb
+  workerservice:
+    image: "nhapreingest/noordhollandsarchiefpreingestworkerservice:development"
+    container_name: "Noord.HollandsArchief.Pre.Ingest.WorkerService"
+    env_file:
+        - "preingest_workerservice.env"
+    networks :
+        - preingest-network          
+    depends_on:
+      - preingest    
   frontend:
     image: "noordhollandsarchief/preingest-frontend:development"
     container_name: "preingest-frontend"

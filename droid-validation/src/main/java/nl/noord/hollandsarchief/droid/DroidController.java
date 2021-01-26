@@ -4,7 +4,7 @@ import nl.noord.hollandsarchief.droid.entities.NewActionResult;
 import nl.noord.hollandsarchief.droid.entities.StatusResult;
 import nl.noord.hollandsarchief.droid.handlers.ExportingHandler;
 import nl.noord.hollandsarchief.droid.handlers.ProfilesHandler;
-import nl.noord.hollandsarchief.droid.handlers.ReportingHandler;
+import nl.noord.hollandsarchief.droid.handlers.ReportingDroidXmlHandler;
 import nl.noord.hollandsarchief.droid.handlers.SignatureHandler;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,7 +53,7 @@ public class DroidController
   
   @GetMapping({"/reporting/pdf/{guid}"})
   public StatusResult reportingPdf(@PathVariable String guid) {
-    ReportingHandler handler = new ReportingHandler(guid);
+    ReportingDroidXmlHandler handler = new ReportingDroidXmlHandler(guid);
     
     if (!handler.existsArchiveFolder()) {
       return new StatusResult("Archive folder not found!", false, null);
@@ -62,14 +62,14 @@ public class DroidController
       return new StatusResult("Droid folder not found!", false, null);
     }
     
-    NewActionResult result = handler.doPdf();
+    NewActionResult result = handler.execute();
     String actionId = result!=null ? result.processId : null;
     return new StatusResult("Generating results.", true, actionId);
   }
   
   @GetMapping({"/reporting/droid/{guid}"})
   public StatusResult reportingDroid(@PathVariable String guid) {
-    ReportingHandler handler = new ReportingHandler(guid);
+    ReportingDroidXmlHandler handler = new ReportingDroidXmlHandler(guid);
     
     if (!handler.existsArchiveFolder()) {
       return new StatusResult("Archive folder not found!", false, null);
@@ -78,14 +78,14 @@ public class DroidController
       return new StatusResult("Droid folder not found!", false, null);
     }
     
-    NewActionResult result = handler.doDroid();
+    NewActionResult result = handler.execute();
     String actionId = result!=null ? result.processId : null;
     return new StatusResult("Generating results.", true, actionId);
   }
   
   @GetMapping({"/reporting/planets/{guid}"})
   public StatusResult reportingPlanets(@PathVariable String guid) {
-    ReportingHandler handler = new ReportingHandler(guid);
+    ReportingDroidXmlHandler handler = new ReportingDroidXmlHandler(guid);
     
     if (!handler.existsArchiveFolder()) {
       return new StatusResult("Archive folder not found!", false, null);
@@ -94,7 +94,7 @@ public class DroidController
       return new StatusResult("Droid folder not found!", false, null);
     }
     
-    NewActionResult result = handler.doPlanets();
+    NewActionResult result = handler.execute();
     String actionId = result!=null ? result.processId : null;
     return new StatusResult("Generating results.", true, actionId);
   }

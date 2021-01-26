@@ -53,10 +53,23 @@ The Docker images expect the folders `/data` and `/data/etc` to be mapped to som
 
 ### OpenAPI (formerly Swagger)
 
-The [OpenAPI specification](/data/etc/swagger/swagger.json) for use in, e.g., Swagger UI or Postman is maintained
-manually. When using `docker-compose.yml`, this internal API can be accessed from `localhost:8000`, like
-<http://localhost:8000/api/preingest/check> to see the API's health status.
+When using `docker-compose.yml`, the internal API can be accessed from `localhost:8000`, like
+<http://localhost:8000/api/preingest/check> to see the API's health status. An OpenAPI specification is available at
+<http://localhost:8000/swagger/v1/swagger.json>, and a built-in Swagger UI at <http://localhost:8000/swagger>.
 
+### Preingest database location 
+
+Database file will be stored (default) in `/data/preingest.db`. Location can be changed by supplying a `environment` parameter in de docker-compose.yml under the preingest service. 
+Example:
+`environment:`
+        `- "ConnectionStrings:Sqlite=Data Source=/{folder}/{name}"`
+
+### SignalR/WebSocket
+
+Three script samples are available for receiving status update/events:
+- http://localhost:8000/events.html
+- http://localhost:8000/collections.html
+- http://localhost:8000/collection.html
 
 ## Troubleshooting
 

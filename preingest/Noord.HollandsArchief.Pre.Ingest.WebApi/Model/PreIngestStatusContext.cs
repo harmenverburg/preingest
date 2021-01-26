@@ -10,6 +10,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Model
         public DbSet<ActionStates> ActionStateCollection { get; set; }
         public DbSet<PreingestAction> PreingestActionCollection { get; set; }
         public DbSet<StateMessage> ActionStateMessageCollection { get; set; }
+        public DbSet<ExecutionPlan> ExecutionPlanCollection { get; set; }
 
         public PreIngestStatusContext() : base() { }
 
@@ -20,7 +21,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Model
         {
             modelBuilder.Entity<PreingestAction>().ToTable("Actions");
             modelBuilder.Entity<ActionStates>().ToTable("States");
-            modelBuilder.Entity<StateMessage>().ToTable("Messages"); 
+            modelBuilder.Entity<StateMessage>().ToTable("Messages");
+            modelBuilder.Entity<ExecutionPlan>().ToTable("Plan");
+            modelBuilder.Entity<ExecutionPlan>().Property(e => e.RecordId).ValueGeneratedOnAdd();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
