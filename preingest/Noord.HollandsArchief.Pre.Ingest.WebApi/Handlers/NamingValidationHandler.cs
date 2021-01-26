@@ -117,7 +117,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         private bool ContainsAnyDOSNames(string testName)
         {
-            Regex containsAnyDOSNames = new Regex("^(PRN|AUX|NUL|CON|COM[0-9]|LPT[0-9]|(\\.+)$)", RegexOptions.IgnoreCase);
+            Regex containsAnyDOSNames = new Regex("^(PRN|AUX|NUL|CON|COM[0-9]|LPT[0-9]|(\\.+))$", RegexOptions.IgnoreCase);
             return (containsAnyDOSNames.IsMatch(testName));
         }
     }

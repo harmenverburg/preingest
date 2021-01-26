@@ -47,18 +47,17 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     stream = EncodingHelper.GetEncodingByStream(file);
                     xml = EncodingHelper.GetXmlEncoding(File.ReadAllText(file));
 
-                    isUtf8Bom = (bom.EncodingName.ToUpperInvariant().Contains("UTF-8") || bom.EncodingName.ToUpperInvariant().Contains("UTF8"));
+                    if (bom != null)
+                        isUtf8Bom = (bom.EncodingName.ToUpperInvariant().Contains("UTF-8") || bom.EncodingName.ToUpperInvariant().Contains("UTF8"));
+
                     isUtf8Stream = (stream.EncodingName.ToUpperInvariant().Contains("UTF-8") || stream.EncodingName.ToUpperInvariant().Contains("UTF8"));
                     isUtf8Xml = (xml.ToUpperInvariant().Equals("UTF-8") || xml.ToUpperInvariant().Equals("UTF8"));
 
                     data.Add(new EncodingItem
                     {
-                        IsUtf8 = (isUtf8Bom && isUtf8Stream && isUtf8Xml),
+                        IsUtf8 = (bom != null) ? (isUtf8Bom && isUtf8Stream && isUtf8Xml) : (isUtf8Stream && isUtf8Xml),
                         MetadataFile = file,
-                        Description = String.Format("Byte Order Mark : {0}, Stream : {1}, XML : {2}",
-                    (bom != null) ? bom.EncodingName : "Byte Order Mark niet gevonden",
-                    (stream != null) ? stream.EncodingName : "In stream niet gevonden",
-                    String.IsNullOrEmpty(xml) ? "In XML niet gevonden" : xml)
+                        Description = String.Format("Byte Order Mark : {0}, Stream : {1}, XML : {2}", (bom != null) ? bom.EncodingName : "Byte Order Mark niet gevonden", (stream != null) ? stream.EncodingName : "In stream niet gevonden", String.IsNullOrEmpty(xml) ? "In XML niet gevonden" : xml)
                     });
 
                     OnTrigger(new PreingestEventArgs { Description = String.Format("Running encoding check on '{0}'", file), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
