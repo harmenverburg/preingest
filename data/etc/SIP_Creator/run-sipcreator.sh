@@ -20,7 +20,7 @@ fi
 
 mkdir "$OUTPUTFOLDER"
 
-export LOGFILE=$OUTPUTFOLDER/$OUTPUTFOLDER_BASE.log
+export LOGFILE=$OUTPUTFOLDER/../$OUTPUTFOLDER_BASE.log
 export ACTIONGUID=""
 
 shopt -s extglob
@@ -81,7 +81,7 @@ function doIt {
     # Let op: -excludedFileNames kan nuttig zijn, maar ondersteunt geen wildcards.
     
     # N.B. -ignoreparent is verwijderd omdat de klacht komt dat "Files are not allowed in the parent folder when not including the parent folder as a DU and not creating a DU per file"
-    
+
     if [ -z "$PRESERVICA_REFERENCE" ]
     then
         "$WHEREAMI/createsip" \
@@ -103,9 +103,10 @@ function doIt {
     fi
     
     cd "$OUTPUTFOLDER"
-    zip -r "$OUTPUTFOLDER/$OUTPUTFOLDER_BASE.zip" !(*.log)
-    
-    rm -Rf !(*.zip|*.log)
+    zip -r "$OUTPUTFOLDER/../$OUTPUTFOLDER_BASE.zip" !(*.log)
+    cd ..
+    rm -Rf "$OUTPUTFOLDER"
+
     # Inform the API that we completed the action with this id:
     echo Send $PREINGEST_WEBAPI/api/status/completed/$ACTIONGUID
     curl -s -S -X POST -H "Content-Type: application/json" --data '{}' "$PREINGEST_WEBAPI/api/status/completed/$ACTIONGUID"    
