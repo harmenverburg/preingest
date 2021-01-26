@@ -29,6 +29,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.Utilities
                 memorySide = ms.ToArray();
             }
 
+            Encoding encodingResult = null;
+
             //compare content
             bool result = stringSide.SequenceEqual(memorySide);
             if (result)//the same then there is no BOM
@@ -36,70 +38,42 @@ namespace Noord.HollandsArchief.Pre.Ingest.Utilities
                 //there is no BOM
                 stringSide = null;
                 memorySide = null;
-                return null;
+                return encodingResult;
             }
 
-            var bom = memorySide.Take(3).ToArray();
-
             byte[] utf8 = Encoding.UTF8.GetPreamble();
+            byte[] bom = memorySide.Take(utf8.Length).ToArray();            
             bool isUtf8 = utf8.SequenceEqual(bom);
             if (isUtf8)
             {
-                stringSide = null;
-                memorySide = null;
-                bom = null;
-                return Encoding.UTF8;
+                encodingResult = Encoding.UTF8;
             }
-
-            //maybe there is a different BOM            
-            if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76)
+            else
             {
-                stringSide = null;
-                memorySide = null;
-                bom = null;
-                return Encoding.UTF7;
+                //byte[] latin = Encoding.Latin1.GetPreamble();
+                //bom = memorySide.Take(latin.Length).ToArray();
+                //bool isLatin = latin.SequenceEqual(bom);
+                //if (isLatin)
+                //    encodingResult = Encoding.Latin1;
+                //maybe there is a different BOM            
+                if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76)
+                    encodingResult = Encoding.UTF7;
+                if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf)
+                    encodingResult = Encoding.UTF8;
+                if (bom[0] == 0xff && bom[1] == 0xfe && bom[2] == 0 && bom[3] == 0)
+                    encodingResult = Encoding.UTF32; //UTF-32LE            
+                if (bom[0] == 0xff && bom[1] == 0xfe)
+                    encodingResult = Encoding.Unicode; //UTF-16LE            
+                if (bom[0] == 0xfe && bom[1] == 0xff)
+                    encodingResult = Encoding.BigEndianUnicode; //UTF-16BE            
+                if (bom[0] == 0 && bom[1] == 0 && bom[2] == 0xfe && bom[3] == 0xff)
+                    encodingResult = new UTF32Encoding(true, true);  //UTF-32BE
             }
-            if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf)
-            {
-                stringSide = null;
-                memorySide = null;
-                bom = null;
-                return Encoding.UTF8;
-            }
-            if (bom[0] == 0xff && bom[1] == 0xfe && bom[2] == 0 && bom[3] == 0)
-            {
-                stringSide = null;
-                memorySide = null;
-                bom = null;
-                return Encoding.UTF32; //UTF-32LE
-            }
-            if (bom[0] == 0xff && bom[1] == 0xfe)
-            {
-                stringSide = null;
-                memorySide = null;
-                bom = null;
-                return Encoding.Unicode; //UTF-16LE
-            }
-            if (bom[0] == 0xfe && bom[1] == 0xff)
-            {
-                stringSide = null;
-                memorySide = null;
-                bom = null;
-                return Encoding.BigEndianUnicode; //UTF-16BE
-            }
-            if (bom[0] == 0 && bom[1] == 0 && bom[2] == 0xfe && bom[3] == 0xff)
-            {
-                stringSide = null;
-                memorySide = null;
-                bom = null;
-                return new UTF32Encoding(true, true);  //UTF-32BE
-            }
-
             stringSide = null;
             memorySide = null;
             bom = null;
             //hard to detect the BOM type
-            return null;
+            return encodingResult;
         }
 
         public static Encoding GetEncodingByStream(string filename)
