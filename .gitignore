@@ -1,44 +1,27 @@
 
 xslweb-jdk8-webservices-docker/xslweb-source/xslweb
 
-xslweb-jdk8-frontend-docker/xslweb-source/xslweb
-
-data/testfiles/
-
-data/etc/SIP_Creator/
+nha/SIP_Creator/
 
 clamav-docker/test-urls.txt
-
-*.tar
-
-clamav-docker/up.sh
 
 xslweb-jdk8-webservices-docker/up.sh
 
 xslweb-jdk8-frontend-docker/up.sh
 
-data/etc/xslwebfrontend/home/webapps/examples/
+nha/xslwebfrontend/home/webapps/examples/
 
-up.sh
+nha/xslwebfrontend/home/.cache/
 
-test-urls.txt
+nha/xslweb/home/.cache/
 
-data/etc/xslwebfrontend/home/.cache/
-
-data/etc/xslweb/home/.cache/
-
-data/etc/tomcatfrontend/logs/
-
-data/etc/tomcat/logs/
-
-klad.yml
-
-up-8000.sh
-
-up-55004.sh
+nha/xslweb/home/webapps/excelreport/static/excel/excelreport.orig.xlsx
 
 docker-compose-poort.yml
 
-data/etc/preingest.db
+nha/tomcat/
 
-data/etc/xslweb/home/webapps/excelreport/static/excel/excelreport.orig.xlsx
+test-urls.txt
+
+
+*.bak

@@ -7,7 +7,7 @@
     </encoder>
   </appender>
   
-  <appender name="global" class="ch.qos.logback.core.rolling.RollingFileAppender">    
+  <!--<appender name="global" class="ch.qos.logback.core.rolling.RollingFileAppender">    
     <Append>true</Append>
     <File>${xslweb.home}/logs/xslweb.log</File>
     <encoder>
@@ -20,9 +20,9 @@
     <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
       <MaxFileSize>10MB</MaxFileSize>
     </triggeringPolicy>
-  </appender>
+  </appender>-->
   
-  <appender name="pipeline" class="ch.qos.logback.core.rolling.RollingFileAppender">    
+  <!--<appender name="pipeline" class="ch.qos.logback.core.rolling.RollingFileAppender">    
     <Append>true</Append>
     <File>${xslweb.home}/logs/pipeline.log</File>
     <encoder>
@@ -35,10 +35,11 @@
     <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
       <MaxFileSize>10MB</MaxFileSize>
     </triggeringPolicy>
-  </appender>
+  </appender>-->
   
   <logger name="nl.armatiek.xslweb.web.servlet" level="DEBUG" additivity="false">
-    <appender-ref ref="pipeline"/>
+    <!--<appender-ref ref="pipeline"/>-->
+    <appender-ref ref="console"/>
   </logger>
   
   <!--
@@ -53,7 +54,7 @@
   
   <root level="INFO">
     <appender-ref ref="console"/>
-    <appender-ref ref="global"/>
+    <!--<appender-ref ref="global"/>-->
   </root>
   
 </configuration>

@@ -14,7 +14,7 @@
     
     <xsl:template match="/">
         <xsl:variable name="reluri" as="xs:string" select="substring-after(/*/req:path, '/')"/>
-        
+        <xsl:message select="'DOE: ' || $data-uri-prefix || encode-for-uri($reluri)"></xsl:message>
         <xsl:copy-of select="doc($data-uri-prefix || encode-for-uri($reluri))"/>
     </xsl:template>
 </xsl:stylesheet>
