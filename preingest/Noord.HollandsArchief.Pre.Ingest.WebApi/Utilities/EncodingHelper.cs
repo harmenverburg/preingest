@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace Noord.HollandsArchief.Pre.Ingest.Utilities
 {
@@ -12,24 +13,67 @@ namespace Noord.HollandsArchief.Pre.Ingest.Utilities
     {
         public static Encoding GetEncodingByBom(string filename)
         {
-            // Read the BOM
-            var bom = new byte[4];
-            using (var file = new FileStream(filename, FileMode.Open, FileAccess.Read))
+            //into as a string
+            var xmlStr = XDocument.Load(filename).ToString();    
+            
+            byte[] stringSide = Encoding.UTF8.GetBytes(xmlStr);
+            byte[] memorySide = null;
+            
+            //into as a memory
+            using (MemoryStream ms = new MemoryStream())
             {
-                file.Read(bom, 0, 4);
+                using (FileStream source = File.Open(filename, FileMode.Open))
+                {
+                    source.CopyTo(ms);
+                }
+                memorySide = ms.ToArray();
             }
 
-            // Analyze the BOM
-            if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76) return Encoding.UTF7;
-            if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf) return Encoding.UTF8;
-            if (bom[0] == 0xff && bom[1] == 0xfe && bom[2] == 0 && bom[3] == 0) return Encoding.UTF32; //UTF-32LE
-            if (bom[0] == 0xff && bom[1] == 0xfe) return Encoding.Unicode; //UTF-16LE
-            if (bom[0] == 0xfe && bom[1] == 0xff) return Encoding.BigEndianUnicode; //UTF-16BE
-            if (bom[0] == 0 && bom[1] == 0 && bom[2] == 0xfe && bom[3] == 0xff) return new UTF32Encoding(true, true);  //UTF-32BE
+            Encoding encodingResult = null;
 
-            // We actually have no idea what the encoding is if we reach this point, so
-            // you may wish to return null instead of defaulting to ASCII
-            return Encoding.ASCII;
+            //compare content
+            bool result = stringSide.SequenceEqual(memorySide);
+            if (result)//the same then there is no BOM
+            {
+                //there is no BOM
+                stringSide = null;
+                memorySide = null;
+                return encodingResult;
+            }
+
+            byte[] utf8 = Encoding.UTF8.GetPreamble();
+            byte[] bom = memorySide.Take(utf8.Length).ToArray();            
+            bool isUtf8 = utf8.SequenceEqual(bom);
+            if (isUtf8)
+            {
+                encodingResult = Encoding.UTF8;
+            }
+            else
+            {
+                //byte[] latin = Encoding.Latin1.GetPreamble();
+                //bom = memorySide.Take(latin.Length).ToArray();
+                //bool isLatin = latin.SequenceEqual(bom);
+                //if (isLatin)
+                //    encodingResult = Encoding.Latin1;
+                //maybe there is a different BOM            
+                if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76)
+                    encodingResult = Encoding.UTF7;
+                if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf)
+                    encodingResult = Encoding.UTF8;
+                if (bom[0] == 0xff && bom[1] == 0xfe && bom[2] == 0 && bom[3] == 0)
+                    encodingResult = Encoding.UTF32; //UTF-32LE            
+                if (bom[0] == 0xff && bom[1] == 0xfe)
+                    encodingResult = Encoding.Unicode; //UTF-16LE            
+                if (bom[0] == 0xfe && bom[1] == 0xff)
+                    encodingResult = Encoding.BigEndianUnicode; //UTF-16BE            
+                if (bom[0] == 0 && bom[1] == 0 && bom[2] == 0xfe && bom[3] == 0xff)
+                    encodingResult = new UTF32Encoding(true, true);  //UTF-32BE
+            }
+            stringSide = null;
+            memorySide = null;
+            bom = null;
+            //hard to detect the BOM type
+            return encodingResult;
         }
 
         public static Encoding GetEncodingByStream(string filename)
