@@ -1,7 +1,6 @@
-Het ontwikkelen/testen van de XSLWeb-applicaties doe je in de folder nhapreingest/etc/xslweb/home/webapps/.
+Het ontwikkelen/testen van de XSLWeb-applicaties doe je in de folder nhapreingest/nha/xslweb/home/webapps/.
 
-Het docker-image verwijst naar deze etc-folder op de host met de folder /data/etc (/data is een mount in het image). Zorg dus dat de etc-folder
-hier overeenkomt met die waar docker naar kijkt.
+Het docker-image bevat een kopie van deze folder (dus van nha/xslweb).
 
 Als je niet het docker-image met XSLWeb gebruikt, moet je XSLWeb zelf installeren. Ik doe dat door het zelf te downloaden en te compileren. Dat gaat zo:
 
@@ -20,5 +19,5 @@ CATALINA_OPTS=CATALINA_OPTS="-Dxslweb.home=/pad/naar/xslweb/home"
 
 Voor setenv.bat gebruik je natuurlijk % % in plaats van een $.
 
-Tenslotte plaats je in de folder xslweb/home/webapps soft links naar de webappliatiefolders in nhapreingest/etc/xslweb/home/webapps/.
+Tenslotte plaats je, nog steeds bij het ontwikkelen, in de folder xslweb/home/webapps soft links naar de webapplicatiefolders in nhapreingest/etc/xslweb/home/webapps/.
 Of je maakt een kopie van die folders.

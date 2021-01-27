@@ -28,14 +28,14 @@
       <value>file:/home/pieter/noord-hollandsarchief/data/</value>
     </parameter>
     <parameter name="sipcreator-folder-devmode" type="xs:string">
-      <value>/home/pieter/noord-hollandsarchief/nha-develop/nhapreingest/etc/SIP_Creator/</value>
+      <value>/home/pieter/noord-hollandsarchief/nha-develop/nhapreingest/nha/SIP_Creator/</value>
     </parameter>
     <parameter name="sipcreator-folder" type="xs:string">
-      <value>/data/etc/SIP_Creator</value>
+      <value>/nha/SIP_Creator</value>
     </parameter>
     <parameter name="sipcreator-shellscript" type="xs:string">
-      <!-- Verwijzing naar het script dat de sipcreator aanroept en het resultaat zipt. Relatief t.o.v. sipcreator-folder -->
-      <value>run-sipcreator.sh</value>
+      <!-- Verwijzing naar het script dat de sipcreator aanroept en het resultaat zipt. Relatief t.o.v. de folder van deze webapp -->
+      <value>scripts/run-sipcreator.sh</value>
     </parameter>
   </parameters>
 </webapp>

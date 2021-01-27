@@ -1,0 +1,54 @@
+#!/bin/bash
+# This is an adapted copy of the Preservica-supplied script "createsip". It comes bundled with
+# the SIP Creator software for Linux.
+
+# Important modifications are:
+# 1. The extra parameter (parameter 1) that supplies the path of the Preservica-supplied folder with the
+#    SIP Creator software for Linux. After that, all parameters are identical to those of Preservica
+#    (parameter 1 is ignored by shifting forward). They are passed directly to the Java invocation of the
+#    SIP Creator.
+# 2. The way the script deals with paths.
+# 3. The trap command (giving an error status upon failure) 
+
+# Wrapper for the SIP Creator Command Line Interface (CLI)
+
+trap "echo EXIT >&2; exit 66" err
+
+START_DIR=$1
+shift
+
+if [ -z "$JAVA_HOME" ]
+then
+    echo "ERROR: omgevingsvariabele JAVA_HOME is niet gedefinieerd (niet hoger instellen dan jdk1.8!)." >&2
+    exit 1
+fi
+
+SAVE_DIR=`pwd`
+cd "$START_DIR"
+
+# Check if the library has been unpacked already
+if [ ! -d "library" ]
+then
+    echo Preparing SIP Creator library for first use >&2
+    LIBRARY_JAR=`ls plugins/com.tessella.sdb.core.xip.gui_*.jar`
+    if [ $? -ne 0 ]
+    then
+        echo ERROR: Failed to locate the SIP Creator library >&2
+        exit 1
+    fi
+    LIBRARY_JAR=`basename $LIBRARY_JAR`
+    mkdir library
+    mkdir library/tmp
+    cp plugins/$LIBRARY_JAR library/tmp
+    cd library/tmp
+    jar xf $LIBRARY_JAR
+    cp lib/dist/*.jar "${START_DIR}"/library
+    cd "${START_DIR}"
+    rm -rf library/tmp
+fi
+
+cd "$SAVE_DIR"
+
+# Call the SIP Creator CLI
+$JAVA_HOME/bin/java -Xms512m -Xmx1G -cp "${START_DIR}/library/*" com.tessella.sdb.core.xip.builder.SIPCreatorImpl "$@"
+

@@ -8,32 +8,34 @@ A collection of tools for validation and transformation, to support transferring
 
 ## Development
 
-The Docker images expect the folders `/data` and `/data/etc` to be mapped to some folder outside the containers.
+All Docker images expect the folders `/data`, `/nha/SIP_Creator` and `/nha/tomcat-logs` to be mapped to some outside folder. 
 
 :warning: Docker does not support symbolic links (unless they're supposed to map to folders inside the containers).
 
-- Make the location of the incoming archives known in the environment variable `DATAFOLDER`, and point `ETCFOLDER` to
-  [`data/etc` in this very project](./data/etc). For example:
+- Make the location of the incoming archives known in environment variables such as `DATAFOLDER`. For example:
   
   - Create a `.env` file in the root of this project, holding lines like:
   
     ```text
     DATAFOLDER=/path/to/data
-    ETCFOLDER=/path/to/project/preingest/data/etc
+    SIPCREATORFOLDER=/path/to/SIP_Creator
+    TOMCATLOGFOLDER=/path/to/tomcat-logs
     ```
 
   - or:
     
     ```text
     export DATAFOLDER=/path/to/data
-    export ETCFOLDER=/path/to/projects/preingest/data/etc
+    export SIPCREATORFOLDER=/path/to/SIP_Creator
+    export TOMCATLOGFOLDER=/path/to/tomcat-logs
     ```
 
   - or:
     
     ```text
     set DATAFOLDER=D:\path\to\data
-    set ETCFOLDER=D:\path\to\projects\preingest\data\etc
+    set SIPCREATORFOLDER=D:\path\to\SIP_Creator
+    set TOMCATLOGFOLDER=D:\path\to\tomcat-logs
     ```
 
 - To run all Docker containers, pulling the development images if needed, run:

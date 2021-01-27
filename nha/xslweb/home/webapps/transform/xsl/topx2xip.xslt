@@ -9,6 +9,7 @@
     xmlns:topx="http://www.nationaalarchief.nl/ToPX/v2.3"
     xmlns:xip="http://www.tessella.com/XIP/v4"
     xmlns:saxon="http://saxon.sf.net/"
+    xpath-default-namespace="http://www.tessella.com/XIP/v4"
     default-mode="topx2xip"
     expand-text="yes"
     version="3.0">

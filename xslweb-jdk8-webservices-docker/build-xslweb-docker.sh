@@ -2,6 +2,13 @@
 
 WHEREAMI=$(dirname $(realpath $0))
 XSLWEB_SRC=$WHEREAMI/xslweb-source/xslweb
+
+if [ -d "$WHEREAMI/../nha/xslweb/home/.cache" ]
+then
+    echo Please remove the folder $WHEREAMI/../nha/xslweb/home/.cache before running this script.
+    exit 1
+fi
+
 cd "$XSLWEB_SRC"
 
 # Uncomment dit als je XSLWeb moet hercompileren
@@ -19,6 +26,7 @@ WAR_FILE=`find target -name '*.war'`
 
 # Docker wil alle files in de folder hebben met de dockerfile:
 cp "$WAR_FILE" "$WHEREAMI/xslweb.war"
+cp -R "$WHEREAMI/../nha/xslweb" "$WHEREAMI"
 cp `which zip` "$WHEREAMI"
 
 cd "$WHEREAMI"
@@ -26,4 +34,5 @@ cd "$WHEREAMI"
 docker build --tag noordhollandsarchief/xslweb:development .
 
 rm "$WHEREAMI"/xslweb.war
+rm -Rf "$WHEREAMI/xslweb"
 rm "$WHEREAMI"/zip

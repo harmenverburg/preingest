@@ -1,17 +1,18 @@
 #!/bin/bash
 
-if [ -z "$2" ]
+if [ -z "$3" ]
 then
     # Impossible to call moanAndDie: output directory has not yet been defined.
-    echo "$0 vereist 1. een input-directory met een archiefstructuur, 2. de guid (corresponderend met de verwerkingsfolder), 3. optioneel Preservica-reference". >&2
+    echo "$0 requires 1. the path to the Preservica-supplied SIP Creator folder 2. an input folder with an archival structure, 3. a guid (corresponding with the session folder), 4. an optional Preservica reference". >&2
     exit 1
 fi
 
-INPUTFOLDER=$1
+SIPCREATOR_FOLDER=$1
+INPUTFOLDER=$2
 OUTPUTFOLDER_BASE=sipresult
 OUTPUTFOLDER=$INPUTFOLDER/../$OUTPUTFOLDER_BASE
-GUID=$2
-PRESERVICA_REFERENCE=$3
+GUID=$3
+PRESERVICA_REFERENCE=$4
 
 if [ -d "$OUTPUTFOLDER" ]
 then
@@ -84,7 +85,8 @@ function doIt {
 
     if [ -z "$PRESERVICA_REFERENCE" ]
     then
-        "$WHEREAMI/createsip" \
+        "$WHEREAMI/nha-createsip" \
+            "$SIPCREATOR_FOLDER" \
             -input "$INPUTFOLDER" \
             -status NEW \
             -securitytag open \
@@ -92,7 +94,8 @@ function doIt {
             -export \
             -output "$OUTPUTFOLDER"
     else
-        "$WHEREAMI/createsip" \
+        "$WHEREAMI/nha-createsip" \
+            "$SIPCREATOR_FOLDER" \
             -input "$INPUTFOLDER" \
             -status SAME \
             -colref "$PRESERVICA_REFERENCE" \
@@ -117,5 +120,5 @@ cd "$INPUTFOLDER"
 # Start the main function and pass its pid - $! - to disown sothat it will continue after this main script has exited..
 # Note: disown is much like nohup, except that nohup requires the command to be a file and disown doesn't (there  are other differences, though):
 
-doIt $1 $2 >"$LOGFILE" 2>&1 &
+doIt "$INPUTFOLDER" "$GUID" >"$LOGFILE" 2>&1 &
 disown $!
