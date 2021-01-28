@@ -25,3 +25,5 @@ test-urls.txt
 
 
 *.bak
+
+docker-compose-pieter.yml

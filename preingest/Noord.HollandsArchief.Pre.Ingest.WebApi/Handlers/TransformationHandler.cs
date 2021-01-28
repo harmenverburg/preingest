@@ -66,6 +66,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                                 if (File.Exists(file))
                                     File.Delete(file);
 
+                                //welcome new metadata
+                                File.Move(String.Concat(file, ".xip"), String.Concat(file), true);
+
                                 transformation.Add(new TransformationItem { IsTranformed = true, MetadataFilename = file, RequestUri = requestUri, ErrorMessage = new string[0] });
                             }
                         }
