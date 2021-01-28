@@ -92,7 +92,8 @@ function doIt {
             -securitytag open \
             -sha512 \
             -export \
-            -output "$OUTPUTFOLDER"
+            -output "$OUTPUTFOLDER" \
+            -singledu
     else
         "$WHEREAMI/nha-createsip" \
             "$SIPCREATOR_FOLDER" \
@@ -102,7 +103,8 @@ function doIt {
             -securitytag open \
             -sha512 \
             -export \
-            -output "$OUTPUTFOLDER"
+            -output "$OUTPUTFOLDER" \
+            -singledu
     fi
     
     cd "$OUTPUTFOLDER"
