@@ -104,9 +104,16 @@ function doIt {
             -export \
             -output "$OUTPUTFOLDER"
     fi
-    
+
     cd "$OUTPUTFOLDER"
-    zip -r "$OUTPUTFOLDER/../$OUTPUTFOLDER_BASE.zip" !(*.log)
+    OUTPUTZIP=$OUTPUTFOLDER/../$OUTPUTFOLDER_BASE.zip
+    echo "Creating zip file $OUTPUTZIP"
+    
+    if [ -f "$OUTPUTZIP" ]
+    then
+      rm -f "$OUTPUTZIP"
+    fi
+    zip -r "$OUTPUTZIP" !(*.log)
     cd ..
     rm -Rf "$OUTPUTFOLDER"
 

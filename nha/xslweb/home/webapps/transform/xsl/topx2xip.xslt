@@ -7,9 +7,9 @@
     xmlns:config="http://www.armatiek.com/xslweb/configuration"
     xmlns:nha="http://noord-hollandsarchief.nl/namespaces/1.0"
     xmlns:topx="http://www.nationaalarchief.nl/ToPX/v2.3"
-    xmlns:xip="http://www.tessella.com/XIP/v4"
     xmlns:saxon="http://saxon.sf.net/"
     xmlns="http://www.tessella.com/XIP/v4"
+    exclude-result-prefixes="#all"
     default-mode="topx2xip"
     expand-text="yes"
     version="3.0">
