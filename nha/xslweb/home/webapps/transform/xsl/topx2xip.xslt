@@ -155,11 +155,12 @@
     </xsl:template>
     
     <xsl:template match="topx:algoritme">
+        <xsl:variable name="adjusted-text" as="xs:string" select="text() => upper-case() => translate('-', '')"/>
         <xsl:choose>
-            <xsl:when test="text() eq 'MD5'">1</xsl:when>
-            <xsl:when test="text() eq 'SHA1'">2</xsl:when>
-            <xsl:when test="text() eq 'SHA256'">3</xsl:when>
-            <xsl:when test="text() eq 'SHA512'">4</xsl:when>
+            <xsl:when test="$adjusted-text eq 'MD5'">1</xsl:when>
+            <xsl:when test="$adjusted-text eq 'SHA1'">2</xsl:when>
+            <xsl:when test="$adjusted-text eq 'SHA256'">3</xsl:when>
+            <xsl:when test="$adjusted-text eq 'SHA512'">4</xsl:when>
             
             <!-- TODO wat bij onbekend? -->
             <xsl:otherwise>{.}</xsl:otherwise>
