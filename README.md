@@ -8,7 +8,8 @@ A collection of tools for validation and transformation, to support transferring
 
 ## Development
 
-All Docker images expect the folders `/data`, `/nha/SIP_Creator` and `/nha/tomcat-logs` to be mapped to some outside folder. 
+Some Docker images expect folders like `/data`, `/nha/SIP_Creator` and `/nha/tomcat-logs` to be mapped to some folder
+on the Docker host.
 
 :warning: Docker does not support symbolic links (unless they're supposed to map to folders inside the containers).
 
@@ -76,3 +77,6 @@ Three script samples are available for receiving status update/events:
 ## Troubleshooting
 
 - `clamav exited with code 137` and `/bootstrap.sh: line 35: 15 Killed clamd`: increase the memory for the Docker host
+
+- `Preparing SIP Creator library for first use` followed by `ls: cannot access 'plugins/com.tessella.sdb.core.xip.gui_*.jar':
+  No such file or directory`: ensure there are no spaces in the path of `SIPCREATORFOLDER`

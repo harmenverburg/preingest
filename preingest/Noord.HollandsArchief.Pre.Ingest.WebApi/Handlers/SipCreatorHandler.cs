@@ -17,9 +17,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
     {
         public SipCreatorHandler(AppSettings settings) : base(settings)  {  }
 
-        private String GetProcessingUrl(string servername, string port, string folder)
+        private String GetProcessingUrl(string servername, string port, Guid folderSessionId, string folder)
         {
-            return String.Format(@"http://{0}:{1}/sipcreator/{2}", servername, port, folder);
+            return String.Format(@"http://{0}:{1}/sipcreator/{2}/{3}", servername, port, folderSessionId, folder);
         }
 
         public override void Execute()
@@ -32,7 +32,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             }
             Logger.LogInformation("Sip Creator : Gevonden map '{0}'.", archive.Name);
            
-            string requestUri = GetProcessingUrl(ApplicationSettings.XslWebServerName, ApplicationSettings.XslWebServerPort, archive.Name);
+            string requestUri = GetProcessingUrl(ApplicationSettings.XslWebServerName, ApplicationSettings.XslWebServerPort, SessionGuid, archive.Name);
             WebRequest request = WebRequest.Create(requestUri);
 
             bool statusCodeOk = false;
@@ -44,7 +44,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             }
 
             if(!statusCodeOk)
-                throw new ApplicationException(String.Format("XSLWeb SIP Creator request '{0}' didn't returned HTTP status code OK/200!", requestUri));
+                throw new ApplicationException(String.Format("XSLWeb SIP Creator request '{0}' didn't return HTTP status code OK/200!", requestUri));
         }
     }
 }
