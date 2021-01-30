@@ -48,10 +48,16 @@ services:
     # Only (temporarily) mapped here for direct debugging access to the API's HTTP endpoints
     ports:
       - "8000:80"
-    env_file:
-        - "preingest_webapi.env"  
-    networks :
-        - preingest-network          
+    environment:
+      - AppSettings:DataFolderName=/data
+      - AppSettings:ClamServerPort=3310
+      - AppSettings:ClamServerNameOrIp=clamav
+      - AppSettings:XslWebServerName=xslweb
+      - AppSettings:XslWebServerPort=8080
+      - AppSettings:DroidServerName=droid
+      - AppSettings:DroidServerPort=8080
+    networks:
+      - preingest-network
     depends_on:
       - droid
       - clamav
@@ -59,10 +65,11 @@ services:
   workerservice:
     image: "nhapreingest/noordhollandsarchiefpreingestworkerservice:development"
     container_name: "Noord.HollandsArchief.Pre.Ingest.WorkerService"
-    env_file:
-        - "preingest_workerservice.env"
-    networks :
-        - preingest-network          
+    environment:
+      - AppSettings:EventHubUrl=http://Noord.HollandsArchief.Pre.Ingest.WebApi/preingestEventHub/
+      - AppSettings:WebApiUrl=http://Noord.HollandsArchief.Pre.Ingest.WebApi/
+    networks:
+      - preingest-network
     depends_on:
       - preingest    
   frontend:
