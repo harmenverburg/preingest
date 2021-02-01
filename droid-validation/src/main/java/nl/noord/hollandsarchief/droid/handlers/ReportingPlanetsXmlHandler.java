@@ -28,13 +28,13 @@ public class ReportingPlanetsXmlHandler extends CommandHandler {
         try {
             if (command.length > 0) {
                 BodyAction jsonData = new BodyAction();
-                jsonData.name = ReportingDroidXmlHandler.class.getSimpleName() + " - Planets XML report";
+                jsonData.name = ReportingPlanetsXmlHandler.class.getSimpleName();
                 jsonData.description = String.join(" ", command);
                 jsonData.result = "DroidValidationHandler.planets.xml";
 
                 result = this.registerNewAction(this._guid, jsonData);
                 String processId = result != null ? result.processId : null;
-                runSeperateThread(ReportingDroidXmlHandler.class.getSimpleName(), processId, this._guid, command);
+                runSeperateThread(ReportingPlanetsXmlHandler.class.getSimpleName(), processId, this._guid, command);
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();

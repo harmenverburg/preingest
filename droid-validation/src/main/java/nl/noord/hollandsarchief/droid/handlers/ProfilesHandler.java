@@ -41,7 +41,7 @@ public class ProfilesHandler extends CommandHandler {
       try {
         if (command.length > 0) {
           BodyAction jsonData = new BodyAction();
-          jsonData.name = ProfilesHandler.class.getSimpleName() + " - Droid Profiling";
+          jsonData.name = ProfilesHandler.class.getSimpleName();
           jsonData.description = String.join(" ", command);
           jsonData.result = "DroidValidationHandler.droid";
 

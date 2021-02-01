@@ -28,13 +28,13 @@ public class ReportingPdfHandler extends CommandHandler {
         try {
             if (command.length > 0) {
                 BodyAction jsonData = new BodyAction();
-                jsonData.name = ReportingDroidXmlHandler.class.getSimpleName() + " - Droid PDF report";
+                jsonData.name = ReportingPdfHandler.class.getSimpleName();
                 jsonData.description = String.join(" ", command);
                 jsonData.result = "DroidValidationHandler.pdf";
 
                 result = this.registerNewAction(this._guid, jsonData);
                 String processId = result != null ? result.processId : null;
-                runSeperateThread(ReportingDroidXmlHandler.class.getSimpleName(), processId, this._guid, command);
+                runSeperateThread(ReportingPdfHandler.class.getSimpleName(), processId, this._guid, command);
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();

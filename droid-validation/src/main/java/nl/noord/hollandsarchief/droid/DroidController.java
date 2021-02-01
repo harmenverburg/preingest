@@ -5,6 +5,8 @@ import nl.noord.hollandsarchief.droid.entities.StatusResult;
 import nl.noord.hollandsarchief.droid.handlers.ExportingHandler;
 import nl.noord.hollandsarchief.droid.handlers.ProfilesHandler;
 import nl.noord.hollandsarchief.droid.handlers.ReportingDroidXmlHandler;
+import nl.noord.hollandsarchief.droid.handlers.ReportingPdfHandler;
+import nl.noord.hollandsarchief.droid.handlers.ReportingPlanetsXmlHandler;
 import nl.noord.hollandsarchief.droid.handlers.SignatureHandler;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,7 +55,7 @@ public class DroidController
   
   @GetMapping({"/reporting/pdf/{guid}"})
   public StatusResult reportingPdf(@PathVariable String guid) {
-    ReportingDroidXmlHandler handler = new ReportingDroidXmlHandler(guid);
+    ReportingPdfHandler handler = new ReportingPdfHandler(guid);
     
     if (!handler.existsArchiveFolder()) {
       return new StatusResult("Archive folder not found!", false, null);
@@ -85,7 +87,7 @@ public class DroidController
   
   @GetMapping({"/reporting/planets/{guid}"})
   public StatusResult reportingPlanets(@PathVariable String guid) {
-    ReportingDroidXmlHandler handler = new ReportingDroidXmlHandler(guid);
+    ReportingPlanetsXmlHandler handler = new ReportingPlanetsXmlHandler(guid);
     
     if (!handler.existsArchiveFolder()) {
       return new StatusResult("Archive folder not found!", false, null);

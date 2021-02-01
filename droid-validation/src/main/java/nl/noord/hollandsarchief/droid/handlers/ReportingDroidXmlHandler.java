@@ -28,7 +28,7 @@ public class ReportingDroidXmlHandler extends CommandHandler {
     try {
       if (command.length > 0) {
         BodyAction jsonData = new BodyAction();
-        jsonData.name = ReportingDroidXmlHandler.class.getSimpleName() + " - Droid XML report";
+        jsonData.name = ReportingDroidXmlHandler.class.getSimpleName();
         jsonData.description = String.join(" ", command);
         jsonData.result = "DroidValidationHandler.droid.xml";
 

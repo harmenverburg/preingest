@@ -30,7 +30,7 @@ public class ExportingHandler extends CommandHandler {
     try {
       if (command.length > 0) {
         BodyAction jsonData = new BodyAction();
-        jsonData.name =  ExportingHandler.class.getSimpleName() + " - Droid CSV report";
+        jsonData.name =  ExportingHandler.class.getSimpleName();
         jsonData.description = String.join(" ", command);
         jsonData.result = "DroidValidationHandler.csv";
 
