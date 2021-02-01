@@ -421,10 +421,17 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     var messagesIds = statusus.Select(item => item.StatusId).ToArray();
 
                     var messages = context.ActionStateMessageCollection.Where(item => messagesIds.Contains(item.StatusId)).ToList();
+                    
+                    var scheduledPlan = context.ExecutionPlanCollection.Where(item => item.SessionId == folderSessionGuid).ToArray();
 
+                    //remove any exeception messages
                     context.ActionStateMessageCollection.RemoveRange(messages);
+                    //remove (actions) statusus
                     context.ActionStateCollection.RemoveRange(statusus);
+                    //remove (folder session) actions
                     context.PreingestActionCollection.RemoveRange(sessions);
+                    //remove plan                    
+                    context.ExecutionPlanCollection.RemoveRange(scheduledPlan);
 
                     context.SavedChanges += (object sender, Microsoft.EntityFrameworkCore.SavedChangesEventArgs e) =>
                     {
