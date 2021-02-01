@@ -37,8 +37,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace);
-                return ValidationProblem(String.Format("An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace));
+                _logger.LogError(e, "An exception was thrown : {0}, '{1}'.", e.Message, e.StackTrace);
+                return ValidationProblem(String.Format("An exception was thrown : {0}, '{1}'.", e.Message, e.StackTrace));
             }
             finally
             {
@@ -70,8 +70,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace);
-                return ValidationProblem(String.Format("An exception is throwned : {0}, '{1}'.", e.Message, e.StackTrace));
+                _logger.LogError(e, "An exception was thrown : {0}, '{1}'.", e.Message, e.StackTrace);
+                return ValidationProblem(String.Format("An exception was thrown : {0}, '{1}'.", e.Message, e.StackTrace));
             }
             finally
             {

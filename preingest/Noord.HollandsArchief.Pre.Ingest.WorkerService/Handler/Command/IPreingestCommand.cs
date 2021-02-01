@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Net.Http;
+
+using Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.CommandKey;
 using Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.EventHub;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
 {
     public interface IPreingestCommand
     {
-        public Guid CurrentSessionId { get; set; }
-        public Settings CurrentSettings { get; set; }
-        public void Execute(HttpClient client);
+        public ValidationActionType ActionTypeName { get; }
+        public void Execute(HttpClient client, Guid currentFolderSessionId);
+        public void Execute(HttpClient client, Guid currentFolderSessionId, Settings settings);
     }
 }

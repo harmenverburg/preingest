@@ -164,7 +164,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e )
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(ContainerChecksumHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(ContainerChecksumHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(ContainerChecksumHandler).Name);
             }
 
@@ -212,7 +212,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch(Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(UnpackTarHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(UnpackTarHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(UnpackTarHandler).Name);
             }
 
@@ -260,7 +260,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(ScanVirusValidationHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(ScanVirusValidationHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(ScanVirusValidationHandler).Name);
             }
 
@@ -309,7 +309,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(NamingValidationHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(NamingValidationHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(NamingValidationHandler).Name);
             }
 
@@ -358,7 +358,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(SidecarValidationHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(SidecarValidationHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(SidecarValidationHandler).Name);
             }
             _logger.LogInformation("Exit Sidecar.");
@@ -392,7 +392,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(DroidValidationHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(DroidValidationHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(DroidValidationHandler).Name);
             }
 
@@ -427,7 +427,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(DroidValidationHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(DroidValidationHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(DroidValidationHandler).Name);
             }
 
@@ -478,7 +478,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(DroidValidationHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(DroidValidationHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(DroidValidationHandler).Name);
             }
 
@@ -504,7 +504,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(DroidValidationHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(DroidValidationHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(DroidValidationHandler).Name);
             }
 
@@ -554,7 +554,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(GreenListHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(GreenListHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(GreenListHandler).Name);
             }
             _logger.LogInformation("Exit GreenListCheck.");
@@ -602,7 +602,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(EncodingHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(EncodingHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(EncodingHandler).Name);
             }
             _logger.LogInformation("Exit EncodingCheck.");
@@ -649,7 +649,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(MetadataValidationHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(MetadataValidationHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(MetadataValidationHandler).Name);
             }
             _logger.LogInformation("Exit ValidateMetadata.");
@@ -696,7 +696,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(TransformationHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(TransformationHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(TransformationHandler).Name);
             }
             _logger.LogInformation("Exit TransformXip.");
@@ -727,7 +727,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(SipCreatorHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(SipCreatorHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(SipCreatorHandler).Name);
             }
 
@@ -774,7 +774,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(ExcelCreatorHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(ExcelCreatorHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(ExcelCreatorHandler).Name);
             }
 
@@ -822,7 +822,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", typeof(SettingsHandler).Name, e.Message);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(SettingsHandler).Name, e.Message);
                 return ValidationProblem(e.Message, typeof(SettingsHandler).Name);
             }
 

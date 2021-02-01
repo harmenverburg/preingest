@@ -82,24 +82,34 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
         private void RunNext(Guid guid, string jsonData)
         {
             CurrentLogger.LogInformation("Hub incoming message - {0}.", guid);
-            try
+            Task.Run(() =>
             {
-                dynamic data = JsonConvert.DeserializeObject<dynamic>(jsonData);
-                IPreingestCommand command = null;
-                command = Creator.FactoryMethod(guid, data);
-
-                if (command != null)
+                try
                 {
-                    using (HttpClient client = new HttpClient())
-                        command.Execute(client);
+                    dynamic data = JsonConvert.DeserializeObject<dynamic>(jsonData);
+                    IPreingestCommand command = null;
+                    command = Creator.FactoryMethod(guid, data);
+
+                    if (command != null)
+                    {
+                        Settings settings = data.settings == null ? null : JsonConvert.DeserializeObject<Settings>(data.settings.ToString());
+
+                        using (HttpClient client = new HttpClient())
+                        {
+                            if (settings == null)
+                                command.Execute(client, guid);
+                            else
+                                command.Execute(client, guid, settings);
+                        }
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                CurrentLogger.LogInformation("An exception occurred with SessionId {0}.", guid);
-                CurrentLogger.LogError(e, e.Message);
-            }
-            finally { }
+                catch (Exception e)
+                {
+                    CurrentLogger.LogInformation("An exception occurred with SessionId {0}.", guid);
+                    CurrentLogger.LogError(e, e.Message);
+                }
+                finally { }
+            });
         }
 
         public async Task<bool> Connect(CancellationToken token)

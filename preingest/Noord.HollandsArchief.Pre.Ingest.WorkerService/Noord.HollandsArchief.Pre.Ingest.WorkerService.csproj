@@ -12,6 +12,7 @@
     <None Remove="Entities\CommandKey\DefaultKey.cs~RF10d5e38b.TMP" />
     <None Remove="Entities\CommandKey\DroidReportingKey.cs~RF2ee6d6.TMP" />
     <None Remove="Handler\AbstractPreingestCommand.cs~RFab265a9.TMP" />
+    <None Remove="Handler\Command\DroidCsvExportingCommand.cs~RF1df28322.TMP" />
     <None Remove="Handler\Command\DroidPlanetsReportingCommand.cs~RF151576.TMP" />
     <None Remove="Handler\Command\XipCreateCommand.cs~RF2426c2.TMP" />
     <None Remove="Handler\Creator\PreingestCommandCreator.cs~RFab86d6c.TMP" />

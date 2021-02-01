@@ -139,7 +139,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 {
                     context.SaveChanges();
                 }
-                catch (Exception e) { _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", e.Message, e.StackTrace); }
+                catch (Exception e) { _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", e.Message, e.StackTrace); }
                 finally { }
             }
             return processId;
@@ -161,7 +161,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     {
                         context.SaveChanges();
                     }
-                    catch (Exception e) { _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", e.Message, e.StackTrace); }
+                    catch (Exception e) { _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", e.Message, e.StackTrace); }
                     finally { }
                 }
             }
@@ -179,7 +179,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     {
                         context.SaveChanges();
                     }
-                    catch (Exception e) { _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", e.Message, e.StackTrace); }
+                    catch (Exception e) { _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", e.Message, e.StackTrace); }
                     finally { }
                 }
             }
@@ -198,7 +198,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     {
                         context.SaveChanges();
                     }
-                    catch (Exception e) { _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", e.Message, e.StackTrace); }
+                    catch (Exception e) { _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", e.Message, e.StackTrace); }
                     finally { }
                 }
             }
@@ -233,7 +233,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
                         context.SaveChanges();
                     }
-                    catch (Exception e) { _logger.LogError(e, "An exception is throwned in {0}: '{1}'.", e.Message, e.StackTrace); }
+                    catch (Exception e) { _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", e.Message, e.StackTrace); }
                     finally { }
                 }
             }

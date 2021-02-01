@@ -47,7 +47,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
             }
 
             Plan[] plans = data.scheduledPlan == null ? null : JsonConvert.DeserializeObject<Plan[]>(data.scheduledPlan.ToString());
-            Settings settings = data.settings == null ? null : JsonConvert.DeserializeObject<Settings>(data.settings.ToString());
             PreingestAction[] actions = data.preingest == null ? null : JsonConvert.DeserializeObject<PreingestAction[]>(data.preingest.ToString());
 
             if (plans == null)
@@ -112,8 +111,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
                 }
 
                 IPreingestCommand command = this._executionCommand[key];
-                command.CurrentSettings = settings;
-                command.CurrentSessionId = guid;
                 return command;
             }
 
@@ -167,8 +164,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
                 if (isOk2Run)
                 {
                     IPreingestCommand command = this._executionCommand[key];
-                    command.CurrentSettings = settings;
-                    command.CurrentSessionId = guid;
                     return command;
                 }
             }
