@@ -142,6 +142,14 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             if (!exists)
                 throw new FileNotFoundException(String.Format("No tar container file found with GUID {0}!", guid));
 
+            var tar = tarArchives.FirstOrDefault(tar => ChecksumHelper.GeneratePreingestGuid(tar.Name) == guid);
+            if (tar == null)            
+                throw new FileNotFoundException(String.Format("Tar with guid {0} returns null!", guid));            
+
+            var workingDir = Path.Combine(directory.FullName, ChecksumHelper.GeneratePreingestGuid(tar.Name).ToString());
+            if (!Directory.Exists(workingDir))
+                directory.CreateSubdirectory(ChecksumHelper.GeneratePreingestGuid(tar.Name).ToString());              
+
             List<JoinedQueryResult> currentActions = new List<JoinedQueryResult>();
             List<ExecutionPlan> executionPlan = new List<ExecutionPlan>();
 
