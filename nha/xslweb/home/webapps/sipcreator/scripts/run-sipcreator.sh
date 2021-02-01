@@ -1,5 +1,4 @@
 #!/bin/bash
-
 if [ -z "$3" ]
 then
     # Impossible to call moanAndDie: output directory has not yet been defined.
@@ -9,6 +8,7 @@ fi
 
 SIPCREATOR_FOLDER=$1
 INPUTFOLDER=$2
+INPUTFOLDER_BASE=$(basename "$INPUTFOLDER")
 OUTPUTFOLDER_BASE=sipresult
 OUTPUTFOLDER=$INPUTFOLDER/../$OUTPUTFOLDER_BASE
 GUID=$3
@@ -27,6 +27,8 @@ export ACTIONGUID=""
 shopt -s extglob
 
 function moanAndDie() {
+   echo "SIP creation terminated with an error"
+    
    if [ -n "$1" ]
    then
        message=$1
@@ -34,7 +36,7 @@ function moanAndDie() {
        message="An unknown error occurred"
    fi
    
-   echo "$message" >>$LOGFILE
+   echo "$message"
    
    if [ -n "$ACTIONGUID" ]
    then
@@ -59,17 +61,22 @@ fi
 
 if [ -z "$PREINGEST_WEBAPI" ]
 then
-    moanAndDie "$0: environment variable PREINGEST_WEBAPI is niet gedefinieerd".
+    moanAndDie "$0: environment variable PREINGEST_WEBAPI is niet gedefinieerd". >>$LOGFILE
 fi
 
+function timestamp {
+    date "+%Y-%m-%dT%H:%M:%S.%N%:z"
+}
+
 function doIt {
+    STARTTIME=`timestamp`
     # Obtain an actionGuid:
     # Sample result from /api/status/new: {"processId":"0b046a2d-26d7-406c-b832-d28b5d136114","folderSessionId":"0ee4629b-3394-6986-b859-430c0256ecd1","name":"SipCreatorHandler","description":"Create a preservica SIP file","creation":"2021-01-06T13:51:09.047071+00:00","resultFiles":"myfile.zip","status":null}
     # grep filters out the part "processId":"0b046a2d-26d7-406c-b832-d28b5d136114"
     # sed removes everything but the action guid (processId), even without quotes: 0b046a2d-26d7-406c-b832-d28b5d136114
     echo Retrieve actionguid using $PREINGEST_WEBAPI/api/status/new/$GUID
-    resultfile=$OUTPUTFOLDER_BASE/$OUTPUTFOLDER_BASE.zip
-    json="{ \"name\": \"SipCreatorHandler\", \"description\": \"Create a preservica SIP file\", \"result\": \"$resultfile\" }"
+    OUTPUTZIP=$OUTPUTFOLDER/../$INPUTFOLDER_BASE.sip.zip
+    json="{ \"name\": \"SipCreatorHandler\", \"description\": \"Create a preservica SIP file\", \"result\": \"$OUTPUTZIP\" }"
     ACTIONGUID=$(curl -s -S -X POST -H "Content-Type: application/json" --data "$json" "$PREINGEST_WEBAPI/api/status/new/$GUID" | \
                  grep -o '"processId":"[^\"]*"' | \
                  sed -e 's/^.*: *"\([^\"]*\)"$/\1/')
@@ -82,6 +89,8 @@ function doIt {
     # Let op: -excludedFileNames kan nuttig zijn, maar ondersteunt geen wildcards.
     
     # N.B. -ignoreparent is verwijderd omdat de klacht komt dat "Files are not allowed in the parent folder when not including the parent folder as a DU and not creating a DU per file"
+
+    echo "Creating zip file $OUTPUTZIP"
 
     if [ -z "$PRESERVICA_REFERENCE" ]
     then
@@ -106,16 +115,42 @@ function doIt {
     fi
 
     cd "$OUTPUTFOLDER"
-    OUTPUTZIP=$OUTPUTFOLDER/../$OUTPUTFOLDER_BASE.zip
-    echo "Creating zip file $OUTPUTZIP"
     
     if [ -f "$OUTPUTZIP" ]
     then
       rm -f "$OUTPUTZIP"
     fi
-    zip -r "$OUTPUTZIP" !(*.log)
+
+    zip -r -q "$OUTPUTZIP" !(*.log)
+
+    ENDTIME=`timestamp`
+
+    if [ -s "$OUTPUTZIP" ]
+    then
+       OUTPUTZIP_CREATED=1
+       
+       #summary="{ \"processed\":1, \"accepted\":1, \"rejected\":0, \"start\": \"$STARTTIME\", \"end\": \"$ENDTIME\" }"
+       #json="{ \"result\": \"success\", \"summary\": $summary }"
+       summary="$OUTPUTZIP created"
+       json="{ \"result\": \"success\", \"summary\": \"$summary\" }"
+    else
+       OUTPUTZIP_CREATED=0
+       
+       #summary="{ \"processed\":1, \"accepted\":0, \"rejected\":1, \"start\": \"$STARTTIME\", \"end\": \"$ENDTIME\" }"
+       #json="{ \"result\": \"error\", \"summary\": $summary }"
+       summary="$OUTPUTZIP missing or empty"
+       json="{ \"result\": \"error\", \"summary\": \"$summary\" }"
+    fi
+
     cd ..
     rm -Rf "$OUTPUTFOLDER"
+    
+    echo "Send $PREINGEST_WEBAPI/api/status/update/$ACTIONGUID with summary $summary"
+    curl -s -S -X PUT -H "Content-Type: application/json" --data "$json" "$PREINGEST_WEBAPI/api/status/update/$ACTIONGUID"
+    if [ $OUTPUTZIP_CREATED -eq 0 ]
+    then
+        moanAndDie "Missing or empty output zip"
+    fi
 
     # Inform the API that we completed the action with this id:
     echo Send $PREINGEST_WEBAPI/api/status/completed/$ACTIONGUID
