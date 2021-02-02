@@ -41,9 +41,10 @@ function moanAndDie() {
    if [ -n "$ACTIONGUID" ]
    then
         # Inform the API that we had a problem with this id:
-        echo Send $PREINGEST_WEBAPI/api/status/failed/$ACTIONGUID
+        echo Sending $PREINGEST_WEBAPI/api/status/failed/$ACTIONGUID
         json="{ \"message\": \"$message\" }"
         curl -s -S -X POST -H "Content-Type: application/json" --data "$json" "$PREINGEST_WEBAPI/api/status/failed/$ACTIONGUID" 
+        echo; echo "--------------- sent FAILED message for action guid $ACTIONGUID"
    fi
    
    exit 1
@@ -80,10 +81,12 @@ function doIt {
     ACTIONGUID=$(curl -s -S -X POST -H "Content-Type: application/json" --data "$json" "$PREINGEST_WEBAPI/api/status/new/$GUID" | \
                  grep -o '"processId":"[^\"]*"' | \
                  sed -e 's/^.*: *"\([^\"]*\)"$/\1/')
+    echo; echo "--------------- retrieved action guid $ACTIONGUID"
 
     # Inform the API that we started the action with this id:
     echo Send $PREINGEST_WEBAPI/api/status/start/$ACTIONGUID
     curl -s -S -X POST -H "Content-Type: application/json" --data '{}' "$PREINGEST_WEBAPI/api/status/start/$ACTIONGUID"
+    echo; echo "--------------- sent START message for action guid $ACTIONGUID"
     
     # Switches conform https://noordhollandsarchief.sharepoint.com/:x:/r/sites/ImplementatiePreserveringsvoorziening/Gedeelde%20documenten/General/2.%20Technische%20documentatie/Pre-ingest/CMD%20SIP%20creator%20settings.xlsx?d=w9e29f946e0624d7db2d1efeca5f3525b&csf=1&web=1&e=Z7CTt7
     # Let op: -excludedFileNames kan nuttig zijn, maar ondersteunt geen wildcards.
@@ -115,7 +118,7 @@ function doIt {
     fi
 
     cd "$OUTPUTFOLDER"
-    
+
     if [ -f "$OUTPUTZIP" ]
     then
       rm -f "$OUTPUTZIP"
@@ -125,28 +128,45 @@ function doIt {
 
     ENDTIME=`timestamp`
 
+    # Writing the status json to a tmp file because otherwise the escapes would make stuff rather unreadable...
+    TMPJSON=$INPUTFOLDER/../_tmp.json
     if [ -s "$OUTPUTZIP" ]
     then
        OUTPUTZIP_CREATED=1
        
-       #summary="{ \"processed\":1, \"accepted\":1, \"rejected\":0, \"start\": \"$STARTTIME\", \"end\": \"$ENDTIME\" }"
-       #json="{ \"result\": \"success\", \"summary\": $summary }"
-       summary="$OUTPUTZIP created"
-       json="{ \"result\": \"success\", \"summary\": \"$summary\" }"
+       cat >"$TMPJSON" <<EOF
+{
+    "result": "Success",
+    "summary": "{\"processed\": 1,\"accepted\": 1,\"rejected\": 0,\"start\": \"$STARTTIME\",\"end\": \"$ENDTIME\"}"
+}
+EOF
     else
        OUTPUTZIP_CREATED=0
        
-       #summary="{ \"processed\":1, \"accepted\":0, \"rejected\":1, \"start\": \"$STARTTIME\", \"end\": \"$ENDTIME\" }"
-       #json="{ \"result\": \"error\", \"summary\": $summary }"
-       summary="$OUTPUTZIP missing or empty"
-       json="{ \"result\": \"error\", \"summary\": \"$summary\" }"
+       cat >"$TMPJSON" <<EOF
+{
+    "result": "Error",
+    "summary": "{\"processed\": 1,\"accepted\": 0,\"rejected\": 1,\"start\": \"$STARTTIME\",\"end\": \"$ENDTIME\"}"
+}
+EOF
+    fi
+    
+    # Copy the metadata.xml to the toplevel folder of this session sothat we can later schema-validate it:
+    SIPMETADATAFILE=$(find . -maxdepth 2 -name metadata.xml)
+    if [ -n "$SIPMETADATAFILE" ]
+    then
+      cp "$SIPMETADATAFILE" "$INPUTFOLDER/.."
     fi
 
     cd ..
     rm -Rf "$OUTPUTFOLDER"
     
-    echo "Send $PREINGEST_WEBAPI/api/status/update/$ACTIONGUID with summary $summary"
-    curl -s -S -X PUT -H "Content-Type: application/json" --data "$json" "$PREINGEST_WEBAPI/api/status/update/$ACTIONGUID"
+    #echo "About to send JSON for status/update:"; cat "$TMPJSON";  echo; echo "---------------"
+    echo "Send $PREINGEST_WEBAPI/api/status/update/$ACTIONGUID"
+    curl -s -S -X PUT -H "Content-Type: application/json" --data @"$TMPJSON" "$PREINGEST_WEBAPI/api/status/update/$ACTIONGUID"
+    echo; echo "--------------- sent UPDATE message for action guid $ACTIONGUID"    
+    rm "$TMPJSON"
+    
     if [ $OUTPUTZIP_CREATED -eq 0 ]
     then
         moanAndDie "Missing or empty output zip"
@@ -154,7 +174,8 @@ function doIt {
 
     # Inform the API that we completed the action with this id:
     echo Send $PREINGEST_WEBAPI/api/status/completed/$ACTIONGUID
-    curl -s -S -X POST -H "Content-Type: application/json" --data '{}' "$PREINGEST_WEBAPI/api/status/completed/$ACTIONGUID"    
+    curl -s -S -X POST -H "Content-Type: application/json" --data '{}' "$PREINGEST_WEBAPI/api/status/completed/$ACTIONGUID"
+    echo; echo "--------------- sent COMPLETED message for action guid $ACTIONGUID"   
 }
 
 cd "$INPUTFOLDER"
