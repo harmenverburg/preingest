@@ -132,26 +132,30 @@ public abstract class CommandHandler implements ICommandHandler {
             }
             isError = true;
           } finally {
+
+            //update the action with result and summary
+            ZonedDateTime end = ZonedDateTime.now(ZoneId.of("UTC"));         
+            String endDateTimeNow = end.format(_formatter);
+            try{
+              String actionGuid = processGuid;
+              updateNewAction(actionGuid, update, startDateTimeNow, endDateTimeNow);
+            }
+            catch(final Exception e){
+              e.printStackTrace();
+            }finally{ }
+
             // send completed signal
             if (processGuid != null && !isError) {
+              try{
               String actionGuid = processGuid;
               registerCompletedStatus(actionGuid);
-
               notifyClient(guid, handlerName, "Done with DROID application.", ActionStateOptions.Completed, startDateTimeNow); 
+              }
+              catch(final Exception e){
+                e.printStackTrace();
+              }finally{ }
             }
           }
-
-          //update the action with result and summary
-          ZonedDateTime end = ZonedDateTime.now(ZoneId.of("UTC"));         
-          String endDateTimeNow = end.format(_formatter);
-          try{
-            String actionGuid = processGuid;
-            updateNewAction(actionGuid, update, startDateTimeNow, endDateTimeNow);
-          }
-          catch(final Exception e){
-            e.printStackTrace();
-          }finally{ }
-
         }
       };
       mainThread.start();
