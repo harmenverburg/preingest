@@ -128,7 +128,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             return dataResults;
         }
 
-        public dynamic GetCollection( Guid guid)
+        public dynamic GetCollection(Guid guid)
         {
             dynamic dataResults = null;
 
