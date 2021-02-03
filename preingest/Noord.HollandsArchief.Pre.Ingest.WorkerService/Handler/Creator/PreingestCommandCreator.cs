@@ -42,7 +42,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
         {
             if (data == null)
             {
-                Logger.LogInformation("FactoryMethod : {0}.", "Incoming data is empty");
+                Logger.LogInformation("FactoryMethod :: {1} : {0}.", "Incoming data is empty", guid);
                 return null;
             }
 
@@ -51,7 +51,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
 
             if (plans == null)
             {
-                Logger.LogInformation("FactoryMethod : {0}.", "No scheduled plan found, just exit");
+                Logger.LogInformation("FactoryMethod :: {1} : {0}.", "No scheduled plan found, just exit", guid);
                 return null;
             }
 
@@ -74,7 +74,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
 
                     if (peek == null) //done just exit
                     {
-                        Logger.LogInformation("FactoryMethod : {0}.", "Peek queue. See nothing. Probably done with the plan");
+                        Logger.LogInformation("FactoryMethod :: {1} : {0}.", "Peek queue. See nothing. Probably done with the plan", guid);
                         return null;
                     }
 
@@ -97,7 +97,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
 
             if (next == null)
             {
-                Logger.LogInformation("FactoryMethod : {0}.", "Exit the factory method, no next task planned");
+                Logger.LogInformation("FactoryMethod :: {1} : {0}.", "Exit the factory method, no next task planned", guid);
                 return null;
             }
 
@@ -106,7 +106,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
                 IKey key = new DefaultKey(next.ActionName);
                 if (!this._executionCommand.ContainsKey(key))
                 {
-                    Logger.LogInformation("FactoryMethod : No key found in dictionary with {0}.", key);
+                    Logger.LogInformation("FactoryMethod :: {1} : No key found in dictionary with {0}.", key, guid);
                     return null;
                 }
 
@@ -118,21 +118,21 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
             {
                 if (actions == null)
                 {
-                    Logger.LogInformation("FactoryMethod : Plan described previous and next action, but there is no actions list returned. Hmmm....");
+                    Logger.LogInformation("FactoryMethod :: {0} : Plan described previous and next action, but there is no actions list returned. Hmmm....", guid);
                     return null;
                 }
 
                 var action = actions.Where(item => item.Name == previous.ActionName.ToString()).FirstOrDefault();
                 if (action == null)
                 {
-                    Logger.LogInformation("FactoryMethod : No action found in the list with the name {0}.", previous.ActionName.ToString());
+                    Logger.LogInformation("FactoryMethod :: {1} : No action found in the list with the name {0}.", previous.ActionName.ToString(), guid);
                     return null;
                 }
 
                 IKey key = new DefaultKey(next.ActionName);
                 if (!this._executionCommand.ContainsKey(key))
                 {
-                    Logger.LogInformation("FactoryMethod : No key found in dictionary with {0}.", key);
+                    Logger.LogInformation("FactoryMethod :: {1} : No key found in dictionary with {0}.", key, guid);
                     return null;
                 }
 
@@ -166,8 +166,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
                     IPreingestCommand command = this._executionCommand[key];
                     return command;
                 }
-            }
 
+                Logger.LogInformation("FactoryMethod :: {1} : Not OK to run {0}.", key, guid);
+            } 
             return null;
         }
     }
