@@ -32,9 +32,16 @@
     
     <xsl:template match="nha:report">
         <h1>Validation report</h1>
-        <xsl:apply-templates/>
+        <xsl:choose>
+            <xsl:when test="exists(*)">
+                <xsl:apply-templates/>
+            </xsl:when>
+            <xsl:otherwise>
+                <p>No problems encountered.</p>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
-    
+
     <xsl:template match="nha:schema-validation-report | nha:schematron-validation-report">
         <xsl:where-populated>
             <h2>{upper-case(substring(local-name(), 1, 1))}{replace(substring(local-name(), 2), '-', ' ')}</h2>
