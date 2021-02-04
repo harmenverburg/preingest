@@ -49,112 +49,80 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter StartPlan.");      
             try
             {                        
-                var newPlan = workflow.Workflow.Select(item => new Entities.Context.ExecutionPlan { ActionName = item.ActionName.ToString(), SessionId = guid, ContinueOnError = item.ContinueOnError, ContinueOnFailed = item.ContinueOnFailed });
-
+                var existingPlan = new List<BodyPlan>();
                 var currentArchive = _preingestCollection.GetCollection(guid);
-                //new
-                if (currentArchive.ScheduledPlan == null || currentArchive.ScheduledPlan.Length == 0)                 
+
+                existingPlan = (currentArchive.ScheduledPlan as ExecutionPlanState[]) == null ? existingPlan : (currentArchive.ScheduledPlan as ExecutionPlanState[]).Select(item => new BodyPlan
                 {
-                    //save scheduled/execution plan in db
-                    using (var context = new PreIngestStatusContext())
-                    {                       
+                    ActionName = ((ValidationActionType)Enum.Parse(typeof(ValidationActionType), item.ActionName)),
+                    ContinueOnError = item.ContinueOnError,
+                    ContinueOnFailed = item.ContinueOnFailed
+                }).ToList();
+                   
+                // the same action then remove old onces first
+                // var exceptCollection = workflow.Workflow.Except<BodyPlan>(existingPlan).ToList();
+                var intersectCollection = workflow.Workflow.Intersect<BodyPlan>(existingPlan).ToList();
+                
+                QueryResultAction[] actions = currentArchive.Preingest as QueryResultAction[];
+
+                var alreadyProcessedActions = actions.Where(action
+                    => intersectCollection.Exists(item
+                        => item.ActionName == ((ValidationActionType)Enum.Parse(typeof(ValidationActionType), action.Name)))).ToList();
+
+                //clean the old plan
+                //remove previous states if selected in new plan
+                //save the new plan
+                using (var context = new PreIngestStatusContext())
+                {
+                    try
+                    {
+                        //get old plan, remove old plan, save
+                        var oldPlan = context.ExecutionPlanCollection.Where(item => item.SessionId == guid).ToArray();
+                        context.ExecutionPlanCollection.RemoveRange(oldPlan);
+                        context.SaveChanges();
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ApplicationException("Failed to remove old plan! " + e.Message);
+                    }
+                    finally
+                    {
                         try
                         {
-                            context.ExecutionPlanCollection.AddRange(newPlan);
-                            context.SaveChanges();
+                            //remove the old action + results + messages if found
+                            if (alreadyProcessedActions.Count > 0)
+                            {
+                                var allStatusIdFromAlreadyProcessedActions = alreadyProcessedActions.SelectMany(item => item.States).Select(item => item.StatusId).ToArray();
+                                var allActionIdFromAlreadyProcessedActions = alreadyProcessedActions.Select(item => item.ProcessId).ToArray();
+                                //remove any error message 
+                                var messages = context.ActionStateMessageCollection.Where(item => allStatusIdFromAlreadyProcessedActions.Contains(item.StatusId)).ToArray();
+                                context.ActionStateMessageCollection.RemoveRange(messages);
+                                //remove any states
+                                var states = context.ActionStateCollection.Where(item => allStatusIdFromAlreadyProcessedActions.Contains(item.StatusId)).ToArray();
+                                context.ActionStateCollection.RemoveRange(states);
+                                //remove any actions
+                                var oldActions = context.PreingestActionCollection.Where(item => allActionIdFromAlreadyProcessedActions.Contains(item.ProcessId)).ToArray();
+                                context.PreingestActionCollection.RemoveRange(oldActions);
+
+                                context.SaveChanges();
+                            }
                         }
                         catch (Exception e)
                         {
-                            throw new ApplicationException("Failed to save the plan! " + e.Message);
+                            throw new ApplicationException("Failed to remove old action(s) + result(s) + message(s)! " + e.Message);
                         }
-                    }
-                }
-                else
-                {
-                    var existingPlan = new List<BodyPlan>();
-                    //rescheduled
-                    using (var context = new PreIngestStatusContext())
-                    {
-                        var planResults = context.ExecutionPlanCollection.Where(item => item.SessionId == guid).ToList();
-
-                        var results = planResults.Select(item => new BodyPlan
+                        finally
                         {
-                            ActionName = ((ValidationActionType)Enum.Parse(typeof(ValidationActionType), item.ActionName)),
-                            ContinueOnError = item.ContinueOnError,
-                            ContinueOnFailed = item.ContinueOnFailed
-                        }).ToArray();
-
-                        existingPlan.AddRange(results);
-                    }
-
-                    // sequence is the same
-                    bool isEqual = workflow.Workflow.SequenceEqual<BodyPlan>(existingPlan);
-                    //the same action then remove old onces first
-                    // var exceptCollection = workflow.Workflow.Except<BodyPlan>(existingPlan).ToList();
-                    var intersectCollection = workflow.Workflow.Intersect<BodyPlan>(existingPlan).ToList();
-
-                    if (!isEqual || intersectCollection.Count > 0)
-                    {                      
-                        QueryResultAction[] actions = currentArchive.Preingest as QueryResultAction[];
-
-                        var alreadyProcessedActions = actions.Where(action 
-                            => intersectCollection.Exists(item 
-                                => item.ActionName == ((ValidationActionType)Enum.Parse(typeof(ValidationActionType), action.Name)))).ToList();
-
-                        //clean the old plan
-                        //save the new plan
-                        using (var context = new PreIngestStatusContext())
-                        { 
                             try
                             {
-                                //get old plan, remove old plan, save
-                                var oldPlan = context.ExecutionPlanCollection.Where(item => item.SessionId == guid).ToArray();
-                                context.ExecutionPlanCollection.RemoveRange(oldPlan);
+                                //save the new plan
+                                var newPlan = workflow.Workflow.Select(item => new Entities.Context.ExecutionPlan { ActionName = item.ActionName.ToString(), SessionId = guid, ContinueOnError = item.ContinueOnError, ContinueOnFailed = item.ContinueOnFailed });
+                                context.ExecutionPlanCollection.AddRange(newPlan);
                                 context.SaveChanges();
                             }
                             catch (Exception e)
                             {
-                                throw new ApplicationException("Failed to remove old plan! " + e.Message);
-                            }
-                            finally
-                            {
-                                try
-                                {
-                                    //remove the old action + results + messages if found
-                                    if(alreadyProcessedActions.Count > 0)
-                                    {
-                                        var allStatusIdFromAlreadyProcessedActions = alreadyProcessedActions.SelectMany(item => item.States).Select(item => item.StatusId).ToArray();
-                                        var allActionIdFromAlreadyProcessedActions = alreadyProcessedActions.Select(item => item.ProcessId).ToArray();
-                                        //remove any error message 
-                                        var messages = context.ActionStateMessageCollection.Where(item => allStatusIdFromAlreadyProcessedActions.Contains(item.StatusId)).ToArray();
-                                        context.ActionStateMessageCollection.RemoveRange(messages);
-                                        //remove any states
-                                        var states = context.ActionStateCollection.Where(item => allStatusIdFromAlreadyProcessedActions.Contains(item.StatusId)).ToArray();
-                                        context.ActionStateCollection.RemoveRange(states);
-                                        //remove any actions
-                                        var oldActions = context.PreingestActionCollection.Where(item => allActionIdFromAlreadyProcessedActions.Contains(item.ProcessId)).ToArray();
-                                        context.PreingestActionCollection.RemoveRange(oldActions);
-
-                                        context.SaveChanges();
-                                    }
-                                }
-                                catch(Exception e)
-                                {
-                                    throw new ApplicationException("Failed to remove old action(s) + result(s) + message(s)! " + e.Message);
-                                }
-                                finally
-                                {
-                                    try
-                                    {
-                                        //save the new plan
-                                        context.ExecutionPlanCollection.AddRange(newPlan);
-                                        context.SaveChanges();
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        throw new ApplicationException("Failed to save the new plan! " + e.Message);
-                                    }
-                                }
+                                throw new ApplicationException("Failed to save the new plan! " + e.Message);
                             }
                         }
                     }

@@ -390,7 +390,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure
 
             if (BinaryFileExists)
             {
-                var fileObject = new FileInfo(this.BinaryFileLocation);  
+                var fileObject = new FileInfo(this.BinaryFileLocation);
+                if (fileObject.Length == 0)
+                    this.ObjectExceptions().Add(new SidecarException(String.Format("Zero byte file gevonden: {0}.", this.BinaryFileLocation)));
 
                 this.ChecksumResultCollection = new Dictionary<string, string>();
                 string md5 = ChecksumHelper.CreateMD5Checksum(fileObject);
@@ -403,7 +405,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure
                 this.ChecksumResultCollection.Add("SHA256", sha256);
                 this.ChecksumResultCollection.Add("SHA512", sha512);
             }
-            
+
             if (!CompareFilesizeMetadataWithBinary)
                 this.ObjectExceptions().Add(new SidecarException("Omvangwaarde opgegeven in metadata komt niet overeen met bestandsgrootte van het bestand."));
 

@@ -5,7 +5,10 @@ VisualStudioVersion = 16.0.30523.141
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Noord.HollandsArchief.Pre.Ingest.WebApi", "Noord.HollandsArchief.Pre.Ingest.WebApi\Noord.HollandsArchief.Pre.Ingest.WebApi.csproj", "{88DEF3B9-029C-4C6A-BC5D-B0B9A69531A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Noord.HollandsArchief.Pre.Ingest.WorkerService", "Noord.HollandsArchief.Pre.Ingest.WorkerService\Noord.HollandsArchief.Pre.Ingest.WorkerService.csproj", "{6B8DB179-D5AE-4381-B98F-6F4516F04940}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Noord.HollandsArchief.Pre.Ingest.WorkerService", "Noord.HollandsArchief.Pre.Ingest.WorkerService\Noord.HollandsArchief.Pre.Ingest.WorkerService.csproj", "{6B8DB179-D5AE-4381-B98F-6F4516F04940}"
+	ProjectSection(ProjectDependencies) = postProject
+		{88DEF3B9-029C-4C6A-BC5D-B0B9A69531A4} = {88DEF3B9-029C-4C6A-BC5D-B0B9A69531A4}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

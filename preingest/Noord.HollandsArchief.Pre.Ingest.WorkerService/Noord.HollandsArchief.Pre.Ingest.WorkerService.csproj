@@ -3,7 +3,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <UserSecretsId>dotnet-Noord.HollandsArchief.Pre.Ingest.WorkerService-6C8B7A4C-92E5-45DE-BBAB-5753FF8D4FF1</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileRunArguments>-v "D:\data:/data" --network "preingest_development_docker_development" --name "Noord.HollandsArchief.Pre.Ingest.WorkerService"</DockerfileRunArguments>
+    <DockerfileRunArguments>--network "preingest_development_docker_development" --name "Noord.HollandsArchief.Pre.Ingest.WorkerService"</DockerfileRunArguments>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Entities\Context\**" />
