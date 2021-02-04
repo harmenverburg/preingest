@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<webapp xmlns="http://www.armatiek.com/xslweb/webapp" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.armatiek.com/xslweb/webapp ../../config/xsd/xslweb/webapp.xsd">
+
+  <title>Noord-Hollands Archief XIP V4-validatie-applicatie</title>
+  <description>Noord-Hollands Archief XIP V4-validatie-applicatie</description>
+  <development-mode>false</development-mode>
+  <max-upload-size>10</max-upload-size>
+
+  <!-- Resources to serve straight away: -->
+  <resources>
+    <resource pattern="/favicon.ico" media-type="image/x-icon" duration="P7DT0H0M0S"/>
+    <resource pattern="/robots.txt" media-type="text/plain" duration="P1DT0H0M0S"/>
+    <resource pattern="/images/.+\.png" media-type="image/png"/>
+    <resource pattern="/images/.+\.gif" media-type="image/gif"/>
+    <resource pattern="/images/.+\.(jpg|jpeg)" media-type="image/jpg"/>
+    <resource pattern="/scripts/.+\.js" media-type="text/javascript"/>
+    <resource pattern="/styles/.+\.css" media-type="text/css"/>
+  </resources>
+
+  <parameters>
+    <parameter name="data-uri-prefix" type="xs:string">
+      <value>file:/data/</value>
+    </parameter>
+    <parameter name="data-uri-prefix-devmode" type="xs:string">
+      <value>file:/home/pieter/noord-hollandsarchief/data/</value>
+    </parameter>
+    <parameter name="metadatafile" type="xs:string">
+      <value>metadata.xml</value>
+    </parameter>
+  </parameters>
+</webapp>

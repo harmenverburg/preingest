@@ -1,0 +1,1954 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xip="http://www.tessella.com/XIP/v4" targetNamespace="http://www.tessella.com/XIP/v4" version="4.0"  elementFormDefault="qualified" attributeFormDefault="unqualified">
+    <xs:complexType name="typeAccumulation">
+        <xs:annotation>
+            <xs:documentation>A series of (one or more) related transfers of Information Objects from a single entity (person, organisation or part of an organisation).</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="AccumulationRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the Accumulation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:choice>
+                <xs:element name="CollectionRef" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Collection, if any, that the Accumulation conceptually belongs to.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+                <xs:element name="RecordSeriesRef" type="xip:typeReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Series of Records (i.e. Deliverable Units), if any, that the Accumulation conceptuallybelongs to.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            </xs:choice>
+            <xs:element name="Metadata" type="xip:genericMetadata" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Any descriptive metadata (i.e. cataloguing information) for the Accumulation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="SelectionEvent" type="xip:typeEvent" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>A record of the selection of which Information Objects to transfer to the repository in this Accumulation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Audit" type="xip:auditContainer" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Audit history of entity</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+                <xs:annotation>
+                    <xs:documentation>Processing information for SDB.</xs:documentation>
+                </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeAccession">
+        <xs:annotation>
+            <xs:documentation>A part of an Accumulation that is delivered in a single transaction.  It consists of a group of Preservation Objects (both physical, i.e. files, and conceptual, i.e. Deliverable Units).</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="AccessionRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the Accession.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="AccumulationRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Accumulation that this Accession is part of.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="IngestedFileSetRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Ingested File Set that contains the physical part (rather than the conceptual part, i.e. Deliverable Units) of the Accession.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Date" type="xs:dateTime">
+                <xs:annotation>
+                    <xs:documentation>Date of the accession.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Metadata" type="xip:genericMetadata" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Any descriptive metadata (i.e. cataloguing information) for the Accession.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="AccessionEvent" type="xip:typeEvent" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Records the history surrounding the events leading to the ingest of an Accession into the repository.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="SystemMigrationEvent" type="xip:typeEvent" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Records the history surrounding the events leading to the transfer of a whole repository from one software system to another (e.g. migrating to the latest version of software).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="TransferEvent" type="xip:typeEvent" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Records the transfer of the Accession to the repository from an entity (an organisation, part of an organisation or an individual).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="RedactionEvent" type="xip:typeEvent" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Records the ingest of redacted (material with sensitive information removed before publication) material.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+                <xs:annotation>
+                    <xs:documentation>Processing information for SDB.</xs:documentation>
+                </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeAggregations">
+        <xs:sequence>
+            <xs:element name="Accumulation" type="xip:typeAccumulation" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="Accession" type="xip:typeAccession" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="typeCollection">
+        <xs:annotation>
+            <xs:documentation>A hierarchical grouping of Deliverable Units (or potential Deliverable Units) for the purposes of ordering content, such as by theme or topic.N.B. A Collection can exist even if no Deliverable Units are held within it yet. Note that a Collection can either contain child collections, or has deliverable units associated with it, but not a mixture of the two, although this is not enforced by the schema.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="CollectionRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the Collection.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CollectionTypeRef" type="xip:typeReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to the type of collection, for example 1 meaning Department, or 2 meaning Series.  The list of Collection Types is held separately.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ParentRef" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Collection's parent collection (if it is not a top-level Collection).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CollectionCode" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>An optional, short alphanumerical code used to uniquely identify the Collection.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Title" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>A descriptive label for the Collection.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClosureStatus" type="xip:typeClosureStatus" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Whether the Collection and/or its description are accessible to general users (open) or not (closed).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClosureType" type="xip:typeClosureType" minOccurs="0" >
+                <xs:annotation>
+                    <xs:documentation>The type of closure, if general users are not allowed to access the Collection.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClosureCode" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The number of closure years (e.g. 0, 30, 75 etc); this code is associated with the closure type data.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClassNumber" type="xs:positiveInteger" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Optional Record Series class number.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="SubclassNumber" type="xs:positiveInteger" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Optional Record Series subclass number.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="AccessReviewEvent" type="xip:typeEvent" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Records a review of access control (i.e. whether a closed Information Object should be opened up to the users of the repository) for a Collection.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CustodialHistory" type="xip:arbitraryContents" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Describes important information about how the records were kept prior to admission to the repository.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PreservationHistory" type="xip:arbitraryContents" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>A record of the actions taken to preserve a Collection prior to admission to the system.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="SecurityTag" type="xs:string" default="open" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Identifier used to form groups of Collections to which the same permissions are applied.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Metadata" type="xip:genericMetadata" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Any descriptive metadata (i.e. cataloguing information) for the Collection.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="BaseVersion" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Base version identifier for the Collection.  BaseVersion and CurrentVersion are used in two-way synchronisation for detecting any conflicting edits of a collection.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CurrentVersion" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Current version identifier for the Collection.  BaseVersion and CurrentVersion are used in two-way synchronisation for detecting any conflicting edits of a collection.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Identifier" type="xip:typeIdentifier" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>External identifier in third-party system for this Collection.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Virtual" type="xs:short" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>A flag to indicate whether this collection is virtual</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Audit" type="xip:auditContainer" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Audit history of entity</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeDepartment">
+        <xs:annotation>
+            <xs:documentation>A collection containing material only from a particular source (governmental or organisational) department. Deprecated.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="DepartmentRef" type="xip:typeReference">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the Department.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="DepartmentCode" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>A short alphanumerical code used to uniquely identify the Department.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Title" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>A descriptive label for the Department.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClosureStatus" type="xip:typeClosureStatus">
+                <xs:annotation>
+                    <xs:documentation>Whether the Department and/or its description are accessible to general users (open) or not (closed).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClosureType" type="xip:typeClosureType">
+                <xs:annotation>
+                    <xs:documentation>The type of closure, if general users are not allowed to access the Department.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClosureCode" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The number of closure years (e.g. 0, 30, 75 etc); this code is associated with the closure type data.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeRecordSeries">
+        <xs:annotation>
+            <xs:documentation>A Record Series is a logical grouping of Accumulations by a specific Department for a specific business reason.  For example, a record series could be: Original correspondence and papers classified under the headings: civil, military, private and secret, and miscellaneous; and correspondence and papers relating to special subjects: Catholic emancipation, 1824; peerage claims, 1828 to 1831; poor law reform, 1836 to 1839; reports of outrages, 1836 to 1840; and the report of the Irish Land Commission, 1820 to 1823. Deprecated.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="RecordSeriesRef" type="xip:typeReference">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the Record Series.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="DepartmentRef" type="xip:typeReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Department to which this Record Series belongs.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="RecordSeriesCode" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>An optional, short alphanumerical code used to uniquely identify the Record Series.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Title" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>A descriptive label for the Record Series.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClosureStatus" type="xip:typeClosureStatus">
+                <xs:annotation>
+                    <xs:documentation>Whether the Record Series and/or its description are accessible to general users (open) or not (closed).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClosureType" type="xip:typeClosureType">
+                <xs:annotation>
+                    <xs:documentation>The type of closure, if general users are not allowed to access the Record Series.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClosureCode" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The number of closure years (e.g. 0, 30, 75 etc); this code is associated with the closure type data.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClassNumber" type="xs:positiveInteger" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Optional Record Series class number.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="SubclassNumber" type="xs:positiveInteger" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Optional Record Series subclass number.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="AccessReviewEvent" type="xip:typeEvent" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Records a review of access control (i.e. whether a closed Information Object should be opened up to the users of the repository) for a Record Series.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CustodialHistory" type="xip:arbitraryContents" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Describes important information about how and where the records were kept prior to transfer to the repository.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PreservationHistory" type="xip:arbitraryContents" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>A record of the actions taken to preserve a Record Series prior to admission to the system.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeDepartmentsAndSeries">
+        <xs:sequence>
+            <xs:element name="Department" type="xip:typeDepartment" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="RecordSeries" type="xip:typeRecordSeries" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="typeCollections">
+        <xs:choice>
+            <xs:element name="Collection" type="xip:typeCollection" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="DepartmentsAndSeries" type="xip:typeDepartmentsAndSeries" minOccurs="0"/>
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:simpleType name="typeReference">
+        <xs:annotation>
+            <xs:documentation>Numeric unique identifier; similar to a relational database primary key.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:long"/>
+    </xs:simpleType>
+    <xs:simpleType name="typeGUID">
+        <xs:annotation>
+            <xs:documentation>Globally Unique IDentifier.  Alternative identifier for entities.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="genericMetadata">
+        <xs:annotation>
+            <xs:documentation>Arbitrary contents, which may conform to an XML schema.  Used to store extra metadata, particularly descriptive metadata (i.e. cataloguing information), from another schema (e.g. Dublin Core, METS, MODS, ISAD(G), etc.) that is relevant to a particular entity.  Allows for controlled extension of the XIP schema.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:any processContents="skip" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="schemaURI" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>The URI for the XML schema for the contents of the 'any' element.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeEvent">
+        <xs:annotation>
+            <xs:documentation>A record of a significant action that occurred in the lifetime of one or more objects known to SDB.  Note that no information about the objects involved is held with the event entity; instead the objects reference the event, which enables a single event entity to be shared by all the objects that participated in it.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="EventRef" type="xs:positiveInteger" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the event.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="EventTypeRef" type="xs:positiveInteger" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Type of the event.  Generally this element is not used as the type of the event is implicit from its name (e.g. a 'VirusCheckEvent' is an event of type 'Virus Check').</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="EventDate" type="xs:dateTime">
+                <xs:annotation>
+                    <xs:documentation>Date (and time) of event completion.  For automated events, such as property extraction, the date and time will be recorded, but for manual events, such as selection, only the date may be recorded (and the time will be set to midnight).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="EventAgent" type="xip:arbitraryContents" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Details of the person or software that was involved in (initiated or carried out) the event.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Process" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The details of the event.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Outcome" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The results and/or the effects of the event.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="auditContainer">
+        <xs:annotation>
+            <xs:documentation>Container for the audit entries</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="AuditEntry" type="xip:auditReference" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="auditReference">
+        <xs:annotation>
+            <xs:documentation>Audit entry element</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="Date" type="xs:dateTime" minOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Date and time of action</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="UserName" type="xs:string" minOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>User who performed action</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ChangeType" type="xs:string" minOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Type of performed action</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="WorkflowInstanceName" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Work flow instance name</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="WorkflowDefinitionName" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Definition of the workflow</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="typeRiskValue">
+        <xs:annotation>
+            <xs:documentation>An indication of the risk (relative to other formats) associated with leaving a file in a specific format (as opposed to, for example, migrating it to another format).  The risk score can be calculated based on the values of inherent format properties (i.e. derived from the underlying characteristics of a format and common to all files of that format).  A given file may have further risks associated with instance properties (i.e. specific to a particular file, such as whether that file is encrypted) or because it contains embedded objects in a riskier combination of format and properties.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:float">
+            <xs:minInclusive value="0.0"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="arbitraryContents" mixed="true">
+        <xs:annotation>
+            <xs:documentation>Any information, of whatever type, that is relevant to a particular entity.  Allows for controlled extension of the XIP schema.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="typeStatus">
+        <xs:annotation>
+            <xs:documentation>These status flags are used for processing only; they are not part of the metadata.  
+For example, an XIP document containing elements with status "new" represents instructions to the receiving system to create new entity instances for those elements, which must not exist already in the repository.  
+Elements with status "same" must already exist in the repository, but are left unchanged.
+Elements with status "changed" must already exist in the repository, where they are updated with the information contained in the XIP document.  Note that entities which have been soft-deleted in the repository can be restored by ingesting an XIP document in which their status is set to "changed".
+Elements with status "deleted" must already exist in the repository, where they are 'soft-deleted'.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new"/>
+            <xs:enumeration value="same"/>
+            <xs:enumeration value="changed"/>
+            <xs:enumeration value="deleted"/>
+            <xs:enumeration value="restored"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="typeClosureStatus">
+        <xs:annotation>
+            <xs:documentation>This type records, in code form, whether the entity and its metadata is closed or open to general users of the repository.
+The meaning of these codes is as follows:
+    C - closed record, closed description
+    D - closed record, open description
+    O - open record, open description</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="C"/>
+            <xs:enumeration value="D"/>
+            <xs:enumeration value="O"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="typeClosureType">
+        <xs:annotation>
+            <xs:documentation>This type records, in code form, the type of closure of an entity (e.g. deliverable unit).
+The meaning of these codes is as follows:
+    A - open on transfer
+    D - retained until
+    F - closed for
+    I - open immediately
+    N - normal closure
+    R - retained by department
+    S - retained by department under section 3.4
+    T - temporarily retained by department
+    U - closed until
+    - - unknown/unspecified</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="A"/>
+            <xs:enumeration value="D"/>
+            <xs:enumeration value="F"/>
+            <xs:enumeration value="I"/>
+            <xs:enumeration value="N"/>
+            <xs:enumeration value="R"/>
+            <xs:enumeration value="S"/>
+            <xs:enumeration value="T"/>
+            <xs:enumeration value="U"/>
+            <xs:enumeration value="-"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <!-- Reference type options: numeric, UUID or URI -->
+    <xs:simpleType name="typeUnionReference">
+        <xs:annotation>
+            <xs:documentation>Unique identifier which can either be an integer, a GUID or a Uniform Resource Identifier (URI).  References to IDs must be of the same 'sub-type' of identifier, although it is not possible to enforce this in the schema.</xs:documentation>
+        </xs:annotation>
+        <xs:union>
+            <xs:simpleType>
+               <xs:restriction base="xs:long"/>
+            </xs:simpleType>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:pattern value="[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"/>
+                </xs:restriction>
+            </xs:simpleType>
+            <xs:simpleType>
+                <xs:restriction base="xs:anyURI"/>
+            </xs:simpleType>
+        </xs:union>
+    </xs:simpleType>
+    <xs:complexType name="typeIdentifier">
+        <xs:annotation>
+            <xs:documentation>External identifier in third-party system for an entity.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="type" type="xs:string" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+
+    <xs:complexType name="typeManifestationFile">
+        <xs:annotation>
+            <xs:documentation>A Digital File that is associated with a Manifestation.  This entity allows a Digital File to be shared between different manifestations of the same (or different) deliverable units (and, potentially, for the file to have a different path in different cases).</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="FileRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to a Digital File (in the Files element of this XIP, or already stored in SDB), by its unique identifier, that is associated with a Deliverable Unit Manifestation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Path" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Path, relative to the manifestation root, of the Digital File within this Manifestation.  If a Manifestation consists of files in only one directory, the path might be the empty string (the filename is an attribute of the Digital File entity).  However a subsequent manifestation might separate (for example) text and image files into subdirectories, so a common file might be linked to the newer manifestation with path "image/".</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="order" type="xs:long" >
+            <xs:annotation>
+                <xs:documentation>Defines the natural ordering of the objects within a manifestation.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB. If this is set to "deleted", the ManifestationFile entity will be hard-deleted (rather than soft-deleted) from the repository.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeDeprecatedManifestationFile">
+        <xs:annotation>
+            <xs:documentation>A deprecated Digital File that is associated with a Manifestation. This entity stores historic information on a Digital File associated with a manifestation that has since been superceded by a newer Digital File.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="FileRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to a Digital File (in the Files element of this XIP, or already stored in SDB), by its unique identifier, that is associated with a Deliverable Unit Manifestation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Path" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Path, relative to the manifestation root, of the Digital File within this Manifestation.  If a Manifestation consists of files in only one directory, the path might be the empty string (the filename is an attribute of the Digital File entity).  However a subsequent manifestation might separate (for example) text and image files into subdirectories, so a common file might be linked to the newer manifestation with path "image/".</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="DeprecatedBy" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Digital File that supercedes the file identified by the FileRef element.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="DeprecatedOn" type="xs:dateTime">
+                <xs:annotation>
+                    <xs:documentation>Date/time the Digital File identified by the FileRef element was deprecated.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="order" type="xs:long" >
+            <xs:annotation>
+                <xs:documentation>Defines the natural ordering of the objects within a manifestation.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB. If this is set to "deleted", the DeprecatedManifestationFile entity will be hard-deleted (rather than soft-deleted) from the repository.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeManifestation">
+        <xs:annotation>
+            <xs:documentation>A Data Object that embodies a Deliverable Unit in one or more technical environments (particular set of technologies).  This is an instance of a deliverable unit in a particular technology (i.e. the collection of files that allow authentic rendering of the deliverable unit within a given technical environment).</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="DeliverableUnitRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Deliverable Unit (by its unique identifier) this Manifestation is an instance of in a given technical environment.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ManifestationRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the Manifestation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ManifestationRelRef" type="xip:typeReference">
+                <xs:annotation>
+                    <xs:documentation>Relative reference for this Manifestation within the DeliverableUnit to which it belongs; this is an ordinal number so the first manifestation of a DU takes 1, then subsequent manifestations 2, 3, etc.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Originality" type="xs:boolean">
+                <xs:annotation>
+                    <xs:documentation>Whether this Manifestation is the original one (i.e. as it was originally created) or not.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Active" type="xs:boolean">
+                <xs:annotation>
+                    <xs:documentation>Whether this Manifestation is active i.e. whether this Manifestation needs preserving.  Manifestations that have been migrated for preservation reasons are marked as inactive as they are no longer considered to be at risk of obsolescence (this prevents duplication of actions).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="TypeRef" type="xip:typeReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to the type of the manifestation.  The allowed values are defined in the Registry.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="TechnicalEnvironmentRef" type="xip:typeReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Technical Environment that is capable of rendering this Manifestation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="TechnicalEnvironmentDescription" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>An optional description of the Technical Environment that is capable of rendering this Manifestation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Metadata" type="xip:genericMetadata" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Any descriptive metadata or additional technical metadata for the Manifestation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ComponentManifestation" type="xip:typeComponentManifestation" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>The set of instances of the Components that make up a Deliverable Unit, as implemented in this Manifestation of the DU.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ManifestationFile" type="xip:typeManifestationFile" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>The set of Digital Files that are associated with this Manifestation of the Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="BaseVersion" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Base version identifier for the Manifestation.  BaseVersion and CurrentVersion are used for two-way synchronisation over OAI-PMH for detecting any conflicting edits of this Manifestation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CurrentVersion" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Current version identifier for the Manifestation.  BaseVersion and CurrentVersion are used for two-way synchronisation over OAI-PMH for detecting any conflicting edits of this Manifestation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Identifier" type="xip:typeIdentifier" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>External identifier in third-party system for this Manifestation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="MetadataPresentable" type="xs:boolean" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Whether the metadata for this Manifestation is presentable.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ContentPresentable" type="xs:boolean" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Whether the content for this Manifestation is presentable.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="DeprecatedManifestationFile" type="xip:typeDeprecatedManifestationFile" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>The set of deprecated Digital Files that are associated with this Manifestation of the Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="GroupRef" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Manifestation group identifier; for internal use only.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Audit" type="xip:auditContainer" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Audit history of entity</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeMeasurementFile">
+        <xs:sequence>
+            <xs:element name="FileRef" type="xip:typeUnionReference"/>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="typeComponentProperty">
+        <xs:annotation>
+            <xs:documentation>An essential characteristic of a Component that needs to be preserved over time (with, potentially, an acceptable degree of invariance) e.g. the width or height of an image.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="PropertyRef" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of this Component Property: normally a PUID, but could be a numerical database primary key.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PropertyName" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The name of the property; it should be descriptive e.g. image width, number of pages.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="typeDeliverableUnitComponent">
+        <xs:annotation>
+            <xs:documentation>A part, or the whole of, a Deliverable Unit about which invariant properties can be measured.  It should be preserved in any migration.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="ComponentRef" type="xip:typeGUID">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the Deliverable Unit Component.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ComponentType" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The high-level type of a component, such as document, image, video, audio, spreadsheet, presentation, container.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Description" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Description of what the Component is, for example, stylesheet, for a web page.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ComponentCreationEvent" type="xip:typeEvent">
+                <xs:annotation>
+                    <xs:documentation>A record of the event by which this Deliverable Unit Component was identified/discovered.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ComponentProperty" type="xip:typeComponentProperty" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>The set of Component Properties (essential characteristics that need to be preserved over time) associated with this Component.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeDeliverableUnit">
+        <xs:annotation>
+            <xs:documentation>An Information Object that is the conceptual entity (a record) that is delivered by archives and libraries.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="DeliverableUnitRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:choice>
+                <xs:element name="CollectionRef" type="xip:typeUnionReference">
+                    <xs:annotation>
+                        <xs:documentation>Reference to the Collection that this DU belongs to. Note: Either this OR RecordSeriesRef can be populated, but not both i.e.a Deliverable Unit can belong to a Collection or a Record Series, but not to both.</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="RecordSeriesRef" type="xip:typeReference">
+                    <xs:annotation>
+                        <xs:documentation>Reference to the Record Series that this DU belongs to. Note: Either this OR CollectionRef can be populated, but not both i.e.a Deliverable Unit can belong to a Collection or a Record Series, but not to both.</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+            </xs:choice>
+            <xs:element name="AccessionRef" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Accession that this DU was part of when it was ingested into the repository.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="AccumulationRef" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Accumulation containing the Accession that this DU was part of when it was ingested into the repository.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ParentRef" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Deliverable Unit's parent Deliverable Unit (if it is not a top-level Deliverable Unit).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="DigitalSurrogate" type="xs:boolean" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>A flag to indicate whether this is a digitised material, which is acting as a substitute for an analogue (e.g. paper, celluloid, magnetic tape, etc.) original, or whether it's original born digital material.  True = digitised material; false = born-digital material.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CatalogueReference" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Identifier (usually human-readable and typically unique) of the Deliverable Unit in the catalogue for the repository.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ScopeAndContent" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>A brief description of the material represented by the Deliverable Unit.  It should enable users to identify the subject matter, and the time periods or geographical locations covered, and so judge its potential significance.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClosureStatus" type="xip:typeClosureStatus" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Whether the Deliverable Unit and/or its description are accessible to general users (open) or not (closed).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClosureType" type="xip:typeClosureType"  minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The type of closure, if general users are not allowed to access the Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ClosureCode" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The number of closure years (e.g. 0, 30, 75 etc); this code is associated with the closure type data.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CoverageFrom" type="xs:dateTime">
+                <xs:annotation>
+                    <xs:documentation>Creation date of the earliest item included in the Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CoverageTo" type="xs:dateTime">
+                <xs:annotation>
+                    <xs:documentation>Creation date of the most recent item included in the Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Title" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Name of the Deliverable Unit (related to its content or the source of that content).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CreatorCorporateBodyRef" type="xip:typeReference" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Reference to the organisation(s) who created and/or accumulated the item(s) that make up the Deliverable Unit, if it was created by an organisation rather than an individual.  N.B. For photographs, the photographer is the creator.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CreatorPersonRef" type="xip:typeReference" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Reference to the individual(s) who created and/or accumulated the item(s) that make up the Deliverable Unit, if it was created by an individual rather than an organisation.  N.B. For photographs, the photographer is the creator.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CorporateBodyRef" type="xip:typeReference" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Reference to the organisation(s) whose activities are significant to the record(s) being described. For example: World Health Organisation, Blackpool Railway Company, Cabinet. Part of the controlled description of the Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PersonRef" type="xip:typeReference" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Reference to the individual(s) whose activities are significant to the record(s) being described. For example: Winston Churchill, Thomas More, William Shakespeare. Part of the controlled description of the Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="SubjectRef" type="xip:typeReference" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Reference to the subject terms which are significant to, or relevant to, or which summarise the Deliverable Unit being described. Part of the controlled description of the Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PlaceRef" type="xip:typeReference" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Reference to the places relevant to the record(s). For example: Oxford, New York, New Zealand. Part of the controlled description of the Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Arrangement" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Information on the physical or logical arrangement of the Deliverable Unit. For example: Alphabetically, county by county, in subject order within blocks of years.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="AccessRestrictions" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Restrictions to the use or reproduction of the material. For example: this item is copyright of the author.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="RecordOpeningDate" type="xs:dateTime" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The date a closed Deliverable Unit will be made available.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Language" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The language(s) in which the Deliverable Unit is written.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="TypeRef" type="xip:typeReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to the type of the Deliverable Unit.  The exact values used will be determined by the owner of the repository.  Depending on how the material is divided between Collections and Deliverable Units, the Deliverable Unit types could be: fonds, series, sub-series, files and items.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FormerExternalRef" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Any previous reference used to identify (e.g. by the creator, or any previous owners of the DU) the Deliverable Unit before the DU was transfered to the repository.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FormerInternalRef" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Any previous (catalogue) reference used to identify the Deliverable Unit by the repository.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="SecurityTag" type="xs:string" default="open" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Identifier used to form groups of Deliverable Units to which the same permissions are applied.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Metadata" type="xip:genericMetadata" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Any descriptive metadata (i.e. cataloguing information) or additional technical metadata for the Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="AccessReviewEvent" type="xip:typeEvent" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Records a review of access control (i.e. whether a closed Information Object should be opened up to the users of the repository) for a Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="DeliverableUnitComponent" type="xip:typeDeliverableUnitComponent" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>The Deliverable Unit Component(s) which make up this Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="BaseVersion" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Base version identifier for the Deliverable Unit. BaseVersion and CurrentVersion are used in two-way synchronisation for detecting any conflicting edits of this Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CurrentVersion" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Current version identifier for the Deliverable Unit. BaseVersion and CurrentVersion are used in two-way synchronisation for detecting any conflicting edits of this Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Identifier" type="xip:typeIdentifier" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>External identifier in third-party system for this Deliverable Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Classification" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Classification of this Deliverable Unit, typically used to classify long-term temporary records, allowing subsequent actions, e.g. disposal, to be automated.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Audit" type="xip:auditContainer" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Audit history of entity</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeRelatedDeliverableUnit">
+        <xs:annotation>
+            <xs:documentation>A link between two Deliverable Units that have a direct and significant connection (from the point of view of the "From Deliverable Unit").</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="FromDeliverableUnitRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to the first Deliverable Unit (DU) concerned.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ToDeliverableUnitRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to the second Deliverable Unit (DU) concerned.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Relationship" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Description of the relationship, e.g. "cites". (In this example the "from" DU cites the "to" DU. An additional row would then have the relationship "cited by" with the references reversed.)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB. Allowed values are "new" and "deleted"; relationships between deliverable units cannot be changed, instead they must be deleted and a new one created instead.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeDeliverableUnits">
+        <xs:sequence>
+            <xs:element name="DeliverableUnit" type="xip:typeDeliverableUnit" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="RelatedDeliverableUnit" type="xip:typeRelatedDeliverableUnit" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="Manifestation" type="xip:typeManifestation" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="typeComponentManifestation">
+        <xs:annotation>
+            <xs:documentation>An instance of a particular Component in a particular Manifestation of a Deliverable Unit.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="ComponentRef" type="xip:typeGUID">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Component to which the Component Manifestation belongs.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ComponentManifestationRef" type="xip:typeGUID">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the Component Manifestation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="LinkedComponentManifestationRef" type="xip:typeGUID" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation></xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ComponentType" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The high-level type of a Component, such as document, image, video, audio, spreadsheet, presentation, container.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ComponentManifestationType" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The type of the Manifestation of a Component, such as HTML, Microsoft Word, PDF, or XML for a Component of type Document.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="MasterFileRef" type="xip:typeUnionReference" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Link to the File(s) which caused the discovery of this Manifestation of the Component.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FileRef" type="xip:typeUnionReference" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>References to the File(s) that make up this Manifestation of the Deliverable Unit Component.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Measurement" type="xip:typeComponentManifestationMeasurement" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>The measurements of Component Properties made on this Manifestation of the Component.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeComponentManifestationMeasurement">
+        <xs:annotation>
+            <xs:documentation>The value of a Component Property as measured in a particular Component Manifestation.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="PropertyRef" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Reference to the (unique identifier of the) Component Property being measured: normally a PUID, but could be a numerical database primary key.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PropertyName" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The name of the property being measured (should be descriptive, such as image height, or number of pages).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Value" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The value that was measured.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="MeasurementEvent" type="xip:typeEvent">
+                <xs:annotation>
+                    <xs:documentation>Reference to the event by which this Component Property Measurement was measured.  Often this may be the same event as the event that identified the component but this may not be the case.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:simpleType name="typeBitstreamType">
+        <xs:annotation>
+            <xs:documentation>The type of bitstream, i.e. whether it is a filestream or bitstream.
+A filestream is an embedded bytestream that can be transformed into a standalone file without the addition of file structure (headers, etc.) or reformatting the bitstream.
+A bitstream is an embedded bytestream that cannot be transformed into a standalone file without the addition of file structure (headers, etc.) and/or reformatting the bitstream to comply with some particular file format.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="File stream"/>
+            <xs:enumeration value="Byte stream"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="typeFixityInfo">
+        <xs:annotation>
+            <xs:documentation>Holds the checksum value, and the algorithm used to generate the checksum, for a Digital File.  More than one checksum value (i.e. more than one algorithm) may be recorded.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="FixityAlgorithmRef" type="xip:typeReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to the algorithm used to calculate the checksum.  Allowable values are:
+1 = MD5
+2 = SHA-1
+3 = SHA-256
+4 = SHA-512</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FixityValue" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Appropriate representation of the output of the checksum algorithm run on the file in question.  The representation used is normally a fixed-length hexadecimal string (e.g. 128-bit MD5 yields a 32 character answer) but the length depends on the algorithm (SHA-1 is 192-bit, for instance, so requires 48 characters).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="typeFormatInfo">
+        <xs:annotation>
+            <xs:documentation>Holds information about the format of a Digital File, including PUID information from the Technical Registry.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="FormatPUID" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The PRONOM Persistent Unique IDentifier for the file format.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FormatName" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The name of the file format.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FormatVersion" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The version of the file format e.g. 97-2003 (for the format Microsoft Word 97-2003).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Valid" type="xs:boolean" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Whether the identification of the format is valid or not.  Only a positive (specific) identification of a single format can be valid.  A file is valid if it is not corrupted and is sufficiently compliant with a format's specification to be usable.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Warning" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Any warnings associated with the format identification, such as unexpected extension.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="typeFileProperty">
+        <xs:annotation>
+            <xs:documentation>The value of a measured characteristic of a Digital File. N.B. These properties will help to ascertain whether migration is necessary and, if so, which migration pathway should be followed.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="PropertyRef" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the Digital File Property in the Technical Registry: normally a PUID, but could be a numerical database primary key.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FilePropertyName" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Name of the Property.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Value" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The measured value of the property for the File.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Metadata" type="xip:genericMetadata" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Any additional technical metadata for the File Property.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="EventRef" type="xip:typeReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Event recording the discovery of this File Property.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB.  Allowed values are "new" and "changed"; both are treated the same and the FileProperty is inserted as a new entity.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeEmbeddedBitstream">
+        <xs:annotation>
+            <xs:documentation>A contiguous or non-contiguous set of data within a Digital File that has meaningful common properties for preservation purposes.  It cannot be transformed into a standalone file without the addition of file structure (headers, etc.) and/or reformatting the bitstream to comply with some particular file format.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="EmbeddedBitstreamRelRef" type="xip:typeReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Relative reference for this Embedded Bitstream within the Digital File which it is part of.  This is an ordinal number so the first Embedded Bitstream within the stream of bytes that make up the Digital File has a relative reference of 1, then subsequent Embedded Bitsreams have 2, 3, etc.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ParentEmbeddedRelRef" type="xip:typeReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Embedded Bitstream's parent Embedded Bitstream (if it is not a top-level Embedded Bitstream).  This would be used if, for example, a ZIP file contained a Word document (top-level Embedded Bitstream) with an embedded Excel document (secondary-level Embedded Bitstream).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Type" type="xip:typeBitstreamType" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Whether it is a filestream or bitstream.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FileName" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Original name of the file. (Only applicable if it is a filestream.)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Metadata" type="xip:genericMetadata" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Any additional technical metadata for the Embedded Bitstream.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FileSize" type="xs:long" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Size of the file (in bytes). (Only applicable if it is a filestream.)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="LastModifiedDate" type="xs:dateTime" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Last modified date/time. (Only applicable if it is a filestream.)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FormatInfo" type="xip:typeFormatInfo" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Holds the information about the format of this Embedded Bitstream, including PUID information from the Technical Registry.  Identification may result in more than one possible format and each identification may have warnings associated with it (e.g. unexpected extension).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="IdentificationStatus" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The status of the format's identification: Positive (specific), Positive (generic), Tentative, Unknown. 
+N.B. This needs to be repeated since it is possible to have both positive (specific) and positive (generic) hits for a single file.  Each identification status has a 1-to-1 relationship to a Format Reference.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FormatDiscrepancies" type="xip:arbitraryContents" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Details of any differences between the Embedded Bitstream's format and the specification, as returned by the format identification or validation tool.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="IdentificationEvent" type="xip:typeEvent" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Records the identification of the format of an Embedded Bitstream.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Valid" type="xs:boolean" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Whether the identification is valid or not.  Only a positive (specific) identification of a single format can be valid.  A file is valid if it is not corrupted and is sufficiently compliant with a format's specification to be usable.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Well-formed" type="xs:boolean" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Whether the bitstream is completely compliant with the specification. This complex attribute will hold information about any non-compliances.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ValidationEvent" type="xip:typeEvent" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Records the validation of the format of an Embedded Bitstream.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FileProperty" type="xip:typeFileProperty" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>The identified and measured properties (essential characteristics) of an Embedded Bitstream.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PropertyExtractionEvent" type="xip:typeEvent" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Records the measurement of the properties of an Embedded Bitstream.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeFile">
+        <xs:annotation>
+            <xs:documentation>A named and ordered sequence of bytes that is known by an operating system.  A file can be zero or more bytes and has a file format, access permissions and file system statistics such as size and last modification date.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="FileRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the Digital File.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="IngestedFileSetRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Ingested File Set to which the Digital File belongs.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FileRelRef" type="xip:typeReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation></xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FileName" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Name of the Digital File.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Extant" type="xs:boolean">
+                <xs:annotation>
+                    <xs:documentation>Whether the file exists (true) or not (false).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Directory" type="xs:boolean">
+                <xs:annotation>
+                    <xs:documentation>True if the Digital File is actually a directory; false if it is a File.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Metadata" type="xip:genericMetadata" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Any additional technical metadata for the Digital File.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FileSize" type="xs:long" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Size of the Digital File (in bytes).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="LastModifiedDate" type="xs:dateTime" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Date and time of when the File was last modified.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+			<xs:element name="BaseVersion" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Base version identifier for the Manifestation.  BaseVersion and CurrentVersion are used for two-way synchronisation over OAI-PMH for detecting any conflicting edits of this Manifestation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CurrentVersion" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Current version identifier for the Manifestation.  BaseVersion and CurrentVersion are used for two-way synchronisation over OAI-PMH for detecting any conflicting edits of this Manifestation.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FixityInfo" type="xip:typeFixityInfo" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Holds the checksum value, and the algorithm used to generate the checksum, for this Digital File.  More than one checksum value (i.e. more than one algorithm) may be recorded.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FormatInfo" type="xip:typeFormatInfo" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Holds the information about the format of this Digital File, including PUID information from the Technical Registry.  Identification may result in more than one possible format and each identification may have warnings associated with it (e.g. unexpected extension).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="IdentificationStatus" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The status of the format's identification: Positive (specific), Positive (generic), Tentative, Unknown. N.B. This needs to be repeated since it is possible to have both positive (specific) and positive (generic) hits for a single file.  Each identification status has a 1-to-1 relationship to a FormatInfo element.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FormatDiscrepancies" type="xip:arbitraryContents" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Details of any differences between the file's format and the specification, as returned by the format identification or validation tool.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="IdentificationEvent" type="xip:typeEvent" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Records the identification of the format of a Digital File.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Valid" type="xs:boolean" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Whether the identification is valid or not.  Only a positive (specific) identification of a single format can be valid.  A file is valid if it is not corrupted and is sufficiently compliant with a format's specification to be usable.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Well-formed" type="xs:boolean" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Whether the file is completely compliant with the specification.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ValidationEvent" type="xip:typeEvent" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Records the validation of the format of a Digital File.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FileProperty" type="xip:typeFileProperty" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation/>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PropertyExtractionEvent" type="xip:typeEvent" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Records the measurement of the properties of a Digital File.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="EmbeddedBitstream" type="xip:typeEmbeddedBitstream" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>The identified and measured properties (essential characteristics) of a file.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="WorkingPath" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The location of the file at the point of ingest, relative to the content subdirectory of the SIP.
+N.B. The working path (e.g. "part1/images/") does not include the root location (e.g. "E:\SIPs/A_SIP/content/"), the directory corresponding to a manifestation in a multi-manifestation ingest, nor does it include the name of the file (e.g. "picture52.jpg").  
+N.B.2. SDB expects forward slashes to be used as file separators.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PhysicalPath" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The physical location of the file, relative to the content subdirectory of the SIP. This directory does not include the root location of the SIP, or the file name, but it does include any intermediate directories relating to the XIP content structure e.g. those relating to manifestations. If this field is not present, the working path will be used instead.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Identifier" type="xip:typeIdentifier" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>External identifier in third-party system for this TypeFile.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Title" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Digital File title.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Audit" type="xip:auditContainer" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Audit history of entity</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB. When this is set to "changed", the File entity's old Fixity, Format and Properties are deleted from the repository.  Any details within this File element are added as new elements to the repository.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeFiles">
+        <xs:sequence>
+            <xs:element name="File" type="xip:typeFile" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+    <xs:complexType name="typeFormatsAtRiskList">
+            <xs:sequence>
+                <xs:element name="FormatsAtRisk"  type="xip:typeFormatsAtRisk" />
+            </xs:sequence>
+    </xs:complexType>
+    -->
+    <xs:complexType name="typeFormatsAtRisk">
+        <xs:annotation>
+            <xs:documentation>Used for recording formats at risk of obsolescence and therefore in need of preservation action.  The file formats included are those where:
+- one of the file format inherent properties is flagged as high risk 
+- one of the file format instance properties is flagged as high risk 
+- the sum of the risk scores for the inherent properties associated with the file format is greater than a supplied threshold risk value.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="MigrationPathwayType" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The type of the Migration Pathway. These are defined in the Registry.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Format" type="xip:typeFormat" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>The set of formats that are at risk of obsolescence.  This is all formats listed in the Technical Registry which either have an inherent property flagged as high risk, or an instance property flagged as high risk or whose total risk from inherent properties plus the worst possible instance property risks are above a user-specified risk threshold.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="typeFormat">
+        <xs:annotation>
+            <xs:documentation>Holds information from the Technical Registry about the format of a Digital File, including PUID information.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="FormatPUID" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The PRONOM Persistent Unique IDentifier for the file format.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FormatName" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The name of the file format.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FormatVersion" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The version of the file format e.g. 97-2003 (for the format Microsoft Word 97-2003).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="InstanceRiskThreshold" type="xip:typePropertyRisk" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>This is named misleadingly, as it is the result of subtracting the sum of the inherent risk scores for the format from the user specified theshold risk value.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="InstanceProperty" type="xip:typeInstanceProperty" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>The instance properties, for the file format, that have non-zero risk or are flagged as being high risk.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="typeInstanceProperty">
+        <xs:annotation>
+            <xs:documentation>Details of an instance property of a file format from the Technical Registry.  An instance property is a property that varies between files of the same format, e.g. image height or number of pages.  Note that inherent properties are ones that all files of a given format share, such as the level of public disclosure for the format.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="PropertyName" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The name of the property in the Technical Registry.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PropertyDescription" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The description of the property in the Technical Registry.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:choice>
+                <xs:element name="PropertyValue" type="xip:typePropertyValue">
+                <xs:annotation>
+                    <xs:documentation>The value of the property (which has a non-zero risk score, or is flagged as high risk), when the property has discrete values that are described by a set of text values or enumerations.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+                <xs:element name="PropertyRange" type="xip:typePropertyRange">
+                <xs:annotation>
+                    <xs:documentation>A specific range of values of the property (which is associated with a non-zero risk score, or is flagged as high risk), when the property has a continuous set of values that are described by ranges of numerical values.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            </xs:choice>
+            <xs:element name="PropertyRisk" type="xip:typePropertyRisk">
+                <xs:annotation>
+                    <xs:documentation>The risk value associated with the given value or range of values for the property.  May be zero (if the property value or range is flagged as being high-risk).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>The unique identifier of the property in the Technical Registry: normally a PUID, but could be a numerical database primary key.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="highRisk" type="xs:boolean" use="optional">
+            <xs:annotation>
+                <xs:documentation>Whether the given value or range of values for the property is flagged as being high-risk (true) or not (false).</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typePropertyRange">
+        <xs:annotation>
+            <xs:documentation>A specific range of numeric values of a property (whose values are continuous) that have the same risk score.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="MinValue" type="xs:double">
+                <xs:annotation>
+                    <xs:documentation>The minimum (start) value for the range.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="MaxValue" type="xs:double">
+                <xs:annotation>
+                    <xs:documentation>The maximum (end) value for the range.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="typePropertyValue">
+        <xs:annotation>
+            <xs:documentation>The value of a property when the property is described by a set of discrete values (text strings or enumerations).</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string"/>
+    </xs:simpleType>
+    <xs:simpleType name="typePropertyRisk">
+        <xs:annotation>
+            <xs:documentation>The risk associated with a specific value (or range of values) of a property which governs how easy it is to preserve a format with that value (or a value within the given range) of the property.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:double"/>
+    </xs:simpleType>
+
+    <xs:complexType name="typeIngestedFileSet">
+        <xs:annotation>
+            <xs:documentation>A set of files that are deposited into the archive together as a result of particular event (e.g. an accession event or a transformation event).</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="IngestedFileSetRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the Ingested File Set.  Note that the identifier will be unique regardless of whether it is Accession File Set or Post-Transformation File Set.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="IngestedFileSetTypeRef" type="xip:typeReference">
+                <xs:annotation>
+                    <xs:documentation>The type of Ingested File Set:
+1 = Accession File Set
+2 = Post-Transformation File Set</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="VirusCheckEvent" type="xip:typeEvent" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Records the event of virus checking an Ingested File Set.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="IntegrityCheckEventRef" type="xip:typeReference" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Records the event of checking the integrity of an Ingested File Set by generating a checksum for each Digital File and comparing it to a previously recorded value.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:choice>
+                <xs:element name="TransformationUnitRef" type="xip:typeGUID" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Transformation Unit(s) with which this file set is associated, if this Ingested File Set is a Post-Transformation File Set.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+                <xs:element name="AccessionRef" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Accession with which this file set is associated, if this Ingested File Set is an Accession File Set.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB. Allowed values are "new" and "same".</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeIngestedFileSets">
+        <xs:sequence>
+            <xs:element name="IngestedFileSet" type="xip:typeIngestedFileSet" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="typeMigrationPathways">
+        <xs:sequence>
+            <xs:element name="MigrationPathway" type="xip:typeMigrationPathway" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="typeMigrationPathway">
+        <xs:annotation>
+            <xs:documentation>A defined action which uses a (software) tool to transform a file from a format at risk to a chosen target format.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="MigrationPathwayRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>Unique Identifier (primary key) of the Migration Pathway in the Technical Registry.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PathwayType" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The type of the Migration Pathway.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PathwayStatus" type="xip:typePathwayStatus">
+                <xs:annotation>
+                    <xs:documentation>Whether the pathway has been approved.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="TargetComponentManifestationType" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The type of Manifestation of a Component (such as HTML, Microsoft Word, PDF, or XML for a Component of type Document) that the migration should/will create.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="OriginalFormat" type="xip:typeFileFormat">
+                <xs:annotation>
+                    <xs:documentation>The format at risk of obsolescence.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="TargetFormat" type="xip:typeFileFormat" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The chosen target format to migrate the at risk files to.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Tool" type="xip:typeTool">
+                <xs:annotation>
+                    <xs:documentation>Details of the software tool used to transform the file from the format at risk to the chosen target format.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PathwayProperties" type="xip:typePathwayProperties" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The set of properties that the migration must maintain unchanged.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="current" type="xs:boolean" use="optional" default="false">
+            <xs:annotation>
+                <xs:documentation>True if this Migration Pathway is a current pathway; false if it has been withdrawn from use.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typePathwayStatus">
+        <xs:annotation>
+            <xs:documentation>Details of whether the Migration Pathway has been approved for use and by whom and on what date.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="ApprovedBy" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The name of the person (e.g. an archivist) who approved the use of this Migration Pathway.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ApprovedDate" type="xs:dateTime" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The date and time when this Migration Pathway was approved.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="approved" type="xs:boolean" use="optional" default="false">
+            <xs:annotation>
+                <xs:documentation>True if this Migration Pathway has been approved for use: false, otherwise.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeFileFormat">
+        <xs:annotation>
+            <xs:documentation>The format of a Digital File; information comes from the Technical Registry.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="FormatRisk" type="xip:typeRiskValue">
+                <xs:annotation>
+                    <xs:documentation>An indication of the risk (relative to other formats) associated with leaving a file in a specific format (as opposed to, for example, migrating it to another format).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FormatInfo" type="xip:typeFormatInfo">
+                <xs:annotation>
+                    <xs:documentation>Details, including the PUID, of the file format from the Technical Registry.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="typeTool">
+        <xs:annotation>
+            <xs:documentation>Details of the software tool (to be) used to transform the file from the format at risk to the chosen target format.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="ClassName" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>A unique identifier for the software package tool, as recorded in the Technical Registry.
+In SDB3, this is the Java class name of the class that wraps the software tool.
+In SDB4, this is the name of the Spring bean that implements the wrapped software tool.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ToolName" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The name of the tool, as recorded in the Technical Registry.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ToolDescription" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>A description of the tool, as recorded in the Technical Registry.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:positiveInteger" use="required">
+            <xs:annotation>
+                <xs:documentation>The unique identifier (primary key) of the software package tool in the Technical Registry.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeProperty">
+        <xs:annotation>
+            <xs:documentation>A Digital File Property that must be maintained unchanged (within a set tolerance) during migration.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="Name" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The name of a Digital File Property.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Description" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>A description of the Digital File Property.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>The Property's PUID (or alternatively, can be the numerical primary key of the Property in the Technical Registry).</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typePathwayProperty">
+        <xs:annotation>
+            <xs:documentation>A measured property of a File, before and after migration, that should be maintained unchanged, within a set tolerance.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="OriginalProperty" type="xip:typeProperty">
+                <xs:annotation>
+                    <xs:documentation>The Property as it exists in the file which is at risk of obsolescence.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="TargetProperty" type="xip:typeProperty">
+                <xs:annotation>
+                    <xs:documentation>The Property as it exists in the file which will be created by the migration.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Variance" type="xs:double">
+                <xs:annotation>
+                    <xs:documentation>The allowed difference in the measured value of the property between the source and target files. Can be zero.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="id" type="xip:typeReference" use="required">
+            <xs:annotation>
+                <xs:documentation>The primary key of the 'original' Property in the Technical Registry.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="approved" type="xs:boolean" use="optional" default="false">
+            <xs:annotation>
+                <xs:documentation>Whether the maintenance of this Property within the given tolerance has been approved by a person with the appropriate level of authority.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typePathwayProperties">
+        <xs:sequence>
+            <xs:element name="PathwayProperty" type="xip:typePathwayProperty" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="typeMigrationPathwayRef">
+        <xs:annotation>
+            <xs:documentation>A reference to a specific Migration Pathway.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="MigrationPathwayRef" type="xip:typeUnionReference">
+                <xs:annotation>
+                    <xs:documentation>A reference to a specific Migration Pathway.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PathwayType" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>The type of the Migration Pathway. These are defined in the Registry.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="typeTransformationUnit">
+        <xs:annotation>
+            <xs:documentation>A Component Manifestation that is transformed via migration.  A Transformation Unit keeps track of the set of formats that are migrated within this Component (and hence can calculate the files which are transformed and those that are unchanged as a result of migration).  For each format to be migrated, it includes details of the migration to perform.  This includes details of the Migration Pathway to use.
+N.B. If a Component Manifestation is being transformed and some files are not part of the migration then these unchanged files will be carried forward into the new manifestation.  The new Component Manifestation will consist of these unchanged files plus the Post-Transformation File Set.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="TransformationUnitRef" type="xip:typeGUID">
+                <xs:annotation>
+                    <xs:documentation>Unique identifier of the Transformation Unit.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="MigrationPathwayRefs" type="xip:typeMigrationPathwayRef" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Migration Pathway to follow for each format.  The Migration Pathway includes details of the software tool to be run to perform the migration.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ParentRef" type="xip:typeGUID" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Transformation Unit's parent Transformation Unit (if it is not a top-level Transformation Unit).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="SourceManifestationRef" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Deliverable Unit (DU) Manifestation being transformed.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="TargetManifestationRef" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Deliverable Unit (DU) Manifestation being created.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="SourceComponentManifestationRef" type="xip:typeGUID" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the Component Manifestation being transformed.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PostTransformationFileSetRef" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the ingested file set created by the transform.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="TransformationEvent" type="xip:typeEvent" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Records the event of performing a transformation (migration).  It records the Technology-Watch driven decision to proceed with a scheduled (set of) migration(s).</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FormatsAtRisk" type="xip:typeFormatsAtRisk" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the list of formats to be transformed.  The files within the source component manifestation to be transformed are those with a format on this list.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="FilesAtRisk" type="xip:typeFilesAtRisk" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference to the set of files being transformed.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="TargetFileRef" type="xip:typeUnionReference" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Target FileRef of TransformationUnit</xs:documentation>
+                </xs:annotation>
+             </xs:element>
+        </xs:sequence>
+        <xs:attribute name="status" type="xip:typeStatus" use="required">
+            <xs:annotation>
+                <xs:documentation>Processing information for SDB. Allowed values are "new" and "same".</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="typeTransformations">
+        <xs:annotation>
+            <xs:documentation>The set of Transformation Units (each for a single Component Manifestation) that are part of the same Transformation.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="TransformationUnit" type="xip:typeTransformationUnit" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="typeFilesAtRisk">
+        <xs:sequence>
+            <xs:element name="FileRef" type="xip:typeUnionReference" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:annotation>
+        <xs:documentation>
+                Metadata schema used by Tessella's SDB (Safety Deposit Box) system for: 
+            * SIPs (Submission Information Packages), 
+            * AIPs (Archival Information Packages), and
+            * DIPs (Dissemination Information Packages), 
+            as well as for migration of files at risk of obsolescence.
+            
+            Changes in 4.2
+            Manifestation files now have an implicity order via optional order attribute.
+            
+        </xs:documentation>
+    </xs:annotation>
+    <xs:element name="XIP">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Control" type="xip:arbitraryContents" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>Holds temporary information used to manage the processing of the main content of the XIP document (held in the other elements) and passed between services; it should not be edited manually. In particular, it was used by the SDB3 workflow scheduler and execution engine.</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="Collections" type="xip:typeCollections" minOccurs="0"/>
+                <xs:element name="Aggregations" type="xip:typeAggregations" minOccurs="0"/>
+                <xs:element name="DeliverableUnits" type="xip:typeDeliverableUnits" minOccurs="0"/>
+                <xs:element name="Files" type="xip:typeFiles" minOccurs="0"/>
+                <xs:element name="Transformations" type="xip:typeTransformations" minOccurs="0"/>
+                <xs:element name="IngestedFileSets" type="xip:typeIngestedFileSets" minOccurs="0"/>
+                <xs:element name="MigrationPathways" type="xip:typeMigrationPathways" minOccurs="0"/>
+                <xs:element name="FormatsAtRisk" type="xip:typeFormatsAtRisk" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
