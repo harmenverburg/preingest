@@ -26,6 +26,43 @@ export ACTIONGUID=""
 
 shopt -s extglob
 
+function notify() {
+   sessionid=$1
+   starttime=$2
+   endtime=$3
+   success=$4 # 0 is ok, anything else not
+   message=$5
+   
+   if [ $success -eq 0 ]
+   then
+      accepted=1
+      rejected=0
+      state=Completed
+   else
+      accepted=0
+      rejected=1
+      state=Failed
+   fi
+   
+   json="{ \"eventDateTime\": \"`timestamp`\", \
+           \"sessionId\": \"$sessionid\", \
+           \"name\": \"SipCreatorHandler\", \
+           \"state\": \"$state\", \
+           \"message\": \"$message\", \
+           \"hasSummary\": true, \
+           \"processed\": 0, \
+           \"accepted\": $accepted, \
+           \"rejected\": $rejected, \
+           \"start\": \"$starttime\", \
+           \"end\": \"$endtime\" \
+         }"
+         
+        # Send notification message to the API:
+        echo Sending $PREINGEST_WEBAPI/api/Status/notify
+        curl -s -S -X POST -H "Content-Type: application/json" --data "$json" "$PREINGEST_WEBAPI/api/Status/notify" 
+        echo; echo "--------------- sent notify message for action guid $sessionid"
+}
+
 function moanAndDie() {
    echo "SIP creation terminated with an error"
     
@@ -41,10 +78,12 @@ function moanAndDie() {
    if [ -n "$ACTIONGUID" ]
    then
         # Inform the API that we had a problem with this id:
-        echo Sending $PREINGEST_WEBAPI/api/status/failed/$ACTIONGUID
+        echo Sending $PREINGEST_WEBAPI/api/Status/failed/$ACTIONGUID
         json="{ \"message\": \"$message\" }"
-        curl -s -S -X POST -H "Content-Type: application/json" --data "$json" "$PREINGEST_WEBAPI/api/status/failed/$ACTIONGUID" 
+        curl -s -S -X POST -H "Content-Type: application/json" --data "$json" "$PREINGEST_WEBAPI/api/Status/failed/$ACTIONGUID" 
         echo; echo "--------------- sent FAILED message for action guid $ACTIONGUID"
+        
+        notify "$ACTIONGUID" "$STARTTIME" "`timestamp`" 1 "$message"
    fi
    
    exit 1
@@ -70,22 +109,21 @@ function timestamp {
 }
 
 function doIt {
-    STARTTIME=`timestamp`
     # Obtain an actionGuid:
-    # Sample result from /api/status/new: {"processId":"0b046a2d-26d7-406c-b832-d28b5d136114","folderSessionId":"0ee4629b-3394-6986-b859-430c0256ecd1","name":"SipCreatorHandler","description":"Create a preservica SIP file","creation":"2021-01-06T13:51:09.047071+00:00","resultFiles":"myfile.zip","status":null}
+    # Sample result from /api/Status/new: {"processId":"0b046a2d-26d7-406c-b832-d28b5d136114","folderSessionId":"0ee4629b-3394-6986-b859-430c0256ecd1","name":"SipCreatorHandler","description":"Create a preservica SIP file","creation":"2021-01-06T13:51:09.047071+00:00","resultFiles":"myfile.zip","status":null}
     # grep filters out the part "processId":"0b046a2d-26d7-406c-b832-d28b5d136114"
     # sed removes everything but the action guid (processId), even without quotes: 0b046a2d-26d7-406c-b832-d28b5d136114
-    echo Retrieve actionguid using $PREINGEST_WEBAPI/api/status/new/$GUID
+    echo Retrieve actionguid using $PREINGEST_WEBAPI/api/Status/new/$GUID
     OUTPUTZIP=$OUTPUTFOLDER/../$INPUTFOLDER_BASE.sip.zip
     json="{ \"name\": \"SipCreatorHandler\", \"description\": \"Create a preservica SIP file\", \"result\": \"$OUTPUTZIP\" }"
-    ACTIONGUID=$(curl -s -S -X POST -H "Content-Type: application/json" --data "$json" "$PREINGEST_WEBAPI/api/status/new/$GUID" | \
+    ACTIONGUID=$(curl -s -S -X POST -H "Content-Type: application/json" --data "$json" "$PREINGEST_WEBAPI/api/Status/new/$GUID" | \
                  grep -o '"processId":"[^\"]*"' | \
                  sed -e 's/^.*: *"\([^\"]*\)"$/\1/')
     echo; echo "--------------- retrieved action guid $ACTIONGUID"
 
     # Inform the API that we started the action with this id:
-    echo Send $PREINGEST_WEBAPI/api/status/start/$ACTIONGUID
-    curl -s -S -X POST -H "Content-Type: application/json" --data '{}' "$PREINGEST_WEBAPI/api/status/start/$ACTIONGUID"
+    echo Send $PREINGEST_WEBAPI/api/Status/start/$ACTIONGUID
+    curl -s -S -X POST -H "Content-Type: application/json" --data '{}' "$PREINGEST_WEBAPI/api/Status/start/$ACTIONGUID"
     echo; echo "--------------- sent START message for action guid $ACTIONGUID"
     
     # Switches conform https://noordhollandsarchief.sharepoint.com/:x:/r/sites/ImplementatiePreserveringsvoorziening/Gedeelde%20documenten/General/2.%20Technische%20documentatie/Pre-ingest/CMD%20SIP%20creator%20settings.xlsx?d=w9e29f946e0624d7db2d1efeca5f3525b&csf=1&web=1&e=Z7CTt7
@@ -162,8 +200,8 @@ EOF
     rm -Rf "$OUTPUTFOLDER"
     
     #echo "About to send JSON for status/update:"; cat "$TMPJSON";  echo; echo "---------------"
-    echo "Send $PREINGEST_WEBAPI/api/status/update/$ACTIONGUID"
-    curl -s -S -X PUT -H "Content-Type: application/json" --data @"$TMPJSON" "$PREINGEST_WEBAPI/api/status/update/$ACTIONGUID"
+    echo "Send $PREINGEST_WEBAPI/api/Status/update/$ACTIONGUID"
+    curl -s -S -X PUT -H "Content-Type: application/json" --data @"$TMPJSON" "$PREINGEST_WEBAPI/api/Status/update/$ACTIONGUID"
     echo; echo "--------------- sent UPDATE message for action guid $ACTIONGUID"    
     rm "$TMPJSON"
     
@@ -173,10 +211,14 @@ EOF
     fi
 
     # Inform the API that we completed the action with this id:
-    echo Send $PREINGEST_WEBAPI/api/status/completed/$ACTIONGUID
-    curl -s -S -X POST -H "Content-Type: application/json" --data '{}' "$PREINGEST_WEBAPI/api/status/completed/$ACTIONGUID"
-    echo; echo "--------------- sent COMPLETED message for action guid $ACTIONGUID"   
+    echo Send $PREINGEST_WEBAPI/api/Status/completed/$ACTIONGUID
+    curl -s -S -X POST -H "Content-Type: application/json" --data '{}' "$PREINGEST_WEBAPI/api/Status/completed/$ACTIONGUID"
+    echo; echo "--------------- sent COMPLETED message for action guid $ACTIONGUID"
+    
+    notify "$ACTIONGUID" "$STARTTIME" "`timestamp`" 0 "SIPCreator completed"
 }
+
+export STARTTIME=`timestamp`
 
 cd "$INPUTFOLDER"
 
