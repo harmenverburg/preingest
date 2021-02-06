@@ -1,5 +1,6 @@
 ﻿using CsvHelper;
 
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
@@ -12,15 +13,18 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
-    public class GreenListHandler : AbstractPreingestHandler
+    public class GreenListHandler : AbstractPreingestHandler, IDisposable
     {
-        public GreenListHandler(AppSettings settings) : base(settings) { }
-
+        public GreenListHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection)
+        {
+            this.PreingestEvents += Trigger;
+        }
         public String GreenlistLocation()
         {
             string json = "greenlist.json";
@@ -36,7 +40,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             else
                 return null;
         }
-
         public String DroidCsvOutputLocation()
         {
             var directory = new DirectoryInfo(TargetFolder);
@@ -55,7 +58,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 return null;
             }
         }
-
         public override void Execute()
         {
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
@@ -153,6 +155,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 if (isSuccess)
                     OnTrigger(new PreingestEventArgs { Description="Comparing greenlist using CSV from DROID is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });                
             }
-        }       
+        }
+        public void Dispose()
+        {
+            this.PreingestEvents -= Trigger;
+        }
     }
 }

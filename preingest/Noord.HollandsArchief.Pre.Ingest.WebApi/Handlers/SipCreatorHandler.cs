@@ -1,21 +1,20 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 using System;
 using System.IO;
+using System.Net;
 using System.Linq;
-using System.Net.Http;
-using System.Collections.Generic;
 
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
-using System.Net;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     //Check 5
-    public class SipCreatorHandler : AbstractPreingestHandler
+    public class SipCreatorHandler : AbstractPreingestHandler, IDisposable
     {
-        public SipCreatorHandler(AppSettings settings) : base(settings)  {  }
+        public SipCreatorHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection) { }
 
         private String GetProcessingUrl(string servername, string port, Guid folderSessionId, string folder)
         {
@@ -45,6 +44,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
             if(!statusCodeOk)
                 throw new ApplicationException(String.Format("XSLWeb SIP Creator request '{0}' didn't return HTTP status code OK/200!", requestUri));
+        }
+
+        public void Dispose()
+        {           
         }
     }
 }

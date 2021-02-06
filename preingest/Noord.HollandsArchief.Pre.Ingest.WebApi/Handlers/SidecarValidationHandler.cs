@@ -1,12 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Collections.Generic;
 
 using Noord.HollandsArchief.Pre.Ingest.Utilities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
@@ -15,10 +17,12 @@ using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure;
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     //Check 5
-    public class SidecarValidationHandler : AbstractPreingestHandler
+    public class SidecarValidationHandler : AbstractPreingestHandler, IDisposable
     {
-        public SidecarValidationHandler(AppSettings settings) : base(settings)  { }
- 
+        public SidecarValidationHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection)
+        {
+            this.PreingestEvents += Trigger;
+        }
         private String CollectionTitlePath(String fullnameLocation)
         {
             return fullnameLocation.Remove(0, TargetFolder.Length);
@@ -76,7 +80,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     OnTrigger(new PreingestEventArgs { Description = "Sidecar structure validation is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel, SidecarStructure = sidecarTreeNode });
             }
         }
-
         private PairNode<ISidecar> ScanSidecarStructure(DirectoryInfo collection, PreingestEventArgs eventArgs)
         {
             eventArgs.Description = "Walking through the folder structure.";
@@ -108,7 +111,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
             return sidecarTreeNode;
         }
-
         private void SetSummary(DirectoryInfo collection, PairNode<ISidecar> sidecarTreeNode, PreingestEventArgs eventArgs)
         {
             //trigger event
@@ -146,7 +148,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             TimeSpan processTime = (TimeSpan)(end - start);
             Logger.LogInformation(String.Format("Processed in {0} ms.", processTime));
         }
-
         private void StartValidation(DirectoryInfo collection, PairNode<ISidecar> sidecarTreeNode, PreingestEventArgs eventArgs)
         {
             eventArgs.Description = String.Format("Start validate sidecar structure in '{0}'.", TargetFolder);
@@ -215,7 +216,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             TimeSpan processTime = (TimeSpan)(end - start);
             Logger.LogInformation(String.Format("Processed in {0} ms.", processTime));
         }
-        
         private void DeepScan(string directory, PairNode<ISidecar> sidecarTreeNode, PreingestEventArgs eventArgs)
         {
             eventArgs.Description = String.Format("Running deepscan for sidecar structure in '{0}'.", directory);
@@ -389,6 +389,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             }
            
             return result;
+        }
+        public void Dispose()
+        {
+            this.PreingestEvents -= Trigger;
         }
     }
 }

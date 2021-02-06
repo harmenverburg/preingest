@@ -2,7 +2,7 @@
 using System.IO;
 using Microsoft.Extensions.Logging;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
@@ -23,6 +23,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         void AddCompleteState(Guid processId);
         void AddFailedState(Guid processId, string message);
         void ValidateAction();
-
+        void Trigger(object sender, PreingestEventArgs e);
     }
 }

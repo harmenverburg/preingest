@@ -134,7 +134,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 currentArchive = _preingestCollection.GetCollection(guid);
 
                 string collectionData = JsonConvert.SerializeObject(currentArchive, settings);
-                _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionStatus), guid, collectionData).GetAwaiter().GetResult();
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeToWorkerService), guid, collectionData).GetAwaiter().GetResult();
             }
             catch (Exception e)
             {

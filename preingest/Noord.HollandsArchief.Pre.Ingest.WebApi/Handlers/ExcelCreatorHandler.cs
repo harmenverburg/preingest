@@ -1,18 +1,23 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Collections.Generic;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
-    public class ExcelCreatorHandler : AbstractPreingestHandler
+    public class ExcelCreatorHandler : AbstractPreingestHandler, IDisposable
     {
-        public ExcelCreatorHandler(AppSettings settings) : base(settings) { }
+        public ExcelCreatorHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection)
+        {
+            this.PreingestEvents += Trigger;
+        }
 
         private String GetProcessingUrl(string servername, string port, Guid folderSessionId)
         {          
@@ -80,6 +85,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 if (isSucces)
                     OnTrigger(new PreingestEventArgs { Description = "Generate Excel file is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
             }
+        }
+
+        public void Dispose()
+        {
+            this.PreingestEvents -= Trigger;
         }
     }
 }

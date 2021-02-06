@@ -1,16 +1,18 @@
-﻿using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+
+using Microsoft.AspNetCore.SignalR;
+
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
+
 using System;
-using System.Net;
 using System.Net.Http;
-using System.Security.Policy;
 using System.Threading.Tasks;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     //Check 5
-    public class DroidValidationHandler : AbstractPreingestHandler
+    public class DroidValidationHandler : AbstractPreingestHandler, IDisposable
     {
         public class StatusResult
         {
@@ -27,7 +29,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         AppSettings _settings = null;
 
-        public DroidValidationHandler(AppSettings settings) : base(settings)
+        public DroidValidationHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection)
         {
             this._settings = settings;
         }
@@ -126,6 +128,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             }
 
             return result;
+        }
+
+        public void Dispose()
+        {
+            
         }
     }
 }

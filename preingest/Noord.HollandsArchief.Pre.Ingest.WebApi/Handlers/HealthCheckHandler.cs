@@ -1,17 +1,18 @@
-﻿using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+﻿using Microsoft.AspNetCore.SignalR;
+
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Model;
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
-using System.Threading.Tasks;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
-    public class HealthCheckHandler : AbstractPreingestHandler
+    public class HealthCheckHandler : AbstractPreingestHandler, IDisposable
     {
         AppSettings _settings = null;
-        public HealthCheckHandler(AppSettings settings) : base(settings)
+        public HealthCheckHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection)
         {
             _settings = settings;
         }
@@ -62,6 +63,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             }
         }
 
+        public void Dispose()
+        {
+           
+        }
         public bool IsAliveDroid { get; set; }
         public bool IsAliveXslWeb { get; set; }
         public bool IsAliveClamAv { get; set; }

@@ -46,24 +46,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi
 
             var settings = appSettingsSection.Get<AppSettings>();
             services.AddDbContext<Model.PreIngestStatusContext>(options => options.UseSqlite(Configuration.GetConnectionString("Sqlite")));
-
+                        
             services.AddSingleton<PreingestEventHub>();
             services.AddSingleton<CollectionHandler>();
 
-            services.Add(new ServiceDescriptor(typeof(HealthCheckHandler), new HealthCheckHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(ContainerChecksumHandler), new ContainerChecksumHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(UnpackTarHandler), new UnpackTarHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(ScanVirusValidationHandler), new ScanVirusValidationHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(NamingValidationHandler), new NamingValidationHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(SidecarValidationHandler), new SidecarValidationHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(DroidValidationHandler), new DroidValidationHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(EncodingHandler), new EncodingHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(GreenListHandler), new GreenListHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(MetadataValidationHandler), new MetadataValidationHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(TransformationHandler), new TransformationHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(SipCreatorHandler), new SipCreatorHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(ExcelCreatorHandler), new ExcelCreatorHandler(settings)));
-            services.Add(new ServiceDescriptor(typeof(SettingsHandler), new SettingsHandler(settings)));
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen();
         }

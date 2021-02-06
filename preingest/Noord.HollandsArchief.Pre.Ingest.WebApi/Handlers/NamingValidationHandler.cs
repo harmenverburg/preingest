@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 using System;
 using System.IO;
@@ -6,6 +7,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
@@ -13,9 +15,12 @@ using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     //Check 2.2
-    public class NamingValidationHandler : AbstractPreingestHandler
+    public class NamingValidationHandler : AbstractPreingestHandler, IDisposable
     {
-        public NamingValidationHandler(AppSettings settings) : base(settings) { }
+        public NamingValidationHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection)
+        {
+            this.PreingestEvents += Trigger;
+        }
         public override void Execute()
         {
             bool isSucces = false;
@@ -70,7 +75,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     OnTrigger(new PreingestEventArgs { Description = "Checking names in files and folders is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
             }
         }
-
         private void DirectoryRecursion(DirectoryInfo currentFolder, List<NamingItem> procesResult, PreingestEventArgs model)
         {
             model.Description = String.Format ("Checking folder '{0}'.", currentFolder.FullName);            
@@ -108,17 +112,19 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             foreach (var directory in currentFolder.GetDirectories())
                 DirectoryRecursion(directory, procesResult, model);
         }
-
         private bool ContainsInvalidCharacters(string testName)
         {
             Regex containsABadCharacter = new Regex("[\\?*:\"​|/<>#&‌​]");
             return (containsABadCharacter.IsMatch(testName));
         }
-
         private bool ContainsAnyDOSNames(string testName)
         {
             Regex containsAnyDOSNames = new Regex("^(PRN|AUX|NUL|CON|COM[0-9]|LPT[0-9]|(\\.+))$", RegexOptions.IgnoreCase);
             return (containsAnyDOSNames.IsMatch(testName));
+        }
+        public void Dispose()
+        {
+            this.PreingestEvents -= Trigger;
         }
     }
 }

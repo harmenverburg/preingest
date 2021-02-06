@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 using System;
 using System.IO;
@@ -6,17 +7,23 @@ using System.Collections.Generic;
 
 using Noord.HollandsArchief.Pre.Ingest.Utilities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
-    public class ContainerChecksumHandler : AbstractPreingestHandler
+    public class ContainerChecksumHandler : AbstractPreingestHandler, IDisposable
     {
-        public ContainerChecksumHandler(AppSettings settings) : base(settings) { }
-
+        public ContainerChecksumHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection)
+        {
+            this.PreingestEvents += Trigger;
+        }
         public String Checksum { get; set; }
-
         public String DeliveredChecksumValue { get; set; }
+        public void Dispose()
+        {
+            this.PreingestEvents -= Trigger;
+        }
         public override void Execute()
         {
             Logger.LogInformation("Calculate checksum for file : '{0}'", TargetCollection);

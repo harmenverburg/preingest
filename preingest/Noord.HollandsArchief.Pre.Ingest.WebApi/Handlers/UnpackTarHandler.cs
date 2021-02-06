@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 using Mono.Unix;
 
@@ -9,14 +10,21 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
-    public class UnpackTarHandler : AbstractPreingestHandler
+    public class UnpackTarHandler : AbstractPreingestHandler, IDisposable
     {
-        public UnpackTarHandler(AppSettings settings) : base(settings) { }       
-
+        public UnpackTarHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection)
+        {
+            PreingestEvents += Trigger;
+        }
+        public void Dispose()
+        {
+            PreingestEvents -= Trigger;
+        }
         public override void Execute()
         {
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);  
@@ -118,7 +126,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 }
             }
         }
-
         private void ScanPath(UnixDirectoryInfo dirinfo, PreingestEventArgs passEventArgs)
         {
             passEventArgs.Description = String.Format("Processing folder '{0}'.", dirinfo.FullName);

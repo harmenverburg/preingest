@@ -6,18 +6,26 @@ using System.Linq;
 using System.Collections.Generic;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     //Check 1.0
-    public class ScanVirusValidationHandler : AbstractPreingestHandler
+    public class ScanVirusValidationHandler : AbstractPreingestHandler, IDisposable
     {
-        public ScanVirusValidationHandler(AppSettings settings) : base(settings) { }
-
+        public ScanVirusValidationHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection)
+        {
+            this.PreingestEvents += Trigger;
+        }
+        public void Dispose()
+        {
+            this.PreingestEvents -= Trigger;
+        }
         public override void Execute()
         {
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);

@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 
@@ -9,11 +11,19 @@ using System.Collections.Generic;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
-    public class SettingsHandler : AbstractPreingestHandler
+    public class SettingsHandler : AbstractPreingestHandler, IDisposable
     {
-        public SettingsHandler(AppSettings settings) : base(settings) { }
+        public SettingsHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection)
+        {
+            this.PreingestEvents += Trigger;
+        }
 
         public BodySettings CurrentSettings { get; set; }
+
+        public void Dispose()
+        {
+            this.PreingestEvents -= Trigger;
+        }
 
         public override void Execute()
         {

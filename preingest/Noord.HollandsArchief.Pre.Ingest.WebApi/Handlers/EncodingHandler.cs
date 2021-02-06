@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 using System;
 using System.IO;
@@ -8,15 +9,22 @@ using System.Collections.Generic;
 
 using Noord.HollandsArchief.Pre.Ingest.Utilities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
-    public class EncodingHandler : AbstractPreingestHandler
+    public class EncodingHandler : AbstractPreingestHandler, IDisposable
     {
-        public EncodingHandler(AppSettings settings) : base(settings) { }
-
+        public EncodingHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection)
+        {
+            this.PreingestEvents += Trigger;
+        }
+        public void Dispose()
+        {
+            this.PreingestEvents -= Trigger;
+        }
         public override void Execute()
         {
             var anyMessages = new List<String>();

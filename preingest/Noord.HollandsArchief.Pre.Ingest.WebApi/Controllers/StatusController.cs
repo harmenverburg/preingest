@@ -314,10 +314,17 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     Summary = message.HasSummary ? new PreingestStatisticsSummary { Accepted = message.Accepted, Processed = message.Processed, Rejected = message.Rejected, Start = message.Start.Value, End = message.End.Value } : null
                 }, settings)).GetAwaiter().GetResult();            
 
-            if ((PreingestActionStates)state == PreingestActionStates.Failed || (PreingestActionStates)state == PreingestActionStates.Completed)
+            if ((PreingestActionStates)state == PreingestActionStates.Started || (PreingestActionStates)state == PreingestActionStates.Failed || (PreingestActionStates)state == PreingestActionStates.Completed)
             {
+                //notify client update collections status
+                string collectionsData = JsonConvert.SerializeObject(_preingestCollection.GetCollections(), settings);
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionsStatus), collectionsData).GetAwaiter().GetResult();
+                //notify client collection /{ guid} status
                 string collectionData = JsonConvert.SerializeObject(_preingestCollection.GetCollection(message.SessionId), settings);
                 _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionStatus), message.SessionId, collectionData).GetAwaiter().GetResult();
+
+                if ((PreingestActionStates)state == PreingestActionStates.Failed || (PreingestActionStates)state == PreingestActionStates.Completed)
+                    _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeToWorkerService), message.SessionId, collectionData).GetAwaiter().GetResult();
             }
             return Ok();
         }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 using Newtonsoft.Json;
 
@@ -9,22 +10,23 @@ using System.Net.Http;
 using System.Collections.Generic;
 
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     //Check 5
-    public class MetadataValidationHandler : AbstractPreingestHandler
+    public class MetadataValidationHandler : AbstractPreingestHandler, IDisposable
     {
-        public MetadataValidationHandler(AppSettings settings) : base(settings) {  }
+        public MetadataValidationHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection)
+        {
+            this.PreingestEvents += Trigger;
+        }
 
         private String GetProcessingUrl(string servername, string port, string pad)
         {
             string reluri = pad.Remove(0, "/data/".Length);
-            //topxvalidatie?reluri=Provincie%20Noord%20Holland/Provincie%20Noord%20%20Holland.metadata&format=json
-            //return String.Format(@"http://{0}:{1}/topxvalidatie?format=json&reluri={2}", servername, port,  reluri);
-            //#44
             return String.Format(@"http://{0}:{1}/topxvalidation/{2}", servername, port, reluri);
         }
 
@@ -162,6 +164,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 if (isSucces)
                     OnTrigger(new PreingestEventArgs { Description = "Validation is done!", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
             }
-        }        
+        }
+
+        public void Dispose()
+        {
+            this.PreingestEvents -= Trigger;
+        }
     }
 }

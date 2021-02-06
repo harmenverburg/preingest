@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 using System;
 using System.IO;
@@ -8,23 +9,24 @@ using System.Xml.Linq;
 using System.Collections.Generic;
 
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
     //Check 5
-    public class TransformationHandler : AbstractPreingestHandler
+    public class TransformationHandler : AbstractPreingestHandler, IDisposable
     {
-        public TransformationHandler(AppSettings settings) : base(settings){ }
+        public TransformationHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection) : base(settings, eventHub, preingestCollection)
+        {
+            this.PreingestEvents += Trigger;
+        }
         private String GetProcessingUrl(string servername, string port, string pad)
         {
             string reluri = pad.Remove(0, "/data/".Length);
-            //return String.Format(@"http://{0}:{1}/transform/topx2xip?reluri={2}", servername, port,  reluri);
-            //#44
             return String.Format(@"http://{0}:{1}/transform/topx2xip/{2}", servername, port, reluri);
         }
-
         public override void Execute()
         {
             var eventModel = CurrentActionProperties(TargetCollection, this.GetType().Name);
@@ -131,6 +133,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 if (isSucces)
                     OnTrigger(new PreingestEventArgs { Description="Transformation is done.", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Completed, PreingestAction = eventModel });
             }           
+        }
+        public void Dispose()
+        {
+            this.PreingestEvents -= Trigger;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 using Newtonsoft.Json; 
 using Newtonsoft.Json.Serialization;
@@ -10,9 +11,10 @@ using Newtonsoft.Json.Serialization;
 using Noord.HollandsArchief.Pre.Ingest.Utilities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Model;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Structure;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.EventHub;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
@@ -22,20 +24,24 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         protected Guid _guidSessionFolder = Guid.Empty;
         private ILogger _logger = null;
 
+        private readonly object triggerLock = new object();
+
+        private readonly IHubContext<PreingestEventHub> _eventHub;
+        private readonly CollectionHandler _preingestCollection = null;
+
         public event EventHandler<PreingestEventArgs> PreingestEvents;
-        public AbstractPreingestHandler(AppSettings settings)
+        public AbstractPreingestHandler(AppSettings settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection)
         {
             _settings = settings;
+            _eventHub = eventHub;
+            _preingestCollection = preingestCollection;
         }
 
         public AppSettings ApplicationSettings
         {
             get { return this._settings; }
         }
-        public virtual void Execute()
-        {
-            
-        }
+        public virtual void Execute() { }
         public Guid SessionGuid
         {
             get
@@ -68,15 +74,66 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
                 {
                     SaveJson(new DirectoryInfo(TargetFolder), e.PreingestAction.Properties.ActionName, e.PreingestAction);
-
-                    /**
-                    if(e.PreingestAction.Properties.ActionName == typeof(SidecarValidationHandler).Name && e.SidecarStructure != null)
+                }                
+            }
+        }
+        public void Trigger(object sender, PreingestEventArgs e)
+        {
+            lock (triggerLock)
+            {
+                var settings = new JsonSerializerSettings
+                {
+                    ContractResolver = new DefaultContractResolver
                     {
-                        SaveBinary(new DirectoryInfo(TargetFolder), e.PreingestAction.Properties.ActionName, e.SidecarStructure);
-                    }
-                    **/
+                        NamingStrategy = new CamelCaseNamingStrategy()
+                    },
+                    Formatting = Formatting.Indented,
+                    NullValueHandling = NullValueHandling.Ignore
+                };
+
+                //send notifications events to client
+                _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
+                    JsonConvert.SerializeObject(new EventHubMessage
+                    {
+                        EventDateTime = e.Initiate,
+                        SessionId = e.PreingestAction.Properties.SessionId,
+                        Name = e.PreingestAction.Properties.ActionName,
+                        State = e.ActionType,
+                        Message = e.Description,
+                        Summary = e.PreingestAction.Summary
+                    }, settings)).GetAwaiter().GetResult();
+
+                if (this.ActionProcessId == Guid.Empty) 
+                    return;
+                if (e.ActionType == PreingestActionStates.Started)
+                    this.AddStartState(this.ActionProcessId);
+                if (e.ActionType == PreingestActionStates.Completed)
+                    this.AddCompleteState(this.ActionProcessId);
+                if (e.ActionType == PreingestActionStates.Failed)
+                {
+                    string message = String.Concat(e.PreingestAction.Properties.Messages);
+                    this.AddFailedState(this.ActionProcessId, message);
                 }
-                
+                if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
+                {
+                    string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultValue.ToString() : PreingestActionResults.None.ToString();
+                    string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary, settings) : String.Empty;
+                    this.UpdateProcessAction(this.ActionProcessId, result, summary);                   
+                }
+
+
+                if(e.ActionType == PreingestActionStates.Started || e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
+                {
+                    //notify client update collections status
+                    string collectionsData = JsonConvert.SerializeObject(_preingestCollection.GetCollections(), settings);
+                    _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionsStatus), collectionsData).GetAwaiter().GetResult();
+                    //notify client collection /{ guid} status
+                    string collectionData = JsonConvert.SerializeObject(_preingestCollection.GetCollection(e.PreingestAction.Properties.SessionId), settings);
+                    _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionStatus), e.PreingestAction.Properties.SessionId, collectionData).GetAwaiter().GetResult();
+
+                    if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)                    
+                        _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeToWorkerService), e.PreingestAction.Properties.SessionId, collectionData).GetAwaiter().GetResult();                    
+                }
             }
         }
         public String TargetCollection { get => Path.Combine(ApplicationSettings.DataFolderName, TarFilename); }
@@ -114,7 +171,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
             return outputFile;
         }
-
         public Guid AddProcessAction(String name, String description, String result)
         {
             var processId = Guid.NewGuid();
@@ -142,6 +198,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 catch (Exception e) { _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", e.Message, e.StackTrace); }
                 finally { }
             }
+
+            ActionProcessId = processId;
             return processId;
         }
         public void UpdateProcessAction(Guid actionId, String result, String summary)

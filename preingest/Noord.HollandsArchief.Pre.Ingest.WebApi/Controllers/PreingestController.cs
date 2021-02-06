@@ -12,9 +12,7 @@ using Newtonsoft.Json.Serialization;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Event;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
-using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.EventHub;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -27,64 +25,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         private readonly IHubContext<PreingestEventHub> _eventHub;
         private readonly CollectionHandler _preingestCollection = null;
 
-        private void Trigger(object sender, PreingestEventArgs e)
-        {
-            if ((sender as IPreingest) == null)
-                return;
-
-            var settings = new JsonSerializerSettings
-            {
-                ContractResolver = new DefaultContractResolver
-                {
-                    NamingStrategy = new CamelCaseNamingStrategy() 
-                },
-                Formatting = Formatting.Indented, 
-                NullValueHandling = NullValueHandling.Ignore                
-            };
-                        
-            //send notifications events to client
-            _eventHub.Clients.All.SendAsync(nameof(IEventHub.SendNoticeEventToClient),
-                JsonConvert.SerializeObject(new EventHubMessage
-                {
-                    EventDateTime = e.Initiate,
-                    SessionId = e.PreingestAction.Properties.SessionId,
-                    Name = e.PreingestAction.Properties.ActionName,
-                    State = e.ActionType,
-                    Message = e.Description,
-                    Summary = e.PreingestAction.Summary
-                }, settings)).GetAwaiter().GetResult();             
-
-            IPreingest handler = sender as IPreingest;
-            if (handler.ActionProcessId == Guid.Empty) return;
-
-            if (e.ActionType == PreingestActionStates.Started)
-                handler.AddStartState(handler.ActionProcessId);
-            if (e.ActionType == PreingestActionStates.Completed)
-                handler.AddCompleteState(handler.ActionProcessId);
-            if (e.ActionType == PreingestActionStates.Failed)
-            {
-                string message = String.Concat(e.PreingestAction.Properties.Messages);
-                handler.AddFailedState(handler.ActionProcessId, message);
-            }
-            if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
-            {
-                string result = (e.PreingestAction.ActionResult != null) ? e.PreingestAction.ActionResult.ResultValue.ToString() : PreingestActionResults.None.ToString();
-                string summary = (e.PreingestAction.Summary != null) ? JsonConvert.SerializeObject(e.PreingestAction.Summary, settings) : String.Empty;
-                handler.UpdateProcessAction(handler.ActionProcessId, result, summary);
-
-                var settingsHandler = (handler as SettingsHandler);
-                if (settingsHandler == null)//don;t trigger if is just saving settings
-                {
-                    //notify client update collections status
-                    string collectionsData = JsonConvert.SerializeObject(_preingestCollection.GetCollections(), settings);
-                    _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionsStatus), collectionsData).GetAwaiter().GetResult();
-                    //notify client collection /{ guid} status
-                    string collectionData = JsonConvert.SerializeObject(_preingestCollection.GetCollection(e.PreingestAction.Properties.SessionId), settings);
-                    _eventHub.Clients.All.SendAsync(nameof(IEventHub.CollectionStatus), e.PreingestAction.Properties.SessionId, collectionData).GetAwaiter().GetResult();
-                }
-            }
-        }
-
         public PreingestController(ILogger<PreingestController> logger, IOptions<AppSettings> settings, IHubContext<PreingestEventHub> eventHub, CollectionHandler preingestCollection)
         {
             _logger = logger;
@@ -96,26 +36,26 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         [HttpGet("check", Name = "API service check", Order = 0)]
         public IActionResult Check()
         {
-            HealthCheckHandler handler = HttpContext.RequestServices.GetService(typeof(HealthCheckHandler)) as HealthCheckHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(HealthCheckHandler).Name);
-
-            handler.Execute();
-
-            return new JsonResult(new 
-            {                
-                Title = "Underlying services health check.",
-                CreationTimestamp = DateTimeOffset.Now,
-                ActionName = typeof(HealthCheckHandler).Name,
-                Messages = new string[] {
-                    "preingest: available",
-                    String.Format("clamav: {0}", handler.IsAliveClamAv ? "available" : "not available"),
-                    String.Format("xslweb: {0}", handler.IsAliveXslWeb ? "available" : "not available"),
-                    String.Format("droid: {0}", handler.IsAliveDroid ? "available" : "not available"),
-                    String.Format("database: {0}", handler.IsAliveDatabase ? "available" : "not available")
-                }
-            });
-        }
+            JsonResult result = null;
+            using (HealthCheckHandler handler = new HealthCheckHandler(_settings, _eventHub, _preingestCollection))
+            {
+                handler.Execute();
+                result = new JsonResult(new
+                {
+                    Title = "Underlying services health check.",
+                    CreationTimestamp = DateTimeOffset.Now,
+                    ActionName = typeof(HealthCheckHandler).Name,
+                    Messages = new string[] {
+                        "preingest: available",
+                        String.Format("clamav: {0}", handler.IsAliveClamAv ? "available" : "not available"),
+                        String.Format("xslweb: {0}", handler.IsAliveXslWeb ? "available" : "not available"),
+                        String.Format("droid: {0}", handler.IsAliveDroid ? "available" : "not available"),
+                        String.Format("database: {0}", handler.IsAliveDatabase ? "available" : "not available")
+                    }
+                });
+            }
+            return result;
+        }       
 
         [HttpPost("calculate/{guid}", Name = "Collection checksum calculation. Options : MD5, SHA1, SHA256, SHA512", Order = 1)]
         public IActionResult CollectionChecksumCalculation(Guid guid, [FromBody] BodyChecksum checksum)
@@ -128,37 +68,24 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem("Empty GUID is invalid.");
 
             if (String.IsNullOrEmpty(checksum.ChecksumType))
-                return BadRequest("Missing checksum type.");
-
-            ContainerChecksumHandler handler = HttpContext.RequestServices.GetService(typeof(ContainerChecksumHandler)) as ContainerChecksumHandler;  
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(ContainerChecksumHandler).Name);
-
-            handler.Logger = _logger;            
-            handler.Checksum = checksum.ChecksumType;
-            handler.DeliveredChecksumValue = checksum.InputChecksumValue;
+                return BadRequest("Missing checksum type.");          
+            
             //database process id
             Guid processId = Guid.Empty;
             try
             {
-                //data map id            
-                handler.SetSessionGuid(guid);
-
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ContainerChecksumHandler).Name, handler.SessionGuid);
-
-                processId = handler.AddProcessAction(typeof(ContainerChecksumHandler).Name, String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(ContainerChecksumHandler).Name, ".json"));
-
+                //data map id                   
                 Task.Run(() =>
                 {
-                    handler.ActionProcessId = processId;
-                    try
+                    using (ContainerChecksumHandler handler = new ContainerChecksumHandler(_settings, _eventHub, _preingestCollection))
                     {
-                        handler.PreingestEvents += Trigger;
-                        handler.Execute();
-                    }
-                    finally
-                    {
-                        handler.PreingestEvents -= Trigger;
+                        handler.SetSessionGuid(guid);
+                        handler.Logger = _logger;
+                        handler.Checksum = checksum.ChecksumType;
+                        handler.DeliveredChecksumValue = checksum.InputChecksumValue;
+                        processId = handler.AddProcessAction(typeof(ContainerChecksumHandler).Name, String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(ContainerChecksumHandler).Name, ".json"));
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ContainerChecksumHandler).Name, handler.SessionGuid);
+                        handler.Execute();                       
                     }
                 });                 
             }
@@ -169,7 +96,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
 
             _logger.LogInformation("Exit CollectionChecksumCalculation.");
-            return new JsonResult(new { Message = String.Format("Container checksum calculation {0} is started", handler.TarFilename), SessionId = handler.SessionGuid, ActionId = processId  });
+            return new JsonResult(new { Message = "Container checksum calculation started.", SessionId = guid, ActionId = processId });
         }
 
         //Voorbereiding  
@@ -180,33 +107,21 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
-
-            UnpackTarHandler handler = HttpContext.RequestServices.GetService(typeof(UnpackTarHandler)) as UnpackTarHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(UnpackTarHandler).Name);
-
-            handler.Logger = _logger;
-           
+              
             //database action id
             Guid processId = Guid.Empty;
             try
-            { 
-                handler.SetSessionGuid(guid);
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(UnpackTarHandler).Name, handler.SessionGuid);               
-
-                processId = handler.AddProcessAction(typeof(UnpackTarHandler).Name, String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(UnpackTarHandler).Name, ".json"));
-
+            {   
                 Task.Run(() =>
                 {
-                    handler.ActionProcessId = processId;
-                    try
+                    using (UnpackTarHandler handler = new UnpackTarHandler(_settings, _eventHub, _preingestCollection))
                     {
-                        handler.PreingestEvents += Trigger;
+                        handler.SetSessionGuid(guid);
+                        handler.Logger = _logger;
+
+                        processId = handler.AddProcessAction(typeof(UnpackTarHandler).Name, String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(UnpackTarHandler).Name, ".json"));
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(UnpackTarHandler).Name, handler.SessionGuid);  
                         handler.Execute();
-                    }
-                    finally
-                    {
-                        handler.PreingestEvents -= Trigger;
                     }
                 });
             }
@@ -217,7 +132,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
 
             _logger.LogInformation("Exit Unpack.");
-            return new JsonResult(new { Message = String.Format ("Unpack tar container '{0}' started", handler.TarFilename), SessionId = handler.SessionGuid, ActionId = processId });
+            return new JsonResult(new { Message = "Expand archive started", SessionId = guid, ActionId = processId });
         }
 
         [HttpPost("virusscan/{guid}", Name = "Virusscan check", Order = 3)]
@@ -226,36 +141,24 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
 
-            _logger.LogInformation("Enter VirusScan.");      
+            _logger.LogInformation("Enter VirusScan.");  
 
-            ScanVirusValidationHandler handler = HttpContext.RequestServices.GetService(typeof(ScanVirusValidationHandler)) as ScanVirusValidationHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(ScanVirusValidationHandler).Name);
-            
-            handler.Logger = _logger;            
             //database process id
             Guid processId = Guid.Empty;
 
             try
             {
                 //data map id
-                handler.SetSessionGuid(guid);
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ScanVirusValidationHandler).Name, guid.ToString());
-
-                processId = handler.AddProcessAction(typeof(ScanVirusValidationHandler).Name, String.Format("Scan for virus on folder {0}", guid), String.Concat(typeof(ScanVirusValidationHandler).Name, ".json"));
-
                 Task.Run(() =>
                 {
-                    handler.ActionProcessId = processId;
-                    try
+                    using (ScanVirusValidationHandler handler = new ScanVirusValidationHandler(_settings, _eventHub, _preingestCollection))
                     {
-                        handler.PreingestEvents += Trigger;
+                        handler.SetSessionGuid(guid);
+                        handler.Logger = _logger;  
+                        processId = handler.AddProcessAction(typeof(ScanVirusValidationHandler).Name, String.Format("Scan for virus on folder {0}", guid), String.Concat(typeof(ScanVirusValidationHandler).Name, ".json"));
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ScanVirusValidationHandler).Name, guid.ToString());
                         handler.Execute();
-                    }
-                    finally
-                    {
-                        handler.PreingestEvents -= Trigger;
-                    }
+                    }       
                 });
             }
             catch (Exception e)
@@ -274,36 +177,22 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
 
-            _logger.LogInformation("Enter Naming.");          
+            _logger.LogInformation("Enter Naming."); 
 
-            NamingValidationHandler handler = HttpContext.RequestServices.GetService(typeof(NamingValidationHandler)) as NamingValidationHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(NamingValidationHandler).Name);
-
-            handler.Logger = _logger;
-                      
             //database process id
             Guid processId = Guid.Empty;
             try
-            {
-                //data map id
-                handler.SetSessionGuid(guid);               
-
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(NamingValidationHandler).Name, guid.ToString());
-               
-                processId = handler.AddProcessAction(typeof(NamingValidationHandler).Name, String.Format("Name check on folders, sub-folders and files : folder {0}", guid), String.Concat(typeof(NamingValidationHandler).Name, ".json"));
-                       
+            {                                     
                 Task.Run(() =>
                 {
-                    handler.ActionProcessId = processId;
-                    try
+                    using (NamingValidationHandler handler = new NamingValidationHandler(_settings, _eventHub, _preingestCollection))
                     {
-                        handler.PreingestEvents += Trigger;
+                        handler.SetSessionGuid(guid);
+                        handler.Logger = _logger;
+                        processId = handler.AddProcessAction(typeof(NamingValidationHandler).Name, String.Format("Name check on folders, sub-folders and files : folder {0}", guid), String.Concat(typeof(NamingValidationHandler).Name, ".json"));
+
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(NamingValidationHandler).Name, guid.ToString());
                         handler.Execute();
-                    }
-                    finally
-                    {
-                        handler.PreingestEvents -= Trigger;
                     }
                 });
             }
@@ -325,34 +214,20 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Enter Sidecar.");          
 
-            SidecarValidationHandler handler = HttpContext.RequestServices.GetService(typeof(SidecarValidationHandler)) as SidecarValidationHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(SidecarValidationHandler).Name);
-
-            handler.Logger = _logger;
-            
             //database process id
             Guid processId = Guid.Empty;
             try
-            {
-                handler.SetSessionGuid(guid);
-
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SidecarValidationHandler).Name, guid.ToString());
-               
-                //processId = handler.AddProcessAction("Sidecar", String.Format("Sidecar structure check for aggregation and metadata : folder {0}", guid), String.Concat(typeof(SidecarValidationHandler).Name, ".json", ";", typeof(SidecarValidationHandler).Name, ".bin"));
-                processId = handler.AddProcessAction(typeof(SidecarValidationHandler).Name, String.Format("Sidecar structure check for aggregation and metadata : folder {0}", guid), String.Concat(typeof(SidecarValidationHandler).Name, ".json"));
-
+            { 
                 Task.Run(() =>
                 {
-                    handler.ActionProcessId = processId;
-                    try
+                    using (SidecarValidationHandler handler = new SidecarValidationHandler(_settings, _eventHub, _preingestCollection))
                     {
-                        handler.PreingestEvents += Trigger;
+                        handler.Logger = _logger;
+                        handler.SetSessionGuid(guid);
+                        processId = handler.AddProcessAction(typeof(SidecarValidationHandler).Name, String.Format("Sidecar structure check for aggregation and metadata : folder {0}", guid), String.Concat(typeof(SidecarValidationHandler).Name, ".json"));
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SidecarValidationHandler).Name, guid.ToString());
+                        
                         handler.Execute();
-                    }
-                    finally
-                    {
-                        handler.PreingestEvents -= Trigger;
                     }
                 });
             }
@@ -372,23 +247,19 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem("Empty GUID is invalid.");
 
             _logger.LogInformation("Enter Profiling.");
-
-            DroidValidationHandler handler = HttpContext.RequestServices.GetService(typeof(DroidValidationHandler)) as DroidValidationHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(DroidValidationHandler).Name);
-
-           
+                        
             string actionId = string.Empty;
             try
-            {  
-                handler.Logger = _logger;
-                handler.SetSessionGuid(guid);                
-                _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
-                
-                var result = handler.GetProfiles().Result;
-                _logger.LogInformation("Profiling is completed.");
-
-                actionId = (result != null) ? result.ActionId : string.Empty;
+            {
+                using (DroidValidationHandler handler = new DroidValidationHandler(_settings, _eventHub, _preingestCollection))
+                {
+                    handler.Logger = _logger;
+                    handler.SetSessionGuid(guid);
+                    _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
+                    var result = handler.GetProfiles().Result;
+                    _logger.LogInformation("Profiling is completed.");
+                    actionId = (result != null) ? result.ActionId : string.Empty;
+                }
             }
             catch (Exception e)
             {
@@ -398,7 +269,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Exit Profiling.");
 
-            return new JsonResult(new { Message = String.Format("Droid profiling is started."), SessionId = handler.SessionGuid, ActionId = actionId });
+            return new JsonResult(new { Message = String.Format("Droid profiling is started."), SessionId = guid, ActionId = actionId });
         }
 
         [HttpPost("exporting/{guid}", Name = "Droid exporting result (CSV)", Order = 7)]
@@ -409,21 +280,18 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Enter Exporting.");
 
-            DroidValidationHandler handler = HttpContext.RequestServices.GetService(typeof(DroidValidationHandler)) as DroidValidationHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(DroidValidationHandler).Name);
-
             string actionId = string.Empty;
             try
             {
-            
-                handler.Logger = _logger;
-                handler.SetSessionGuid(guid);
-                _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
-                
-                var result = handler.GetExporting().Result;
-                _logger.LogInformation("Exporting is completed.");
-                actionId = (result != null) ? result.ActionId : string.Empty;
+                using (DroidValidationHandler handler = new DroidValidationHandler(_settings, _eventHub, _preingestCollection))
+                {
+                    handler.Logger = _logger;
+                    handler.SetSessionGuid(guid);
+                    _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
+                    var result = handler.GetExporting().Result;
+                    _logger.LogInformation("Exporting is completed.");
+                    actionId = (result != null) ? result.ActionId : string.Empty;
+                }
             }
             catch (Exception e)
             {
@@ -433,7 +301,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Exit Exporting.");
 
-            return new JsonResult(new { Message = String.Format("Droid exporting (CSV) is started."), SessionId = handler.SessionGuid, ActionId = actionId });
+            return new JsonResult(new { Message = String.Format("Droid exporting (CSV) is started."), SessionId = guid, ActionId = actionId });
         }       
 
         [HttpPost("reporting/{type}/{guid}", Name = "Droid reporting PDF/Droid (XML)/Planets (XML)", Order = 8)]
@@ -459,22 +327,19 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 default:
                     return NotFound(String.Format ("Unknown report type {0}", type));
             }
-
-            DroidValidationHandler handler = HttpContext.RequestServices.GetService(typeof(DroidValidationHandler)) as DroidValidationHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(DroidValidationHandler).Name);
-
-            
+   
             string actionId = string.Empty;
             try
             {
-                handler.Logger = _logger;
-                handler.SetSessionGuid(guid);
-
-                _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
-                var result = handler.GetReporting(style).Result;
-                _logger.LogInformation("Reporting is completed.");
-                actionId = (result != null) ? result.ActionId : string.Empty;
+                using (DroidValidationHandler handler = new DroidValidationHandler(_settings, _eventHub, _preingestCollection))
+                {
+                    handler.Logger = _logger;
+                    handler.SetSessionGuid(guid);
+                    _logger.LogInformation("Execute handler ({0}).", typeof(DroidValidationHandler).Name);
+                    var result = handler.GetReporting(style).Result;
+                    _logger.LogInformation("Reporting is completed.");
+                    actionId = (result != null) ? result.ActionId : string.Empty;
+                }
             }
             catch (Exception e)
             {
@@ -484,7 +349,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Exit Reporting.");
 
-            return new JsonResult(new { Message = String.Format("Droid reporting ({0}) is started.", style), SessionId = handler.SessionGuid, ActionId = actionId });
+            return new JsonResult(new { Message = String.Format("Droid reporting ({0}) is started.", style), SessionId = guid, ActionId = actionId });
         }
 
         [HttpPut("signature/update", Name = "Droid signature update", Order = 9)]
@@ -520,36 +385,21 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem("Empty GUID is invalid.");
 
             _logger.LogInformation("Enter GreenListCheck.");                     
-
-            GreenListHandler handler = HttpContext.RequestServices.GetService(typeof(GreenListHandler)) as GreenListHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(GreenListHandler).Name);
-
-            handler.Logger = _logger;
-                       
+     
             //database process id
             Guid processId = Guid.Empty;
-
             try
-            {
-                handler.SetSessionGuid(guid);
-
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(GreenListHandler).Name, guid.ToString());
-                
-                processId = handler.AddProcessAction(typeof(GreenListHandler).Name, String.Format("Compare CSV result with greenlist"), String.Concat(typeof(GreenListHandler).Name, ".json"));
-                               
+            {              
                 Task.Run(() =>
                 {
-                    handler.ActionProcessId = processId;
-                    try
+                    using (GreenListHandler handler = new GreenListHandler(_settings, _eventHub, _preingestCollection))
                     {
-                        handler.PreingestEvents += Trigger;
+                        handler.Logger = _logger;
+                        handler.SetSessionGuid(guid);
+                        processId = handler.AddProcessAction(typeof(GreenListHandler).Name, String.Format("Compare CSV result with greenlist"), String.Concat(typeof(GreenListHandler).Name, ".json"));
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(GreenListHandler).Name, guid.ToString());
                         handler.Execute();
-                    }
-                    finally
-                    {
-                        handler.PreingestEvents -= Trigger;
-                    }
+                    }                       
                 });
             }
             catch (Exception e)
@@ -569,34 +419,20 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Enter EncodingCheck.");
 
-            EncodingHandler handler = HttpContext.RequestServices.GetService(typeof(EncodingHandler)) as EncodingHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(EncodingHandler).Name);
-
-            handler.Logger = _logger;
             //database process id
             Guid processId = Guid.Empty;
-
             try
             {
-                //data map id
-                handler.SetSessionGuid(guid);
-                
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(EncodingHandler).Name, guid.ToString());
-                
-                processId = handler.AddProcessAction(typeof(EncodingHandler).Name, String.Format("Retrieve the encoding for all metadata files : folder {0}", guid), String.Concat(typeof(EncodingHandler).Name, ".json"));
-                                
+                //data map id               
                 Task.Run(() =>
                 {
-                    handler.ActionProcessId = processId;
-                    try
+                    using (EncodingHandler handler = new EncodingHandler(_settings, _eventHub, _preingestCollection))
                     {
-                        handler.PreingestEvents += Trigger;
+                        handler.Logger = _logger;
+                        handler.SetSessionGuid(guid);
+                        processId = handler.AddProcessAction(typeof(EncodingHandler).Name, String.Format("Retrieve the encoding for all metadata files : folder {0}", guid), String.Concat(typeof(EncodingHandler).Name, ".json"));
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(EncodingHandler).Name, guid.ToString());
                         handler.Execute();
-                    }
-                    finally
-                    {
-                        handler.PreingestEvents -= Trigger;
                     }
                 });
             }
@@ -617,34 +453,21 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Enter ValidateMetadata.");           
 
-            MetadataValidationHandler handler = HttpContext.RequestServices.GetService(typeof(MetadataValidationHandler)) as MetadataValidationHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(MetadataValidationHandler).Name);
-
-            handler.Logger = _logger;
-            
             //database process id
             Guid processId = Guid.Empty;
-
             try
-            {
-                handler.SetSessionGuid(guid);
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(MetadataValidationHandler).Name, guid.ToString());
-             
-                processId = handler.AddProcessAction(typeof(MetadataValidationHandler).Name, String.Format("Validate all metadata files with XSD schema and schema+ : folder {0}", guid), String.Concat(typeof(MetadataValidationHandler).Name, ".json"));
-                                
+            {                               
                 Task.Run(() =>
                 {
-                    handler.ActionProcessId = processId;
-                    try
-                    {
-                        handler.PreingestEvents += Trigger;
-                        handler.Execute();
-                    }
-                    finally
-                    {
-                        handler.PreingestEvents -= Trigger;
-                    }
+                    using (MetadataValidationHandler handler = new MetadataValidationHandler(_settings, _eventHub, _preingestCollection))
+                {
+                    handler.Logger = _logger;
+                    handler.SetSessionGuid(guid);
+                    
+                    processId = handler.AddProcessAction(typeof(MetadataValidationHandler).Name, String.Format("Validate all metadata files with XSD schema and schema+ : folder {0}", guid), String.Concat(typeof(MetadataValidationHandler).Name, ".json"));
+                    _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(MetadataValidationHandler).Name, guid.ToString());
+                    handler.Execute();
+                } 
                 });
             }
             catch (Exception e)
@@ -664,33 +487,19 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Enter TransformXip.");         
 
-            TransformationHandler handler = HttpContext.RequestServices.GetService(typeof(TransformationHandler)) as TransformationHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(TransformationHandler).Name);
-
-            handler.Logger = _logger;
             //database process id
             Guid processId = Guid.Empty;
-
             try
             {
-                handler.SetSessionGuid(guid);
-
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(TransformationHandler).Name, guid.ToString());                                
-
-                processId = handler.AddProcessAction(typeof(TransformationHandler).Name, String.Format("Transform metadata files to XIP files : folder {0}", guid), String.Concat(typeof(TransformationHandler).Name, ".json"));
-                               
                 Task.Run(() =>
                 {
-                    handler.ActionProcessId = processId;
-                    try
+                    using (TransformationHandler handler = new TransformationHandler(_settings, _eventHub, _preingestCollection))
                     {
-                        handler.PreingestEvents += Trigger;
+                        handler.Logger = _logger;
+                        handler.SetSessionGuid(guid);
+                        processId = handler.AddProcessAction(typeof(TransformationHandler).Name, String.Format("Transform metadata files to XIP files : folder {0}", guid), String.Concat(typeof(TransformationHandler).Name, ".json"));
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(TransformationHandler).Name, guid.ToString());
                         handler.Execute();
-                    }
-                    finally
-                    {
-                        handler.PreingestEvents -= Trigger;
                     }
                 });
             }
@@ -743,32 +552,20 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Enter CreateExcel.");
 
-            ExcelCreatorHandler handler = HttpContext.RequestServices.GetService(typeof(ExcelCreatorHandler)) as ExcelCreatorHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(ExcelCreatorHandler).Name);
-
-            handler.Logger = _logger;
             //database process id
             Guid processId = Guid.Empty;
             try
             {
-                handler.SetSessionGuid(guid);
-
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ExcelCreatorHandler).Name, guid.ToString());
-                               
-                //Should be called by XSLWeb service                
-                processId = handler.AddProcessAction(typeof(ExcelCreatorHandler).Name, String.Format("Create Excel from folder {0}", guid), String.Concat(String.Concat(typeof(ExcelCreatorHandler).Name, ".xlsx"),";", String.Concat(typeof(ExcelCreatorHandler).Name, ".json")));
                 Task.Run(() =>
                 {
-                    handler.ActionProcessId = processId;
-                    try
+                    using (ExcelCreatorHandler handler = new ExcelCreatorHandler(_settings, _eventHub, _preingestCollection))
                     {
-                        handler.PreingestEvents += Trigger;
+                        handler.Logger = _logger;
+                        handler.SetSessionGuid(guid);
+                        processId = handler.AddProcessAction(typeof(ExcelCreatorHandler).Name, String.Format("Create Excel from folder {0}", guid), String.Concat(String.Concat(typeof(ExcelCreatorHandler).Name, ".xlsx"), ";", String.Concat(typeof(ExcelCreatorHandler).Name, ".json")));
+
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ExcelCreatorHandler).Name, guid.ToString());
                         handler.Execute();
-                    }
-                    finally
-                    {
-                        handler.PreingestEvents -= Trigger;
                     }
                 });
             }
@@ -789,34 +586,21 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem("Empty GUID is invalid.");
 
             _logger.LogInformation("Enter PutSettings.");
-
-            SettingsHandler handler = HttpContext.RequestServices.GetService(typeof(SettingsHandler)) as SettingsHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(SettingsHandler).Name);
-
-            handler.Logger = _logger;
+               
             //database process id
             Guid processId = Guid.Empty;
             try
             {
-                handler.SetSessionGuid(guid);
-                handler.CurrentSettings = settings;
-
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SettingsHandler).Name, guid.ToString());
-
-                //Should be called by XSLWeb service                
-                processId = handler.AddProcessAction(typeof(SettingsHandler).Name, String.Format("Save user input setting(s) for folder {0}", guid), String.Concat(typeof(SettingsHandler).Name, ".json"));
                 Task.Run(() =>
                 {
-                    handler.ActionProcessId = processId;
-                    try
+                    using (SettingsHandler handler = new SettingsHandler(_settings, _eventHub, _preingestCollection))
                     {
-                        handler.PreingestEvents += Trigger;
+                        handler.Logger = _logger;
+                        handler.SetSessionGuid(guid);
+                        handler.CurrentSettings = settings;
+                        processId = handler.AddProcessAction(typeof(SettingsHandler).Name, String.Format("Save user input setting(s) for folder {0}", guid), String.Concat(typeof(SettingsHandler).Name, ".json"));
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SettingsHandler).Name, guid.ToString());
                         handler.Execute();
-                    }
-                    finally
-                    {
-                        handler.PreingestEvents -= Trigger;
                     }
                 });
             }
