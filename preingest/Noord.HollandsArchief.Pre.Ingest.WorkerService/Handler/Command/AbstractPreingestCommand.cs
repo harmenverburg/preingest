@@ -15,10 +15,34 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
 {
     public abstract class AbstractPreingestCommand : IPreingestCommand
     {
+        internal class NotificationEvent : EventArgs
+        {
+            public enum State
+            {
+                Started, 
+                CompletedOrFailed
+            }
+
+            public State Result { get; set; }
+            public HttpClient Client { get; set; }
+            public Guid Id { get; set; }
+        }
+
         public AbstractPreingestCommand(ILogger<PreingestEventHubHandler> logger, Uri webApiUrl)
         {
             Logger = logger;
             WebApi = webApiUrl;
+        }
+
+        private event EventHandler<NotificationEvent> NotifyEvent;
+
+        private void OnNotify(NotificationEvent e)
+        {
+            EventHandler<NotificationEvent> handler = NotifyEvent;
+            if (handler != null)
+                handler(this, e);
+
+            Notify(e.Client, e.Id, e.Result);
         }
 
         protected ILogger<PreingestEventHubHandler> Logger { get; set; }
@@ -100,39 +124,29 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
 
                     StringBuilder textBuilder = new StringBuilder();
                     textBuilder.AppendLine(parentExc.Message);
-                    textBuilder.AppendLine(parentExc.StackTrace);
-                    //clean it first before adding 2 records (started/failed) for state
-                    if (actions.Length == 0)
-                    {
-                        CompleteNewActionRegistration(client, id, textBuilder.ToString());
-                        return;
-                    }
+                    textBuilder.AppendLine(parentExc.StackTrace);                    
 
                     var currentAction = actions.FirstOrDefault(action => action.Name == currentActionType.ToString());
                     if (currentAction == null)
                     {
                         CompleteNewActionRegistration(client, id, textBuilder.ToString());
-                        return;
                     }
-
-                    if (currentAction.States == null)
+                    else if (currentAction.States == null)
                     {
                         CompleteNewStatesRegistration(client, id, currentAction.ProcessId, textBuilder.ToString());
-                        return;
                     }
-
-                    if (currentAction.States != null && currentAction.States.Length > 0)
+                    else if (currentAction.States != null && currentAction.States.Length > 0)
                     {
                         if (currentAction.States.Length >= 2)
                             throw new ApplicationException(String.Format("Cannot register fault state! Action ID {0} have already 2 items in states collection. Folder/Session ID {1}", currentAction.ProcessId, id));
 
                         FailedStateRegistration(client, id, currentAction.ProcessId, textBuilder.ToString());
-                    }
+                    }                    
                 };
 
                 var response = api.CollectionAsync(id).GetAwaiter().GetResult();
                 if (response.StatusCode != 200)
-                    throw new ApplicationException(String.Format("Failed to register fault state for action {0} with ID {1}! Web API status code returned not 200 code.", currentActionType, id));
+                    throw new ApplicationException(String.Format("Failed to register fault state for action {0} with ID {1}! Web API status code returned not 200 code.", currentActionType, id));                                
             }
             catch (Exception e)
             {
@@ -159,7 +173,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             {
                 Name = currentActionType.ToString(),
                 Description = "Action created by WorkerService.",
-                Result = string.Empty
+                Result = "N/A"
             }).GetAwaiter().GetResult();
 
             if (processId == Guid.Empty)
@@ -168,10 +182,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             if (addNewActionResponse.StatusCode != 200)
                 throw new ApplicationException(String.Format("New action registration returned a bad response (not 200 code)! Action ID {0}, Folder/Session ID {1}.", processId, folderSessionId));
             //add 2 records (started/failed) for state
-            var startStateResponse = status.StartAsync(processId).GetAwaiter().GetResult();
+            var startStateResponse = status.StartAsync(processId).GetAwaiter().GetResult();           
             if (startStateResponse.StatusCode != 200)
                 throw new ApplicationException(String.Format("Start state registration returned a bad response (not 200 code)! Action ID {0}, Folder / Session ID {1}.", processId, folderSessionId));
-
+            
+            OnNotify(new NotificationEvent { Client = client, Id = folderSessionId, Result = NotificationEvent.State.Started });
+            
             var failedStateResponse = status.FailedAsync(processId, new BodyMessage { Message = errorMessage }).GetAwaiter().GetResult();
             if (failedStateResponse.StatusCode != 200)
                 throw new ApplicationException(String.Format("Failed state registration returned a bad response (not 200 code)! Action ID {0}, Folder / Session ID {1}.", processId, folderSessionId));
@@ -182,6 +198,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             var finalUpdateResponse = status.UpdateAsync(processId, new BodyUpdate { Result = "Failed", Summary = summaryStr }).GetAwaiter().GetResult();
             if(finalUpdateResponse.StatusCode != 200)
                 throw new ApplicationException(String.Format("Final update status returned a bad response (not 200 code)! Action ID {0}, Folder / Session ID {1}.", processId, folderSessionId));
+
+            OnNotify(new NotificationEvent { Client = client, Id = folderSessionId, Result = NotificationEvent.State.CompletedOrFailed });
         }
 
         private void CompleteNewStatesRegistration(HttpClient client, Guid folderSessionId, Guid processId, string errorMessage)
@@ -195,6 +213,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             if (startStateResponse.StatusCode != 200)
                 throw new ApplicationException(String.Format("Start state registration returned a bad response (not 200 code)! Action ID {0}, Folder / Session ID {1}.", processId, folderSessionId));
 
+            OnNotify(new NotificationEvent { Client = client, Id = folderSessionId, Result = NotificationEvent.State.Started });
+
             var failedStateResponse = status.FailedAsync(processId, new BodyMessage { Message = errorMessage }).GetAwaiter().GetResult();
             if (failedStateResponse.StatusCode != 200)
                 throw new ApplicationException(String.Format("Failed state registration returned a bad response (not 200 code)! Action ID {0}, Folder / Session ID {1}.", processId, folderSessionId));
@@ -205,6 +225,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             var finalUpdateResponse = status.UpdateAsync(processId, new BodyUpdate { Result = "Failed", Summary = summaryStr }).GetAwaiter().GetResult();
             if (finalUpdateResponse.StatusCode != 200)
                 throw new ApplicationException(String.Format("Final update status returned a bad response (not 200 code)! Action ID {0}, Folder / Session ID {1}.", processId, folderSessionId));
+
+            OnNotify(new NotificationEvent { Client = client, Id = folderSessionId, Result = NotificationEvent.State.CompletedOrFailed });
         }
     
         private void FailedStateRegistration(HttpClient client, Guid folderSessionId, Guid processId, string errorMessage)
@@ -221,6 +243,61 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             var finalUpdateResponse = status.UpdateAsync(processId, new BodyUpdate { Result = "Failed", Summary = summaryStr }).GetAwaiter().GetResult();
             if (finalUpdateResponse.StatusCode != 200)
                 throw new ApplicationException(String.Format("Final update status returned a bad response (not 200 code)! Action ID {0}, Folder / Session ID {1}.", processId, folderSessionId));
+
+            OnNotify(new NotificationEvent { Client = client, Id = folderSessionId, Result = NotificationEvent.State.CompletedOrFailed });
         }
+
+        private void Notify(HttpClient client, Guid folderSessionId, NotificationEvent.State type)
+        {
+            Entities.CommandKey.ValidationActionType currentActionType = this.ActionTypeName;
+
+            OpenAPIService.StatusClient status = new OpenAPIService.StatusClient(WebApi.ToString(), client);
+
+            if (type == NotificationEvent.State.Started)
+            {
+                //notify start
+                var startBody = new BodyEventMessageBody
+                {
+                    Accepted = 0,
+                    Processed = 0,
+                    Rejected = 0,
+                    Name = currentActionType.ToString(),
+                    HasSummary = true,
+                    SessionId = folderSessionId,
+                    State = "Started",
+                    EventDateTime = DateTimeOffset.Now,
+                    Start = DateTimeOffset.Now,
+                    End = DateTimeOffset.Now,
+                    Message = "Event triggered by WorkerService."
+                };
+                var statusStartResult = status.NotifyAsync(startBody).GetAwaiter().GetResult();
+                if (statusStartResult.StatusCode != 200)
+                    throw new ApplicationException(String.Format("Failed to notify, returned a bad response (not 200 code)! Folder / Session ID {0}.", folderSessionId));             
+            }
+
+            if (type == NotificationEvent.State.CompletedOrFailed)
+            {
+                //notify end
+                var failedBody = new BodyEventMessageBody
+                {
+                    Accepted = 0,
+                    Processed = 0,
+                    Rejected = 0,
+                    Name = currentActionType.ToString(),
+                    HasSummary = true,
+                    SessionId = folderSessionId,
+                    State = "Failed",
+                    EventDateTime = DateTimeOffset.Now,
+                    Start = DateTimeOffset.Now,
+                    End = DateTimeOffset.Now,
+                    Message = "Event triggered by WorkerService."
+                };
+                var statusFailedResult = status.NotifyAsync(failedBody).GetAwaiter().GetResult();
+                if (statusFailedResult.StatusCode != 200)
+                    throw new ApplicationException(String.Format("Failed to notify, returned a bad response (not 200 code)! Folder / Session ID {0}.", folderSessionId));
+            }
+
+            System.Threading.Thread.Sleep(500);
+        }          
     }
 }
