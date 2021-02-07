@@ -69,12 +69,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
                     e.PreingestAction.Summary.End = e.Initiate;
 
-                handler(this, e);
-
-                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
-                {
-                    SaveJson(new DirectoryInfo(TargetFolder), e.PreingestAction.Properties.ActionName, e.PreingestAction);
-                }                
+                handler(this, e);                   
             }
         }
         public void Trigger(object sender, PreingestEventArgs e)
@@ -121,8 +116,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     this.UpdateProcessAction(this.ActionProcessId, result, summary);                   
                 }
 
+                if (e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
+                {
+                    SaveJson(new DirectoryInfo(TargetFolder), e.PreingestAction.Properties.ActionName, e.PreingestAction);
+                }
 
-                if(e.ActionType == PreingestActionStates.Started || e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
+                if (e.ActionType == PreingestActionStates.Started || e.ActionType == PreingestActionStates.Completed || e.ActionType == PreingestActionStates.Failed)
                 {
                     //notify client update collections status
                     string collectionsData = JsonConvert.SerializeObject(_preingestCollection.GetCollections(), settings);

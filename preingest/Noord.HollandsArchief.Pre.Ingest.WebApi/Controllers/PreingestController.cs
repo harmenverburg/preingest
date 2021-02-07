@@ -611,7 +611,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             }
 
             _logger.LogInformation("Exit PutSettings.");
-            return new JsonResult(new { Message = String.Format("Settings is stored."), SessionId = guid, ActionId = processId });
+            return new JsonResult(new { Message = String.Format("Settings are stored."), SessionId = guid, ActionId = processId });
         }
     }
 }
