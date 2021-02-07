@@ -171,9 +171,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
             return outputFile;
         }
-        public Guid AddProcessAction(String name, String description, String result)
+        public Guid AddProcessAction(Guid processId, String name, String description, String result)
         {
-            var processId = Guid.NewGuid();
+            if (processId == Guid.Empty)
+                processId = Guid.NewGuid();
 
             if (String.IsNullOrEmpty(description) || String.IsNullOrEmpty(result))
                 return Guid.Empty;

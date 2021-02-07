@@ -17,7 +17,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         public String TarFilename { get; set; }
         public String TargetCollection { get; }
         public String TargetFolder { get; }
-        Guid AddProcessAction(String name, String description, String result);
+        Guid AddProcessAction(Guid processId, String name, String description, String result);
         void UpdateProcessAction(Guid actionId, String result, String summary);
         void AddStartState(Guid processId);
         void AddCompleteState(Guid processId);

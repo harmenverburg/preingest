@@ -71,7 +71,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return BadRequest("Missing checksum type.");          
             
             //database process id
-            Guid processId = Guid.Empty;
+            Guid processId = Guid.NewGuid();
             try
             {
                 //data map id                   
@@ -83,7 +83,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                         handler.Logger = _logger;
                         handler.Checksum = checksum.ChecksumType;
                         handler.DeliveredChecksumValue = checksum.InputChecksumValue;
-                        processId = handler.AddProcessAction(typeof(ContainerChecksumHandler).Name, String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(ContainerChecksumHandler).Name, ".json"));
+                        processId = handler.AddProcessAction(processId, typeof(ContainerChecksumHandler).Name, String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(ContainerChecksumHandler).Name, ".json"));
                         _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ContainerChecksumHandler).Name, handler.SessionGuid);
                         handler.Execute();                       
                     }
@@ -109,7 +109,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem("Empty GUID is invalid.");
               
             //database action id
-            Guid processId = Guid.Empty;
+            Guid processId = Guid.NewGuid();
             try
             {   
                 Task.Run(() =>
@@ -119,7 +119,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                         handler.SetSessionGuid(guid);
                         handler.Logger = _logger;
 
-                        processId = handler.AddProcessAction(typeof(UnpackTarHandler).Name, String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(UnpackTarHandler).Name, ".json"));
+                        processId = handler.AddProcessAction(processId, typeof(UnpackTarHandler).Name, String.Format("Container file {0}", handler.TarFilename), String.Concat(typeof(UnpackTarHandler).Name, ".json"));
                         _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(UnpackTarHandler).Name, handler.SessionGuid);  
                         handler.Execute();
                     }
@@ -144,7 +144,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter VirusScan.");  
 
             //database process id
-            Guid processId = Guid.Empty;
+            Guid processId = Guid.NewGuid();
 
             try
             {
@@ -155,7 +155,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     {
                         handler.SetSessionGuid(guid);
                         handler.Logger = _logger;  
-                        processId = handler.AddProcessAction(typeof(ScanVirusValidationHandler).Name, String.Format("Scan for virus on folder {0}", guid), String.Concat(typeof(ScanVirusValidationHandler).Name, ".json"));
+                        processId = handler.AddProcessAction(processId, typeof(ScanVirusValidationHandler).Name, String.Format("Scan for virus on folder {0}", guid), String.Concat(typeof(ScanVirusValidationHandler).Name, ".json"));
                         _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ScanVirusValidationHandler).Name, guid.ToString());
                         handler.Execute();
                     }       
@@ -180,7 +180,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter Naming."); 
 
             //database process id
-            Guid processId = Guid.Empty;
+            Guid processId = Guid.NewGuid();
             try
             {                                     
                 Task.Run(() =>
@@ -189,7 +189,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     {
                         handler.SetSessionGuid(guid);
                         handler.Logger = _logger;
-                        processId = handler.AddProcessAction(typeof(NamingValidationHandler).Name, String.Format("Name check on folders, sub-folders and files : folder {0}", guid), String.Concat(typeof(NamingValidationHandler).Name, ".json"));
+                        processId = handler.AddProcessAction(processId, typeof(NamingValidationHandler).Name, String.Format("Name check on folders, sub-folders and files : folder {0}", guid), String.Concat(typeof(NamingValidationHandler).Name, ".json"));
 
                         _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(NamingValidationHandler).Name, guid.ToString());
                         handler.Execute();
@@ -215,7 +215,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter Sidecar.");          
 
             //database process id
-            Guid processId = Guid.Empty;
+            Guid processId = Guid.NewGuid();
             try
             { 
                 Task.Run(() =>
@@ -224,7 +224,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     {
                         handler.Logger = _logger;
                         handler.SetSessionGuid(guid);
-                        processId = handler.AddProcessAction(typeof(SidecarValidationHandler).Name, String.Format("Sidecar structure check for aggregation and metadata : folder {0}", guid), String.Concat(typeof(SidecarValidationHandler).Name, ".json"));
+                        processId = handler.AddProcessAction(processId, typeof(SidecarValidationHandler).Name, String.Format("Sidecar structure check for aggregation and metadata : folder {0}", guid), String.Concat(typeof(SidecarValidationHandler).Name, ".json"));
                         _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SidecarValidationHandler).Name, guid.ToString());
                         
                         handler.Execute();
@@ -387,7 +387,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter GreenListCheck.");                     
      
             //database process id
-            Guid processId = Guid.Empty;
+            Guid processId = Guid.NewGuid();
             try
             {              
                 Task.Run(() =>
@@ -396,7 +396,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     {
                         handler.Logger = _logger;
                         handler.SetSessionGuid(guid);
-                        processId = handler.AddProcessAction(typeof(GreenListHandler).Name, String.Format("Compare CSV result with greenlist"), String.Concat(typeof(GreenListHandler).Name, ".json"));
+                        processId = handler.AddProcessAction(processId, typeof(GreenListHandler).Name, String.Format("Compare CSV result with greenlist"), String.Concat(typeof(GreenListHandler).Name, ".json"));
                         _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(GreenListHandler).Name, guid.ToString());
                         handler.Execute();
                     }                       
@@ -420,7 +420,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter EncodingCheck.");
 
             //database process id
-            Guid processId = Guid.Empty;
+            Guid processId = Guid.NewGuid();
             try
             {
                 //data map id               
@@ -430,7 +430,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     {
                         handler.Logger = _logger;
                         handler.SetSessionGuid(guid);
-                        processId = handler.AddProcessAction(typeof(EncodingHandler).Name, String.Format("Retrieve the encoding for all metadata files : folder {0}", guid), String.Concat(typeof(EncodingHandler).Name, ".json"));
+                        processId = handler.AddProcessAction(processId, typeof(EncodingHandler).Name, String.Format("Retrieve the encoding for all metadata files : folder {0}", guid), String.Concat(typeof(EncodingHandler).Name, ".json"));
                         _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(EncodingHandler).Name, guid.ToString());
                         handler.Execute();
                     }
@@ -454,7 +454,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter ValidateMetadata.");           
 
             //database process id
-            Guid processId = Guid.Empty;
+            Guid processId = Guid.NewGuid();
             try
             {                               
                 Task.Run(() =>
@@ -464,7 +464,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     handler.Logger = _logger;
                     handler.SetSessionGuid(guid);
                     
-                    processId = handler.AddProcessAction(typeof(MetadataValidationHandler).Name, String.Format("Validate all metadata files with XSD schema and schema+ : folder {0}", guid), String.Concat(typeof(MetadataValidationHandler).Name, ".json"));
+                    processId = handler.AddProcessAction(processId, typeof(MetadataValidationHandler).Name, String.Format("Validate all metadata files with XSD schema and schema+ : folder {0}", guid), String.Concat(typeof(MetadataValidationHandler).Name, ".json"));
                     _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(MetadataValidationHandler).Name, guid.ToString());
                     handler.Execute();
                 } 
@@ -488,7 +488,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter TransformXip.");         
 
             //database process id
-            Guid processId = Guid.Empty;
+            Guid processId = Guid.NewGuid();
             try
             {
                 Task.Run(() =>
@@ -497,7 +497,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     {
                         handler.Logger = _logger;
                         handler.SetSessionGuid(guid);
-                        processId = handler.AddProcessAction(typeof(TransformationHandler).Name, String.Format("Transform metadata files to XIP files : folder {0}", guid), String.Concat(typeof(TransformationHandler).Name, ".json"));
+                        processId = handler.AddProcessAction(processId, typeof(TransformationHandler).Name, String.Format("Transform metadata files to XIP files : folder {0}", guid), String.Concat(typeof(TransformationHandler).Name, ".json"));
                         _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(TransformationHandler).Name, guid.ToString());
                         handler.Execute();
                     }
@@ -553,7 +553,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter CreateExcel.");
 
             //database process id
-            Guid processId = Guid.Empty;
+            Guid processId = Guid.NewGuid();
             try
             {
                 Task.Run(() =>
@@ -562,7 +562,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     {
                         handler.Logger = _logger;
                         handler.SetSessionGuid(guid);
-                        processId = handler.AddProcessAction(typeof(ExcelCreatorHandler).Name, String.Format("Create Excel from folder {0}", guid), String.Concat(String.Concat(typeof(ExcelCreatorHandler).Name, ".xlsx"), ";", String.Concat(typeof(ExcelCreatorHandler).Name, ".json")));
+                        processId = handler.AddProcessAction(processId, typeof(ExcelCreatorHandler).Name, String.Format("Create Excel from folder {0}", guid), String.Concat(String.Concat(typeof(ExcelCreatorHandler).Name, ".xlsx"), ";", String.Concat(typeof(ExcelCreatorHandler).Name, ".json")));
 
                         _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(ExcelCreatorHandler).Name, guid.ToString());
                         handler.Execute();
@@ -588,7 +588,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter PutSettings.");
                
             //database process id
-            Guid processId = Guid.Empty;
+            Guid processId = Guid.NewGuid();
             try
             {
                 Task.Run(() =>
@@ -598,7 +598,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                         handler.Logger = _logger;
                         handler.SetSessionGuid(guid);
                         handler.CurrentSettings = settings;
-                        processId = handler.AddProcessAction(typeof(SettingsHandler).Name, String.Format("Save user input setting(s) for folder {0}", guid), String.Concat(typeof(SettingsHandler).Name, ".json"));
+                        processId = handler.AddProcessAction(processId, typeof(SettingsHandler).Name, String.Format("Save user input setting(s) for folder {0}", guid), String.Concat(typeof(SettingsHandler).Name, ".json"));
                         _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SettingsHandler).Name, guid.ToString());
                         handler.Execute();
                     }
