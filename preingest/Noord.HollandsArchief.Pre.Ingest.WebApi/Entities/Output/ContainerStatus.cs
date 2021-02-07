@@ -23,42 +23,42 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Output
     public class ContainerOverallStatusHandler
     {
         private readonly ContainerStatus _status = ContainerStatus.None;
-        public ContainerOverallStatusHandler(IEnumerable<QueryResultAction> actions)
+        public ContainerOverallStatusHandler(ExecutionPlanState[] plans, IEnumerable<QueryResultAction> actions)
         {
+            //calculation with no scheduled plan or scheduled plan is fully done.
+
             if (_status == ContainerStatus.None && actions.ToList().Count == 0)
-            {
                 _status = ContainerStatus.New;
-            }
 
-            if (_status == ContainerStatus.None)
+            var currentAvailableStatus = actions.Select(item
+                => (Enum.Parse(typeof(PreingestActionResults), item.ActionStatus, true) == null)
+                ? PreingestActionResults.None
+                : (PreingestActionResults)Enum.Parse(typeof(PreingestActionResults), item.ActionStatus, true)
+                ).Distinct().OrderBy(item => item);
+
+            PreingestActionResults result = currentAvailableStatus.FirstOrDefault();
+            switch (result)
             {
-                var currentAvailableStatus = actions.Select(item
-                    => (Enum.Parse(typeof(PreingestActionResults), item.ActionStatus, true) == null)
-                    ? PreingestActionResults.None
-                    : (PreingestActionResults)Enum.Parse(typeof(PreingestActionResults), item.ActionStatus, true)
-                    ).Distinct().OrderBy(item => item);
-
-                PreingestActionResults result = currentAvailableStatus.FirstOrDefault();
-                switch(result)
-                {
-                    case PreingestActionResults.Executing:
-                    case PreingestActionResults.None:
-                        _status = ContainerStatus.Running;
-                        break;
-                    case PreingestActionResults.Failed:
-                        _status = ContainerStatus.Failed;
-                        break;
-                    case PreingestActionResults.Error:
-                        _status = ContainerStatus.Error;
-                        break;
-                    case PreingestActionResults.Success:
-                        _status = ContainerStatus.Success;
-                        break;
-                    default:
-                        _status = ContainerStatus.None;
-                        break;
-                }
+                case PreingestActionResults.Executing:
+                case PreingestActionResults.None:
+                    _status = ContainerStatus.Running;
+                    break;
+                case PreingestActionResults.Failed:
+                    _status = ContainerStatus.Failed;
+                    break;
+                case PreingestActionResults.Error:
+                    _status = ContainerStatus.Error;
+                    break;
+                case PreingestActionResults.Success:
+                    _status = ContainerStatus.Success;
+                    break;
+                default:
+                    _status = ContainerStatus.None;
+                    break;
             }
+
+            if (_status != ContainerStatus.Failed && plans.Count(item => item.Status == ExecutionStatus.Pending) > 0)
+                _status = ContainerStatus.Running;
         }
 
         public ContainerStatus GetContainerStatus()

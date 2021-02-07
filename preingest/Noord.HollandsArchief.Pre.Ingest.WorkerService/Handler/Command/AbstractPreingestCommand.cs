@@ -159,7 +159,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             {
                 Name = currentActionType.ToString(),
                 Description = "Action created by WorkerService.",
-                Result = "N/A"
+                Result = string.Empty
             }).GetAwaiter().GetResult();
 
             if (processId == Guid.Empty)

@@ -100,7 +100,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                         ScheduledPlan = new ScheduledPlanStatusHandler(executionPlan.Where(ep
                         => ep.SessionId == ChecksumHelper.GeneratePreingestGuid(item.Name)).ToList(), joinedActions.Where(preingestActions
                         => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetExecutionPlan(),
-                        OverallStatus = new ContainerOverallStatusHandler(joinedActions.Where(preingestActions
+                        OverallStatus = new ContainerOverallStatusHandler(new ScheduledPlanStatusHandler(executionPlan.Where(ep
+                        => ep.SessionId == ChecksumHelper.GeneratePreingestGuid(item.Name)).ToList(), joinedActions.Where(preingestActions
+                        => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetExecutionPlan(), joinedActions.Where(preingestActions
                             => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetContainerStatus(),
                         Preingest = joinedActions.Where(preingestActions
                             => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name)).ToArray()
@@ -206,7 +208,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                         Size = item.Length,
                         Settings = new SettingsReader(item.DirectoryName, ChecksumHelper.GeneratePreingestGuid(item.Name)).GetSettings(),
                         ScheduledPlan = new ScheduledPlanStatusHandler(executionPlan, joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetExecutionPlan(),
-                        OverallStatus = new ContainerOverallStatusHandler(joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetContainerStatus(),
+                        OverallStatus = new ContainerOverallStatusHandler(new ScheduledPlanStatusHandler(executionPlan, joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetExecutionPlan(), joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name))).GetContainerStatus(),
                         Preingest = joinedActions.Where(preingestActions => preingestActions.FolderSessionId == ChecksumHelper.GeneratePreingestGuid(item.Name)).ToArray()
                     }).FirstOrDefault(item => item.SessionId == guid);
             }
