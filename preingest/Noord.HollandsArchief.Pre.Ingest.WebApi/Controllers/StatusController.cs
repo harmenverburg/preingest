@@ -138,8 +138,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem("Name is required");
             if (String.IsNullOrEmpty(data.Description))
                 return Problem("Description is required");
-            if(String.IsNullOrEmpty(data.Result))
-                return Problem("Result filename is required.");
+
+            //if(String.IsNullOrEmpty(data.Result))
+                //return Problem("Result filename is required.");
             
             _logger.LogInformation("Enter AddProcessAction.");
 

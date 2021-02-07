@@ -73,7 +73,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     FolderSessionId = item.FolderSessionId,
                     Name = item.Name,
                     ProcessId = item.ProcessId,
-                    ResultFiles = item.ResultFiles.Split(";").ToArray(),
+                    ResultFiles = String.IsNullOrEmpty(item.ResultFiles) ? new string[] { } : item.ResultFiles.Split(";").ToArray(),
                     Summary = String.IsNullOrEmpty(item.StatisticsSummary) ? null : JsonConvert.DeserializeObject<PreingestStatisticsSummary>(item.StatisticsSummary),
                     States = currentActions.Select(state
                         => state.States).Where(state
@@ -183,7 +183,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     FolderSessionId = item.FolderSessionId,
                     Name = item.Name,
                     ProcessId = item.ProcessId,
-                    ResultFiles = item.ResultFiles.Split(";").ToArray(),
+                    ResultFiles = String.IsNullOrEmpty(item.ResultFiles) ? new string[] { } : item.ResultFiles.Split(";").ToArray(),
                     Summary = String.IsNullOrEmpty(item.StatisticsSummary) ? null : JsonConvert.DeserializeObject<PreingestStatisticsSummary>(item.StatisticsSummary),
                     States = currentActions.Select(state
                         => state.States).Where(state
