@@ -27,25 +27,31 @@ export ACTIONGUID=""
 shopt -s extglob
 
 function notify() {
-   sessionid=$1
-   starttime=$2
-   endtime=$3
-   success=$4 # 0 is ok, anything else not
-   message=$5
+   starttime=$1
+   endtime=$2
+   success=$3 # "" is "Started", "0" is ok ("Completed"), anything else is not ok ("Failed")
+   message=$4
    
-   if [ $success -eq 0 ]
+   if [ -z "$success" ]
    then
-      accepted=1
-      rejected=0
-      state=Completed
-   else
       accepted=0
-      rejected=1
-      state=Failed
+      rejected=0
+      state=Started
+   else
+       if [ $success -eq 0 ]
+       then
+          accepted=1
+          rejected=0
+          state=Completed
+       else
+          accepted=0
+          rejected=1
+          state=Failed
+       fi
    fi
    
    json="{ \"eventDateTime\": \"`timestamp`\", \
-           \"sessionId\": \"$sessionid\", \
+           \"sessionId\": \"$GUID\", \
            \"name\": \"SipCreatorHandler\", \
            \"state\": \"$state\", \
            \"message\": \"$message\", \
@@ -83,7 +89,7 @@ function moanAndDie() {
         curl -s -S -X POST -H "Content-Type: application/json" --data "$json" "$PREINGEST_WEBAPI/api/Status/failed/$ACTIONGUID" 
         echo; echo "--------------- sent FAILED message for action guid $ACTIONGUID"
         
-        notify "$ACTIONGUID" "$STARTTIME" "`timestamp`" 1 "$message"
+        notify "$STARTTIME" "`timestamp`" 1 "$message"
    fi
    
    exit 1
@@ -125,6 +131,9 @@ function doIt {
     echo Send $PREINGEST_WEBAPI/api/Status/start/$ACTIONGUID
     curl -s -S -X POST -H "Content-Type: application/json" --data '{}' "$PREINGEST_WEBAPI/api/Status/start/$ACTIONGUID"
     echo; echo "--------------- sent START message for action guid $ACTIONGUID"
+    
+    # Also, do a notification:
+    notify "$STARTTIME" "$STARTTIME" "" "SIPCreator was started"
     
     # Switches conform https://noordhollandsarchief.sharepoint.com/:x:/r/sites/ImplementatiePreserveringsvoorziening/Gedeelde%20documenten/General/2.%20Technische%20documentatie/Pre-ingest/CMD%20SIP%20creator%20settings.xlsx?d=w9e29f946e0624d7db2d1efeca5f3525b&csf=1&web=1&e=Z7CTt7
     # Let op: -excludedFileNames kan nuttig zijn, maar ondersteunt geen wildcards.
@@ -215,7 +224,7 @@ EOF
     curl -s -S -X POST -H "Content-Type: application/json" --data '{}' "$PREINGEST_WEBAPI/api/Status/completed/$ACTIONGUID"
     echo; echo "--------------- sent COMPLETED message for action guid $ACTIONGUID"
     
-    notify "$ACTIONGUID" "$STARTTIME" "`timestamp`" 0 "SIPCreator completed"
+    notify "$STARTTIME" "`timestamp`" 0 "SIPCreator has completed"
 }
 
 export STARTTIME=`timestamp`
