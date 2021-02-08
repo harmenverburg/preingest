@@ -519,20 +519,18 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 return Problem("Empty GUID is invalid.");
 
             _logger.LogInformation("Enter CreateSip.");
-          
-            SipCreatorHandler handler = HttpContext.RequestServices.GetService(typeof(SipCreatorHandler)) as SipCreatorHandler;
-            if (handler == null)
-                return Problem("Object is not loaded.", typeof(SipCreatorHandler).Name);
 
-            handler.Logger = _logger;
             //database process id
             Guid processId = Guid.Empty;
             try
             {
-                handler.SetSessionGuid(guid);
-                _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SipCreatorHandler).Name, guid.ToString());
-                //Task.Run(() => handler.Execute());
-                handler.Execute();
+                using (SipCreatorHandler handler = new SipCreatorHandler(_settings, _eventHub, _preingestCollection))
+                {
+                    handler.Logger = _logger;
+                    handler.SetSessionGuid(guid);
+                    _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SipCreatorHandler).Name, guid.ToString());
+                    handler.Execute();
+                }
             }
             catch (Exception e)
             {
