@@ -81,6 +81,7 @@ services:
       - "9000:80"
     environment:
       - "PROXY_API_DEST=http://Noord.HollandsArchief.Pre.Ingest.WebApi/api/"
+      - "PROXY_EVENTHUB_DEST=http://Noord.HollandsArchief.Pre.Ingest.WorkerService/preingestEventHub/"
     networks:
       - preingest-network
     depends_on:
