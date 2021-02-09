@@ -50,5 +50,6 @@ fi
 cd "$SAVE_DIR"
 
 # Call the SIP Creator CLI
+echo Running SIP Creator command line: $JAVA_HOME/bin/java -Xms512m -Xmx1G -cp "${START_DIR}/library/*" com.tessella.sdb.core.xip.builder.SIPCreatorImpl "$@"
 $JAVA_HOME/bin/java -Xms512m -Xmx1G -cp "${START_DIR}/library/*" com.tessella.sdb.core.xip.builder.SIPCreatorImpl "$@"
 
