@@ -93,7 +93,7 @@
             <CollectionCode><xsl:apply-templates select="$identificatiekenmerk"/></CollectionCode>
             <Title><xsl:apply-templates select="$naam"/></Title>
             <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
-            <Metadata><xsl:copy-of select="$topxDoc"/></Metadata>
+            <Metadata schemaURI="http://www.nationaalarchief.nl/ToPX/v2.3"><xsl:copy-of select="$topxDoc"/></Metadata>
         </Collection>
     </xsl:template>
     
@@ -112,7 +112,7 @@
             <ScopeAndContent><xsl:apply-templates select="$omschrijving"/></ScopeAndContent>
             <Title><xsl:apply-templates select="$naam"/></Title>
             <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
-            <Metadata><xsl:copy-of select="$topxDoc"/></Metadata>
+            <Metadata schemaURI="http://www.nationaalarchief.nl/ToPX/v2.3"><xsl:copy-of select="$topxDoc"/></Metadata>
         </DeliverableUnit>
     </xsl:template>
     
@@ -130,7 +130,7 @@
         <File status="new">
             <!-- TODO <FileRef> is in meerdere XML-conteksten toegestaan. Is dit wel de juiste plaats? Ook onder Manifestation/ManifestationFile kan het bijvoorbeeld. -->
             <xsl:if test="exists($bestandsverwijzing)"><FileRef><xsl:apply-templates select="$bestandsverwijzing"/></FileRef></xsl:if>
-            <Metadata><xsl:copy-of select="$topxDoc"/></Metadata>
+            <Metadata schemaURI="http://www.nationaalarchief.nl/ToPX/v2.3"><xsl:copy-of select="$topxDoc"/></Metadata>
             <FileSize><xsl:value-of select="$omvang"/></FileSize>
             <FixityInfo>
                 <FixityAlgorithmRef><xsl:apply-templates select="$algoritme"/></FixityAlgorithmRef>
