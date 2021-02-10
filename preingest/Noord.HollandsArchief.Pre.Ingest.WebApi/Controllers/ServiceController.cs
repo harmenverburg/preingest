@@ -58,17 +58,29 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     ContinueOnError = item.ContinueOnError,
                     ContinueOnFailed = item.ContinueOnFailed
                 }).ToList();
-                   
+
                 // the same action then remove old onces first
                 // var exceptCollection = workflow.Workflow.Except<BodyPlan>(existingPlan).ToList();
-                var intersectCollection = workflow.Workflow.Intersect<BodyPlan>(existingPlan).ToList();
                 
                 QueryResultAction[] actions = currentArchive.Preingest as QueryResultAction[];
+                List<QueryResultAction> alreadyProcessedActions = new List<QueryResultAction>();
+                if (existingPlan.Count > 0)
+                {
+                    var intersectCollection = workflow.Workflow.Intersect<BodyPlan>(existingPlan).ToList();
+                    var tempResult = actions.Where(action
+                                        => intersectCollection.Exists(item
+                                            => item.ActionName == ((ValidationActionType)Enum.Parse(typeof(ValidationActionType), action.Name)))).ToList();
 
-                var alreadyProcessedActions = actions.Where(action
-                    => intersectCollection.Exists(item
-                        => item.ActionName == ((ValidationActionType)Enum.Parse(typeof(ValidationActionType), action.Name)))).ToList();
+                    alreadyProcessedActions.AddRange(tempResult);
+                }
+                else
+                {
+                    var tempResult = actions.Where(action
+                                       => workflow.Workflow.ToList().Exists(item
+                                           => item.ActionName == ((ValidationActionType)Enum.Parse(typeof(ValidationActionType), action.Name)))).ToList();
 
+                    alreadyProcessedActions.AddRange(tempResult);
+                }
                 //clean the old plan
                 //remove previous states if selected in new plan
                 //save the new plan
@@ -78,8 +90,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                     {
                         //get old plan, remove old plan, save
                         var oldPlan = context.ExecutionPlanCollection.Where(item => item.SessionId == guid).ToArray();
-                        context.ExecutionPlanCollection.RemoveRange(oldPlan);
-                        context.SaveChanges();
+                        if (oldPlan.Length > 0)
+                        {
+                            context.ExecutionPlanCollection.RemoveRange(oldPlan);
+                            context.SaveChanges();
+                        }
                     }
                     catch (Exception e)
                     {
@@ -117,8 +132,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                             {
                                 //save the new plan
                                 var newPlan = workflow.Workflow.Select(item => new Entities.Context.ExecutionPlan { ActionName = item.ActionName.ToString(), SessionId = guid, ContinueOnError = item.ContinueOnError, ContinueOnFailed = item.ContinueOnFailed });
-                                context.ExecutionPlanCollection.AddRange(newPlan);
-                                context.SaveChanges();
+                                if (newPlan.Count() > 0)
+                                {
+                                    context.ExecutionPlanCollection.AddRange(newPlan);
+                                    context.SaveChanges();
+                                }
                             }
                             catch (Exception e)
                             {

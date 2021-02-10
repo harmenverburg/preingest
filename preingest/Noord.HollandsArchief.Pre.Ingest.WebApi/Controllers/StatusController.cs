@@ -48,16 +48,17 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Enter GetActions.");
 
-
-            PreingestAction action = null;
-            PreingestStatisticsSummary summary = null;
+            PreingestAction action = null;            
             try
             {
                 using (var context = new PreIngestStatusContext())
                 {
                     action = context.PreingestActionCollection.Find(actionGuid);
                     if (action != null && action.StatisticsSummary != null)
-                        summary = JsonConvert.DeserializeObject<PreingestStatisticsSummary>(action.StatisticsSummary);
+                    {
+                        action.Status = context.ActionStateCollection.Where(item => item.ProcessId == action.ProcessId).ToList();
+                        action.Status.ToList().ForEach(item => item.Messages = context.ActionStateMessageCollection.Where(m => m.StatusId == item.StatusId).ToList());
+                    }
                 }
             }
             catch (Exception e)
@@ -72,10 +73,24 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             if (action == null)
                 return NotFound(String.Format("Action not found with ID '{0}'", actionGuid));
 
-            if (summary == null)
-                return new JsonResult(new { action.Creation, action.Description, SessionId = action.FolderSessionId, action.Name, ActionId = action.ProcessId, ResultFiles = action.ResultFiles.Split(";").ToArray(), action.ActionStatus });
-            else
-                return new JsonResult(new { action.Creation, action.Description, SessionId = action.FolderSessionId, action.Name, ActionId = action.ProcessId, ResultFiles = action.ResultFiles.Split(";").ToArray(), action.ActionStatus, Summary = summary });
+            return new JsonResult(new
+            {
+                action.Creation,
+                action.Description,
+                SessionId = action.FolderSessionId,
+                action.Name,
+                ActionId = action.ProcessId,
+                ResultFiles = String.IsNullOrEmpty(action.ResultFiles) ? new string[] { } : action.ResultFiles.Split(";").ToArray(),
+                action.ActionStatus,
+                Summary = String.IsNullOrEmpty(action.StatisticsSummary) ? new object { } : JsonConvert.DeserializeObject<PreingestStatisticsSummary>(action.StatisticsSummary),
+                States = action.Status.Count == 0 ? new object[] { } : action.Status.Select(item => new
+                {
+                    item.Name,
+                    item.StatusId,
+                    item.Creation,
+                    Messages = (item.Messages.Count == 0) ? new object[] { } : item.Messages.Select(m => new { m.MessageId, m.Creation, m.Description }).ToArray()
+                }).ToArray()
+            });
         }
 
         [HttpGet("actions/{folderSessionGuid}", Name = "Retrieve all actions from a preingest session", Order = 1)]
@@ -87,29 +102,19 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Enter GetActions.");
 
             List<PreingestAction> actions = new List<PreingestAction>();
-
-            dynamic jsonResult = null;
-
             try
             {
                 using (var context = new PreIngestStatusContext())
                 {
                     var result = context.PreingestActionCollection.Where(item => item.FolderSessionId == folderSessionGuid).ToList();
-                    if (result != null)
-                        actions.AddRange(result);                 
+                    result.ForEach(action =>
+                    {
+                        action = context.PreingestActionCollection.Find(action.ProcessId);
+                        action.Status = context.ActionStateCollection.Where(item => item.ProcessId == action.ProcessId).ToList();
+                        action.Status.ToList().ForEach(item => item.Messages = context.ActionStateMessageCollection.Where(m => m.StatusId == item.StatusId).ToList());
+                    });
+                    actions.AddRange(result);
                 }
-
-                jsonResult = actions.Select(action => new
-                {
-                    action.Creation,
-                    action.Description,
-                    SessionId = action.FolderSessionId,
-                    action.Name,
-                    ActionId = action.ProcessId,
-                    action.ResultFiles,
-                    action.ActionStatus,
-                    Summary = String.IsNullOrEmpty(action.StatisticsSummary) ? new object { } : JsonConvert.DeserializeObject<PreingestStatisticsSummary>(action.StatisticsSummary)
-                }).ToArray();
             }
             catch (Exception e)
             {
@@ -120,11 +125,24 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 
             _logger.LogInformation("Exit GetActions.");
 
-
-            if (jsonResult == null)
-                return new JsonResult(new object[] { });
-
-            return new JsonResult(jsonResult);            
+            return new JsonResult(actions.Select(action => new
+            {
+                action.Creation,
+                action.Description,
+                SessionId = action.FolderSessionId,
+                action.Name,
+                ActionId = action.ProcessId,
+                ResultFiles = String.IsNullOrEmpty(action.ResultFiles) ? new string[] { } : action.ResultFiles.Split(";").ToArray(),
+                action.ActionStatus,
+                Summary = String.IsNullOrEmpty(action.StatisticsSummary) ? new object { } : JsonConvert.DeserializeObject<PreingestStatisticsSummary>(action.StatisticsSummary),
+                States = action.Status.Count == 0 ? new object[] { } : action.Status.Select(item => new
+                {
+                    item.Name,
+                    item.StatusId,
+                    item.Creation,
+                    Messages = (item.Messages.Count == 0) ? new object[] { } : item.Messages.Select(m => new { m.MessageId, m.Creation, m.Description }).ToArray()
+                }).ToArray()
+            }).ToArray());           
         }
          
         [HttpPost("new/{folderSessionGuid}", Name = "Add an action", Order = 3)]
