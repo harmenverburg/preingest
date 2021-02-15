@@ -8,6 +8,9 @@
             <assert test="count(topx:naam) eq 1"
                 >Het aantal naam-elementen in de ToPX-metadata is niet 1 maar <value-of select="count(topx:naam)"/></assert>
             
+            <assert test="string-length(topx:naam) le 200"
+                >De lengte van het naam-veld (voor de titel) is te groot: <value-of select="string-length(topx:naam)"/>. De inhoud van het naam-veld is: "<value-of select="topx:naam"/>".</assert>
+            
             <p>Controleer of er precies één element "omschrijving" is (dus niet 0 of meer dan 1)</p>
             <assert test="count(topx:classificatie/topx:omschrijving) eq 1"
                 >Het aantal classificatie-elementen met een omschrijving-element in de ToPX-metadata is niet 1 maar <value-of select="count(topx:classificatie/topx:omschrijving)"/></assert>
