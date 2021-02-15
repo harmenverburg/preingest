@@ -12,5 +12,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities
         public String XslWebServerPort { get; set; }
         public String DroidServerName { get; set; }
         public String DroidServerPort { get; set; }
+        public String TransferAgentTestFolder { get; set; }
+        public String TransferAgentProdFolder { get; set; }
     }
 }

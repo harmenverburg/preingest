@@ -43,6 +43,8 @@ services:
     container_name: "Noord.HollandsArchief.Pre.Ingest.WebApi"
     volumes:
         - "${DATAFOLDER}:/data"
+        - "${TRANSFERAGENTTESTFOLDER}:/tatf"
+        - "${TRANSFERAGENTPRODFOLDER}:/tapf"
     expose:
         - "80"
     # Only (temporarily) mapped here for direct debugging access to the API's HTTP endpoints

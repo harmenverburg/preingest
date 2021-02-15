@@ -5,6 +5,8 @@ WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
+RUN apt-get update && apt-get install zip unzip -qy
+
 FROM mcr.microsoft.com/dotnet/sdk:5.0-focal AS build
 WORKDIR /src
 COPY ["Noord.HollandsArchief.Pre.Ingest.WebApi/Noord.HollandsArchief.Pre.Ingest.WebApi.csproj", "Noord.HollandsArchief.Pre.Ingest.WebApi/"]

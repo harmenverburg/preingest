@@ -120,7 +120,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                         {
                             IsValidated = true,
                             IsConfirmSchema = false,
-                            ErrorMessages = anyMessages.ToArray(),
+                            ErrorMessages = errorMessages.ToArray(),
                             MetadataFilename = file,
                             RequestUri = requestUri
                         });
