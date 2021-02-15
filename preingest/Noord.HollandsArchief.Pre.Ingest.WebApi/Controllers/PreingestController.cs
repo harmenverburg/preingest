@@ -611,5 +611,41 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Exit PutSettings.");
             return new JsonResult(new { Message = String.Format("Settings are stored."), SessionId = guid, ActionId = processId });
         }
+
+
+        [HttpPost("transfer/{guid}", Name = "Prepare sip.zip for transfer agent", Order = 17)]
+        public IActionResult PrepareForTransferAgent(Guid guid)
+        {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
+            _logger.LogInformation("Enter PrepareForTransferAgent.");
+
+            //database process id
+            Guid processId = Guid.NewGuid();
+            try
+            {
+                Task.Run(() =>
+                {
+                    using (SipZipHandler handler = new SipZipHandler(_settings, _eventHub, _preingestCollection))
+                    {
+                        handler.Logger = _logger;
+                        handler.SetSessionGuid(guid);
+                        processId = handler.AddProcessAction(processId, typeof(SipZipHandler).Name, String.Format("Prepare sip.zip for transfer agent folder {0}", guid), String.Concat(typeof(SipZipHandler).Name, ".json"));
+
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SipZipHandler).Name, guid.ToString());
+                        handler.Execute();
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(SipZipHandler).Name, e.Message);
+                return ValidationProblem(e.Message, typeof(SipZipHandler).Name);
+            }
+
+            _logger.LogInformation("Exit PrepareForTransferAgent.");
+            return new JsonResult(new { Message = String.Format("Preparation is started."), SessionId = guid, ActionId = processId });
+        }
     }
 }

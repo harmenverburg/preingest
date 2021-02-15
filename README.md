@@ -21,6 +21,8 @@ on the Docker host.
     DATAFOLDER=/path/to/data
     SIPCREATORFOLDER=/path/to/SIP_Creator
     TOMCATLOGFOLDER=/path/to/tomcat-logs
+	TRANSFERAGENTTESTFOLDER=/path/to/tatf
+	TRANSFERAGENTPRODFOLDER=/path/to/tapf
     ```
 
   - or:
@@ -29,6 +31,8 @@ on the Docker host.
     export DATAFOLDER=/path/to/data
     export SIPCREATORFOLDER=/path/to/SIP_Creator
     export TOMCATLOGFOLDER=/path/to/tomcat-logs
+	export TRANSFERAGENTTESTFOLDER=/path/to/tatf
+	export TRANSFERAGENTPRODFOLDER=/path/to/tapf
     ```
 
   - or:
@@ -37,6 +41,8 @@ on the Docker host.
     set DATAFOLDER=D:\path\to\data
     set SIPCREATORFOLDER=D:\path\to\SIP_Creator
     set TOMCATLOGFOLDER=D:\path\to\tomcat-logs
+	set TRANSFERAGENTTESTFOLDER=D:\path\to\tatf
+	set TRANSFERAGENTPRODFOLDER=D:\path\to\tapf
     ```
 
 - To run all Docker containers, pulling the development images if needed, run:
