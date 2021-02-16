@@ -58,6 +58,8 @@ services:
       - AppSettings:XslWebServerPort=8080
       - AppSettings:DroidServerName=droid
       - AppSettings:DroidServerPort=8080
+      - AppSettings:TransferAgentTestFolder=/tatf
+      - AppSettings:TransferAgentProdFolder=/tapf
     networks:
       - preingest-network
     depends_on:
