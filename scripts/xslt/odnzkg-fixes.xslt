@@ -1,17 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:math="http://www.w3.org/2005/xpath-functions/math" exclude-result-prefixes="xs math"
+    xmlns:nha="http://noord-hollandsarchief.nl/namespaces/1.0"
     xpath-default-namespace="http://www.nationaalarchief.nl/ToPX/v2.3"
     xmlns="http://www.nationaalarchief.nl/ToPX/v2.3" version="3.0" expand-text="yes">
 
     <xsl:mode on-no-match="shallow-copy"/>
+    
+    <xsl:variable name="fileinfodoc" as="document-node()" select="doc(base-uri() || '.tmp.xml')"/>
+    
+    <xsl:function name="nha:format-filedate" as="xs:string">
+        <xsl:param name="filedate-from-stat" as="xs:string"/>
+        
+        <xsl:value-of select="$filedate-from-stat => substring-before(' ') || 'T' || $filedate-from-stat => substring-after(' ') => translate(' ', '') => replace('(\d\d)$', ':$1')"/>
+    </xsl:function>
 
-    <xsl:template match="aggregatieniveau/text()[. eq 'Document']">
-        <xsl:text>Bestand</xsl:text>
+    <xsl:template match="aggregatieniveau/text()">
+        <xsl:choose>
+            <xsl:when test=". eq 'Document'"><xsl:text>Bestand</xsl:text></xsl:when>
+            <xsl:when test=". eq 'Zaakniveau'">
+                <xsl:comment>TODO Wat is de overeenkomstige waarde van Zaakniveau? Record? Dossier? Serie?</xsl:comment>
+                <xsl:text>Record</xsl:text>
+            </xsl:when>
+            <xsl:otherwise><xsl:copy/></xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
-
-    <xsl:template match="omschrijving">
+    
+    <xsl:template match="bestand/omschrijving | aggregatie/omschrijving">
         <classificatie>
             <code>TODO-code</code>
             <xsl:copy>
@@ -20,7 +35,16 @@
             <bron>TODO-bron</bron>
         </classificatie>
     </xsl:template>
-
+    
+    <xsl:template match="bestand/naam[not(following-sibling::omschrijving)]">
+        <xsl:copy><xsl:apply-templates select="@* | node()"/></xsl:copy>
+        <classificatie>
+            <code>TODO-code</code>
+            <omschrijving>TODO-omschrijving</omschrijving>
+            <bron>TODO-bron</bron>
+        </classificatie>
+    </xsl:template>
+    
     <xsl:template match="externeIdentificatiekenmerken">
         <externIdentificatiekenmerk>
             <xsl:apply-templates select="@* | node()"/>
@@ -38,6 +62,39 @@
         <xsl:text>dut</xsl:text>
     </xsl:template>
     
+    <xsl:template match="classificatie/datum">
+        <datumOfPeriode>
+            <xsl:copy>
+                <xsl:apply-templates select="@* | node()"/>
+            </xsl:copy>
+        </datumOfPeriode>
+    </xsl:template>
+    
+    <xsl:template match="datum/text()[not(matches(., '^\d\d\d\d-\d\d?-\d\d?$'))]">
+        <xsl:comment>TODO Datum heeft onjuist formaat: "{.}", aangepast</xsl:comment>
+        <xsl:text>2021-02-11</xsl:text>
+    </xsl:template>
+    
+    <xsl:template match="inTijd/begin[not(*)] | inTijd/eind[not(*)]">
+        <xsl:copy>
+            <xsl:apply-templates select="@*"/>
+            <datum><xsl:apply-templates select="node()"/></datum>
+        </xsl:copy>
+    </xsl:template>
+    
+    <xsl:template match="Periode">
+        <periode>
+            <xsl:apply-templates select="@*"/>
+            <begin><datum>{substring-before(., ' ')}</datum></begin>
+            <eind><datum>{substring-after(., '- ')}</datum></eind>
+        </periode>
+    </xsl:template>
+    
+    <xsl:template match="relatie[not(relatieID)]/typeRelatie">
+        <relatieID>TODO-relatieID</relatieID>
+        <xsl:copy><xsl:apply-templates select="@* | node()"/></xsl:copy>
+    </xsl:template>
+    
     <xsl:template match="vertrouwelijkheid/classificatieNiveau">
         <xsl:copy><xsl:apply-templates select="@* | node()"/></xsl:copy>
         <xsl:comment>TODO Datum of periode uitzoeken</xsl:comment>
@@ -52,6 +109,21 @@
         </openbaarheid>        
     </xsl:template>
     
+    <xsl:template match="aggregatie/context[not(following-sibling::openbaarheid)]">
+        <openbaarheid>
+            <omschrijvingBeperkingen><!--omschrijvingBeperkingen: details staan nog niet vast; aangepast aan verouderde schema-conventie-->Beperkt openbaar A</omschrijvingBeperkingen>
+            <!--TODO Datum of periode uitzoeken-->
+            <datumOfPeriode>
+                <datum>2021-02-11</datum>
+            </datumOfPeriode>
+        </openbaarheid>
+    </xsl:template>
+    
+    <xsl:template match="omschrijvingBeperkingen/text()[. = ('internet', 'besloten')]">
+        <xsl:comment>omschrijvingBeperkingen: details staan nog niet vast; aangepast aan verouderde schema-conventie</xsl:comment>
+        <xsl:text>Beperkt openbaar A</xsl:text>
+    </xsl:template>
+    
     <xsl:template match="identificatieKenmerk">
         <identificatiekenmerk>
             <xsl:apply-templates select="@* | node()"/>
@@ -61,8 +133,10 @@
     <xsl:template match="bestandsnaam">
         <xsl:copy>
             <xsl:apply-templates select="@*"/>
-            <xsl:comment>TODO bestandsnaam, uri-encoding?</xsl:comment>
-            <naam>{base-uri() => replace('^(.*/)*([^/]+)\.[^.]+\.metadata$', '$2')}</naam>
+            <xsl:if test="not(naam)">
+                <xsl:comment>TODO bestandsnaam, uri-encoding?</xsl:comment>
+                <naam>{base-uri() => replace('^(.*/)*([^/]+)\.[^.]+\.metadata$', '$2')}</naam>
+            </xsl:if>
             <xsl:apply-templates/>
         </xsl:copy>
     </xsl:template>
@@ -83,8 +157,8 @@
     </xsl:template>
 
     <xsl:template match="formaat/omvang/text()">
-        <xsl:comment>TODO omvang moet geheel getal zijn</xsl:comment>
-        <xsl:text>{translate(., '.', '')}</xsl:text>
+        <xsl:comment>TODO omvang moet geheel getal zijn, in bytes</xsl:comment>
+        <xsl:text>{$fileinfodoc/*/*:filesize}</xsl:text>
     </xsl:template>
     
     <xsl:template match="creatieapplicatie/naam">
@@ -93,6 +167,18 @@
             <xsl:comment>TODO wat zijn hier de conventies?</xsl:comment>
             <xsl:apply-templates select="node()"/>
         </xsl:copy>
+    </xsl:template>
+    
+    <xsl:template match="creatieapplicatie">
+        <xsl:copy>
+            <xsl:apply-templates select="@* | node()"/>
+        </xsl:copy>
+        
+        <fysiekeIntegriteit>
+            <algoritme>SHA512</algoritme>
+            <waarde><xsl:comment>TODO bereken SHA512-waarde</xsl:comment>{$fileinfodoc/*/*:sha512sum}</waarde>
+            <datumEnTijd><xsl:comment>TODO datum en tijd van bestand</xsl:comment>{nha:format-filedate($fileinfodoc/*/*:filedate)}</datumEnTijd>
+        </fysiekeIntegriteit>
     </xsl:template>
     
 </xsl:stylesheet>

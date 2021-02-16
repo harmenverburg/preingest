@@ -16,6 +16,9 @@
     
     <xsl:mode on-no-match="shallow-copy"/>
     
+    <!-- The maximum size of a Title in XIP (currently, we don't know the real maximum): -->
+    <xsl:param name="max-length-of-title" as="xs:integer" select="200"/>
+    
     <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute('data-uri-prefix')"/>
     
     <!-- TODO variabele zorgdrager-geautoriseerde-naam kan misschien ook opgehaald worden uit de metadata op aggregatieniveau Archief. Nu o.b.v. request-parameter zorgdrager=... -->
@@ -91,7 +94,7 @@
         
         <Collection status="new">
             <CollectionCode><xsl:apply-templates select="$identificatiekenmerk"/></CollectionCode>
-            <Title><xsl:apply-templates select="$naam"/></Title>
+            <Title><xsl:apply-templates select="$naam" mode="title"/></Title>
             <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
             <Metadata schemaURI="http://www.nationaalarchief.nl/ToPX/v2.3"><xsl:copy-of select="$topxDoc"/></Metadata>
         </Collection>
@@ -110,7 +113,7 @@
             <DigitalSurrogate>{$DigitalSurrogate}</DigitalSurrogate>
             <CatalogueReference><xsl:apply-templates select="$identificatiekenmerk"/></CatalogueReference>
             <ScopeAndContent><xsl:apply-templates select="$omschrijving"/></ScopeAndContent>
-            <Title><xsl:apply-templates select="$naam"/></Title>
+            <Title><xsl:apply-templates select="$naam" mode="title"/></Title>
             <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
             <Metadata schemaURI="http://www.nationaalarchief.nl/ToPX/v2.3"><xsl:copy-of select="$topxDoc"/></Metadata>
         </DeliverableUnit>
@@ -136,18 +139,37 @@
                 <FixityAlgorithmRef><xsl:apply-templates select="$algoritme"/></FixityAlgorithmRef>
                 <FixityValue><xsl:apply-templates select="$algoritme-waarde"/></FixityValue>
             </FixityInfo>
-            <Title><xsl:apply-templates select="$naam"/></Title>
+            <Title><xsl:apply-templates select="$naam" mode="title"/></Title>
         </File>
+    </xsl:template>
+
+    <xsl:template match="topx:naam" mode="title">
+        <xsl:variable name="text" select="." as="xs:string"/>
+        <xsl:choose>
+            <xsl:when test="string-length($text) le $max-length-of-title"><xsl:value-of select="$text"/></xsl:when>
+            <xsl:otherwise>
+                <!-- Shorten the title by taking the first and the last part and inserting " ... " in between. -->
+                <xsl:variable name="ellipsisstring" as="xs:string" select="' ... '"/>
+                <xsl:variable name="half-max-length-of-title" as="xs:integer" select="xs:integer($max-length-of-title div 2)"/>
+                <xsl:variable name="part1-end-offst" as="xs:integer" select="$half-max-length-of-title - string-length($ellipsisstring) - 1"/>
+                <xsl:variable name="part2-start-offset" as="xs:integer" select="string-length($text) - $half-max-length-of-title"/>
+                
+                <xsl:variable name="part1" as="xs:string" select="substring($text, 1, $part1-end-offst)"/>
+                <xsl:variable name="part2" as="xs:string" select="substring($text, $part2-start-offset)"/>
+                <xsl:comment>Title truncated; original title:&#10;{$text}</xsl:comment>
+                <xsl:value-of select="$part1 || $ellipsisstring || $part2"/>                
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <xsl:template match="topx:omschrijvingBeperkingen">
         <xsl:variable name="zorgdrager" as="xs:string" select="if ($zorgdrager-geautoriseerde-naam ne '') then $zorgdrager-geautoriseerde-naam else '*zorgdrager-ontbreekt*'"/>
         <xsl:choose>
             <xsl:when test="text() eq 'Openbaar'">open</xsl:when>
-            <xsl:when test="text() eq 'Beperkt openbaar A'">{$zorgdrager}_Niet_openbaar_A</xsl:when>
-            <xsl:when test="text() eq 'Beperkt openbaar B'">{$zorgdrager}_Niet_openbaar_B</xsl:when>
-            <xsl:when test="text() eq 'Beperkt openbaar C'">{$zorgdrager}_Niet_openbaar_C</xsl:when>
-            <xsl:when test="matches(text(), 'Beperkt openbaar .*')">{$zorgdrager}_Niet_openbaar_{replace(text(), 'Beperkt openbaar (.*)', '$1')}</xsl:when> <!-- TODO is deze interpretatie juist? naam mappen, bijv. Zorgdrager=Gemeente_Haarlem -->
+            <xsl:when test="text() eq 'Beperkt openbaar A'">{$zorgdrager}_Niet_Openbaar_A</xsl:when>
+            <xsl:when test="text() eq 'Beperkt openbaar B'">{$zorgdrager}_Niet_Openbaar_B</xsl:when>
+            <xsl:when test="text() eq 'Beperkt openbaar C'">{$zorgdrager}_Niet_Openbaar_C</xsl:when>
+            <xsl:when test="matches(text(), 'Beperkt openbaar .*')">{$zorgdrager}_Niet_Openbaar_{replace(text(), 'Beperkt openbaar (.*)', '$1')}</xsl:when> <!-- TODO is deze interpretatie juist? naam mappen, bijv. Zorgdrager=Gemeente_Haarlem -->
             
             <!-- TODO wat bij onbekend? -->
             <xsl:otherwise>{.}</xsl:otherwise>
