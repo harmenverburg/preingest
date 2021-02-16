@@ -49,7 +49,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 {
                     Logger.LogInformation("Metadata validatie : {0}", file);
 
-                    string requestUri = GetProcessingUrl(ApplicationSettings.XslWebServerName, ApplicationSettings.XslWebServerPort, file);
+                    string requestUri = GetProcessingUrl(ApplicationSettings.XslWebServerName, ApplicationSettings.XslWebServerPort, System.Net.WebUtility.UrlEncode(file));
                     var errorMessages = new List<String>();
                     
                     try

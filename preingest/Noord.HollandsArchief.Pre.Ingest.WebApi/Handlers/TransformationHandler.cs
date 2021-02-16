@@ -43,7 +43,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 foreach (string file in metadatas)
                 {
                     Logger.LogInformation("Transformatie : {0}", file);
-                    string requestUri = GetProcessingUrl(ApplicationSettings.XslWebServerName, ApplicationSettings.XslWebServerPort, file);
+                    string requestUri = GetProcessingUrl(ApplicationSettings.XslWebServerName, ApplicationSettings.XslWebServerPort, System.Net.WebUtility.UrlEncode(file));
                     try
                     {
                         WebRequest request = WebRequest.Create(requestUri);
