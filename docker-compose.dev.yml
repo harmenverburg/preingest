@@ -2,6 +2,8 @@
 #   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 # Or copy into a file named docker-compose.override.yml to use automatically with just:
 #   docker-compose up
+# When images already exist (like after running `docker-compose pull` or when built earlier),
+# add `--build` to force a new build.
 
 version: "3.8"
 
@@ -9,7 +11,7 @@ services:
   clamav:
     # entrypoint: ["echo", "Service clamav disabled"]
   xslweb:
-    # image: "pmasereeuwnha/xslweb"
+    # image: "noordhollandsarchief/xslweb:development"
   droid:
     # image: "noordhollandsarchief/droidvalidationwebapi:development"
     build: droid-validation
