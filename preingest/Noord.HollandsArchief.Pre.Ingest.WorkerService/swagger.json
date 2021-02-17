@@ -945,11 +945,31 @@
             "type": "string",
             "nullable": true
           },
-          "preservicaTarget": {
+          "environment": {
             "type": "string",
             "nullable": true
           },
-          "preservicaSecurityTag": {
+          "owner": {
+            "type": "string",
+            "nullable": true
+          },
+          "securityTag": {
+            "type": "string",
+            "nullable": true
+          },
+          "collectionStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "collectionCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "collectionTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "collectionRef": {
             "type": "string",
             "nullable": true
           }

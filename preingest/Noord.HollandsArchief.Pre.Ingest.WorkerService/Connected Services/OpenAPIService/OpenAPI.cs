@@ -3144,13 +3144,28 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.OpenAPIService
         [Newtonsoft.Json.JsonProperty("checksumValue", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string ChecksumValue { get; set; }
     
-        [Newtonsoft.Json.JsonProperty("preservicaTarget", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string PreservicaTarget { get; set; }
-    
-        [Newtonsoft.Json.JsonProperty("preservicaSecurityTag", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string PreservicaSecurityTag { get; set; }
-    
-        public string ToJson() 
+        [Newtonsoft.Json.JsonProperty("environment", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Environment { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("owner", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Owner { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("securityTag", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string SecurityTag { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("collectionStatus", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string CollectionStatus { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("collectionCode", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string CollectionCode { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("collectionTitle", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string CollectionTitle { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("collectionRef", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string CollectionRef { get; set; }
+
+        public string ToJson()
         {
             return Newtonsoft.Json.JsonConvert.SerializeObject(this);
         }
