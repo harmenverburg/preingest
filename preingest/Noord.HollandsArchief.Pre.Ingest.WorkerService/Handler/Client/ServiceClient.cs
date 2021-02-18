@@ -8,6 +8,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.OpenAPIService
 {
     public partial class ServiceClient
     {
+        public ServiceClient(string url, System.Net.Http.HttpClient httpClient)
+        {
+            BaseUrl = url;
+            _httpClient = httpClient;
+            _settings = new System.Lazy<Newtonsoft.Json.JsonSerializerSettings>(CreateSerializerSettings);
+        }
         public async Task PrepareRequestAsync(System.Net.Http.HttpClient httpClient, System.Net.Http.HttpRequestMessage request, StringBuilder urlBuilder)
         {
             await PrepareRequestAsync(httpClient, request, urlBuilder.ToString());

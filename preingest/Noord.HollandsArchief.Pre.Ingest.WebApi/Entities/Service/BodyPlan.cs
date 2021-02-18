@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System;
+using System.ComponentModel;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Service
 {
@@ -23,7 +24,9 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Service
         ScanVirusValidationHandler,
         SidecarValidationHandler,
         SipCreatorHandler,
-        TransformationHandler
+        TransformationHandler,
+        SipZipMetadataValidationHandler,
+        SipZipCopyHandler
     }
 
 
@@ -32,7 +35,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Service
         public ValidationActionType ActionName { get; set; }
         public bool ContinueOnFailed { get; set; }
         public bool ContinueOnError { get; set; }
-                
+        [DefaultValue(true)]
+        public bool StartOnError { get; set; }
         public bool Equals(BodyPlan other)
         {
             return other != null && other.ActionName == this.ActionName;

@@ -19,6 +19,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.EventHub
         public ValidationActionType ActionName { get; set; }
         public bool ContinueOnError { get; set; }
         public bool ContinueOnFailed { get; set; }
-        
+        public bool StartOnError { get; set; }        
     }
 }

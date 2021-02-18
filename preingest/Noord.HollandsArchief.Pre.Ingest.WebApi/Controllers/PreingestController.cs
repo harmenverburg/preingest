@@ -613,13 +613,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
         }
 
 
-        [HttpPost("transfer/{guid}", Name = "Prepare sip.zip for transfer agent", Order = 17)]
-        public IActionResult PrepareForTransferAgent(Guid guid)
+        [HttpPost("sipzip/validate/{guid}", Name = "Validate metadata.xml in *.sip.zip", Order = 17)]
+        public IActionResult SipZipValidate(Guid guid)
         {
             if (guid == Guid.Empty)
                 return Problem("Empty GUID is invalid.");
 
-            _logger.LogInformation("Enter PrepareForTransferAgent.");
+            _logger.LogInformation("Enter SipZipValidate.");
 
             //database process id
             Guid processId = Guid.NewGuid();
@@ -627,24 +627,59 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             {
                 Task.Run(() =>
                 {
-                    using (SipZipHandler handler = new SipZipHandler(_settings, _eventHub, _preingestCollection))
+                    using (SipZipMetadataValidationHandler handler = new SipZipMetadataValidationHandler(_settings, _eventHub, _preingestCollection))
                     {
                         handler.Logger = _logger;
                         handler.SetSessionGuid(guid);
-                        processId = handler.AddProcessAction(processId, typeof(SipZipHandler).Name, String.Format("Prepare sip.zip for transfer agent folder {0}", guid), String.Concat(typeof(SipZipHandler).Name, ".json"));
+                        processId = handler.AddProcessAction(processId, typeof(SipZipMetadataValidationHandler).Name, String.Format("Validate metadata.xml in *.sip.zip for folder {0}", guid), String.Concat(typeof(SipZipMetadataValidationHandler).Name, ".json"));
 
-                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SipZipHandler).Name, guid.ToString());
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SipZipMetadataValidationHandler).Name, guid.ToString());
                         handler.Execute();
                     }
                 });
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(SipZipHandler).Name, e.Message);
-                return ValidationProblem(e.Message, typeof(SipZipHandler).Name);
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(SipZipMetadataValidationHandler).Name, e.Message);
+                return ValidationProblem(e.Message, typeof(SipZipMetadataValidationHandler).Name);
             }
 
-            _logger.LogInformation("Exit PrepareForTransferAgent.");
+            _logger.LogInformation("Exit SipZipValidate.");
+            return new JsonResult(new { Message = String.Format("Validation is started."), SessionId = guid, ActionId = processId });
+        }
+
+        [HttpPost("sipzip/transfer/{guid}", Name = "Transfer *.sip.zip for transfer agent", Order = 18)]
+        public IActionResult SipZipTransfer(Guid guid)
+        {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
+            _logger.LogInformation("Enter SipZipTransfer.");
+
+            //database process id
+            Guid processId = Guid.NewGuid();
+            try
+            {
+                Task.Run(() =>
+                {
+                    using (SipZipCopyHandler handler = new SipZipCopyHandler(_settings, _eventHub, _preingestCollection))
+                    {
+                        handler.Logger = _logger;
+                        handler.SetSessionGuid(guid);
+                        processId = handler.AddProcessAction(processId, typeof(SipZipCopyHandler).Name, String.Format("Transfer *.sip.zip to TA folder {0}", guid), String.Concat(typeof(SipZipCopyHandler).Name, ".json"));
+
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(SipZipCopyHandler).Name, guid.ToString());
+                        handler.Execute();
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(SipZipCopyHandler).Name, e.Message);
+                return ValidationProblem(e.Message, typeof(SipZipCopyHandler).Name);
+            }
+
+            _logger.LogInformation("Exit SipZipTransfer.");
             return new JsonResult(new { Message = String.Format("Preparation is started."), SessionId = guid, ActionId = processId });
         }
     }

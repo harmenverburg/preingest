@@ -18,5 +18,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context
         public bool ContinueOnError { get; set; }
         [Column("ContinueOnFailed")]
         public bool ContinueOnFailed { get; set; }
+        [Column("StartOnError")]
+        public bool StartOnError { get; set; }
     }    
 }

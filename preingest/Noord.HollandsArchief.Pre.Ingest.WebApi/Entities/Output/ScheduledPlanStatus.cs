@@ -24,6 +24,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Output
         public String ActionName { get; set; }
         public bool ContinueOnError { get; set; }
         public bool ContinueOnFailed { get; set; }
+        public bool StartOnError { get; set; }
     }
 
     public class ScheduledPlanStatusHandler
@@ -40,6 +41,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Output
                     ActionName = item.ActionName,
                     ContinueOnError = item.ContinueOnError,
                     ContinueOnFailed = item.ContinueOnFailed,
+                    StartOnError = item.StartOnError,
                     Status = ExecutionStatus.Pending
                 }).ToArray();
 
@@ -62,6 +64,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Output
                         ActionName = ep.Left.ActionName,
                         ContinueOnError = ep.Left.ContinueOnError,
                         ContinueOnFailed = ep.Left.ContinueOnFailed,
+                        StartOnError = ep.Left.StartOnError,
                         Status = (a == null) ? ExecutionStatus.Pending : (a.States.Count() == 0) ? ExecutionStatus.Pending : (a.States.Count() == 2) ? ExecutionStatus.Done : ExecutionStatus.Executing
                     }).ToList();             
    

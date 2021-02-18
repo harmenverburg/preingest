@@ -15,6 +15,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.OpenAPIService
     {
         public event EventHandler<CallEvents> ProcessResponse;
 
+        public OutputClient(string url, System.Net.Http.HttpClient httpClient)
+        {
+            BaseUrl = url;
+            _httpClient = httpClient;
+            _settings = new System.Lazy<Newtonsoft.Json.JsonSerializerSettings>(CreateSerializerSettings);
+        }
+
         protected virtual void OnTrigger(CallEvents e)
         {
             EventHandler<CallEvents> handler = ProcessResponse;

@@ -1,4 +1,5 @@
-﻿using Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Command;
+﻿using Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler;
+using Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Command;
 using Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.CommandKey;
 
@@ -22,7 +23,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
             _executionCommand = new Dictionary<IKey, IPreingestCommand>();
             _executionCommand.Add(new DefaultKey(ValidationActionType.ContainerChecksumHandler), new CalculateChecksumCommand(logger, webapiUrl));
             _executionCommand.Add(new DefaultKey(ValidationActionType.ExportingHandler), new DroidCsvExportingCommand(logger, webapiUrl));
-            _executionCommand.Add(new DefaultKey(ValidationActionType.ReportingPdfHandler), new DroidPdfReportingCommand(logger,webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.ReportingPdfHandler), new DroidPdfReportingCommand(logger, webapiUrl));
             _executionCommand.Add(new DefaultKey(ValidationActionType.ReportingDroidXmlHandler), new DroidXmlReportingCommand(logger, webapiUrl));
             _executionCommand.Add(new DefaultKey(ValidationActionType.ReportingPlanetsXmlHandler), new DroidPlanetsReportingCommand(logger, webapiUrl));
             _executionCommand.Add(new DefaultKey(ValidationActionType.ProfilesHandler), new DroidProfilingCommand(logger, webapiUrl));
@@ -36,6 +37,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
             _executionCommand.Add(new DefaultKey(ValidationActionType.SidecarValidationHandler), new SidecarCheckCommand(logger, webapiUrl));
             _executionCommand.Add(new DefaultKey(ValidationActionType.SipCreatorHandler), new SipCreateCommand(logger, webapiUrl));
             _executionCommand.Add(new DefaultKey(ValidationActionType.TransformationHandler), new XipCreateCommand(logger, webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.SipZipMetadataValidationHandler), new SipZipValidationCommand(logger, webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.SipZipCopyHandler), new SipZipCopyCommand(logger, webapiUrl));
         }
 
         public override IPreingestCommand FactoryMethod(Guid guid, dynamic data)
@@ -59,7 +62,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
 
             Plan next = null;
             Plan previous = null;
-            while(queue.Count > 0)
+            while (queue.Count > 0)
             {
                 Plan item = queue.Peek();
                 //found one running (should not), just break it
@@ -78,8 +81,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
                         return null;
                     }
 
-                    if (peek.Status == ExecutionStatus.Done)                    
-                        continue;                    
+                    if (peek.Status == ExecutionStatus.Done)
+                        continue;
 
                     if (peek.Status == ExecutionStatus.Pending)
                     {
@@ -109,6 +112,12 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
                     Logger.LogInformation("FactoryMethod :: {1} : No key found in dictionary with {0}.", key, guid);
                     return null;
                 }
+                bool isNextOverallStatusOk2Run = OnStartError(previous, next, plans, actions);
+                if (!isNextOverallStatusOk2Run)
+                {
+                    Logger.LogInformation("FactoryMethod :: {1} : Overall status tell us not to continue {0}.", key, guid);
+                    return null;
+                }
 
                 IPreingestCommand command = this._executionCommand[key];
                 return command;
@@ -136,40 +145,61 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
                     return null;
                 }
 
-                bool isOk2Run = false;
-                switch(action.ActionStatus)
+                bool isPreviousOk2Run = false;
+                switch (action.ActionStatus)
                 {
                     case "Error":
-                        if(previous.ContinueOnError)
+                        if (previous.ContinueOnError)
                         {
-                            isOk2Run = true;
+                            isPreviousOk2Run = true;
                         }
                         break;
                     case "Failed":
                         if (previous.ContinueOnFailed)
                         {
-                            isOk2Run = true;
+                            isPreviousOk2Run = true;
                         }
                         break;
                     case "Success":
                         {
-                            isOk2Run = true;
+                            isPreviousOk2Run = true;
                         }
                         break;
                     default:
-                        isOk2Run = false;
+                        isPreviousOk2Run = false;
                         break;
                 }
 
-                if (isOk2Run)
+                bool isNextOverallStatusOk2Run = OnStartError(previous, next, plans, actions);
+                if (isPreviousOk2Run && isNextOverallStatusOk2Run)
                 {
                     IPreingestCommand command = this._executionCommand[key];
                     return command;
                 }
 
+                if(!isNextOverallStatusOk2Run)
+                    Logger.LogInformation("FactoryMethod :: {1} : Overall status tell us not to continue {0}.", key, guid);
+
                 Logger.LogInformation("FactoryMethod :: {1} : Not OK to run {0}.", key, guid);
-            } 
+            }
             return null;
+        }
+
+        private bool OnStartError(Plan previous, Plan next, Plan[] plans, PreingestAction[] actions)
+        {
+            bool result = false;
+            try
+            {
+                result = OnStartHandler.OnStartCalculate(previous, next, plans, actions, Logger);                 
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, "OnStart calculation failed!");
+                result = false;
+            }
+            finally { }
+
+            return result;
         }
     }
 }

@@ -56,8 +56,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.Utilities
                 //if (isLatin)
                 //    encodingResult = Encoding.Latin1;
                 //maybe there is a different BOM            
-                if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76)
-                    encodingResult = Encoding.UTF7;
+                //if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76)
+                    //encodingResult = Encoding.UTF7;
                 if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf)
                     encodingResult = Encoding.UTF8;
                 if (bom[0] == 0xff && bom[1] == 0xfe && bom[2] == 0 && bom[3] == 0)

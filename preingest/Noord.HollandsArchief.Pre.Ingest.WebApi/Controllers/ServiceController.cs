@@ -56,7 +56,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                 {
                     ActionName = ((ValidationActionType)Enum.Parse(typeof(ValidationActionType), item.ActionName)),
                     ContinueOnError = item.ContinueOnError,
-                    ContinueOnFailed = item.ContinueOnFailed
+                    ContinueOnFailed = item.ContinueOnFailed,
+                    StartOnError = item.StartOnError
                 }).ToList();
 
                 // the same action then remove old onces first
@@ -131,7 +132,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                             try
                             {
                                 //save the new plan
-                                var newPlan = workflow.Workflow.Select(item => new Entities.Context.ExecutionPlan { ActionName = item.ActionName.ToString(), SessionId = guid, ContinueOnError = item.ContinueOnError, ContinueOnFailed = item.ContinueOnFailed });
+                                var newPlan = workflow.Workflow.Select(item => new Entities.Context.ExecutionPlan { ActionName = item.ActionName.ToString(), SessionId = guid, ContinueOnError = item.ContinueOnError, ContinueOnFailed = item.ContinueOnFailed, StartOnError = item.StartOnError });
                                 if (newPlan.Count() > 0)
                                 {
                                     context.ExecutionPlanCollection.AddRange(newPlan);

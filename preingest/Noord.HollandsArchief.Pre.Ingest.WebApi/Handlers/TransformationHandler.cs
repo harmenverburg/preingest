@@ -25,7 +25,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         private String GetProcessingUrl(string servername, string port, string pad)
         {
             string reluri = pad.Remove(0, "/data/".Length);
-            return String.Format(@"http://{0}:{1}/transform/topx2xip/{2}", servername, port, reluri);
+            return String.Format(@"http://{0}:{1}/transform/topx2xip/{2}", servername, port, System.Net.WebUtility.UrlEncode(reluri));
         }
         public override void Execute()
         {

@@ -18,7 +18,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         private String GetProcessingUrl(string servername, string port, Guid folderSessionId, string folder)
         {
-            return String.Format(@"http://{0}:{1}/sipcreator/{2}/{3}", servername, port, folderSessionId, folder);
+            return String.Format(@"http://{0}:{1}/sipcreator/{2}/{3}", servername, port, folderSessionId, System.Net.WebUtility.UrlEncode(folder));
         }
 
         public override void Execute()

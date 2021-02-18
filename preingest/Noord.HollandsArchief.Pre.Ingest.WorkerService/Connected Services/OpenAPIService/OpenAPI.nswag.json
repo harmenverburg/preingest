@@ -4,6 +4,11 @@
     "title": "Noord.HollandsArchief.Pre.Ingest.WebApi",
     "version": "1.0"
   },
+  "servers": [
+    {
+      "url": "http://localhost:50000"
+    }
+  ],
   "paths": {
     "/api/Output/collections": {
       "get": {
@@ -63,8 +68,7 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             }
           }
         ],
@@ -96,8 +100,7 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             }
           }
         ],
@@ -329,8 +332,7 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             }
           }
         ],
@@ -534,6 +536,54 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/sipzip/validate/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Validate metadata.xml in *.sip.zip",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/sipzip/transfer/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Transfer *.sip.zip for transfer agent",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Success"
@@ -930,123 +980,6 @@
           }
         }
       },
-      "BodySettings": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "checksumType": {
-            "type": "string",
-            "nullable": true
-          },
-          "checksumValue": {
-            "type": "string",
-            "nullable": true
-          },
-          "preservicaTarget": {
-            "type": "string",
-            "nullable": true
-          },
-          "preservicaSecurityTag": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "ValidationActionType": {
-        "type": "string",
-        "enum": [
-          "ContainerChecksumHandler",
-          "ExportingHandler",
-          "ReportingPdfHandler",
-          "ReportingDroidXmlHandler",
-          "ReportingPlanetsXmlHandler",
-          "ProfilesHandler",
-          "EncodingHandler",
-          "UnpackTarHandler",
-          "MetadataValidationHandler",
-          "NamingValidationHandler",
-          "GreenListHandler",
-          "ExcelCreatorHandler",
-          "ScanVirusValidationHandler",
-          "SidecarValidationHandler",
-          "SipCreatorHandler",
-          "TransformationHandler"
-        ]
-      },
-      "BodyPlan": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "actionName": {
-            "$ref": "#/components/schemas/ValidationActionType"
-          },
-          "continueOnFailed": {
-            "type": "boolean"
-          },
-          "continueOnError": {
-            "type": "boolean"
-          }
-        }
-      },
-      "BodyExecutionPlan": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "workflow": {
-            "type": "array",
-            "nullable": true,
-            "items": {
-              "$ref": "#/components/schemas/BodyPlan"
-            }
-          }
-        }
-      },
-      "BodyNewAction": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "result": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "BodyUpdate": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "result": {
-            "type": "string",
-            "nullable": true
-          },
-          "summary": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "BodyMessage": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "message": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
       "BodyEventMessageBody": {
         "type": "object",
         "additionalProperties": false,
@@ -1097,6 +1030,149 @@
             "nullable": true
           }
         }
+      },
+      "BodyExecutionPlan": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "workflow": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/BodyPlan"
+            }
+          }
+        }
+      },
+      "BodyMessage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "BodyNewAction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "result": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "BodyPlan": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionName": {
+            "$ref": "#/components/schemas/ValidationActionType"
+          },
+          "continueOnFailed": {
+            "type": "boolean"
+          },
+          "continueOnError": {
+            "type": "boolean"
+          },
+          "startOnError": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "BodySettings": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "checksumType": {
+            "type": "string",
+            "nullable": true
+          },
+          "checksumValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "environment": {
+            "type": "string",
+            "nullable": true
+          },
+          "owner": {
+            "type": "string",
+            "nullable": true
+          },
+          "securityTag": {
+            "type": "string",
+            "nullable": true
+          },
+          "collectionStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "collectionCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "collectionTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "collectionRef": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "BodyUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "result": {
+            "type": "string",
+            "nullable": true
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ValidationActionType": {
+        "type": "string",
+        "enum": [
+          "SettingsHandler",
+          "ContainerChecksumHandler",
+          "ExportingHandler",
+          "ReportingPdfHandler",
+          "ReportingDroidXmlHandler",
+          "ReportingPlanetsXmlHandler",
+          "ProfilesHandler",
+          "EncodingHandler",
+          "UnpackTarHandler",
+          "MetadataValidationHandler",
+          "NamingValidationHandler",
+          "GreenListHandler",
+          "ExcelCreatorHandler",
+          "ScanVirusValidationHandler",
+          "SidecarValidationHandler",
+          "SipCreatorHandler",
+          "TransformationHandler",
+          "SipZipHandler"
+        ]
       }
     }
   }
