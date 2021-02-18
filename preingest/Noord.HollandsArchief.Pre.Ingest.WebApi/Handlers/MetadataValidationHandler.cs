@@ -51,7 +51,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
                     string requestUri = GetProcessingUrl(ApplicationSettings.XslWebServerName, ApplicationSettings.XslWebServerPort, file);
                     var errorMessages = new List<String>();
-
+                    Logger.LogInformation("Voor Pieter" + requestUri);
                     using (HttpClient client = new HttpClient())
                     {
                         var httpResponse = client.GetAsync(requestUri).Result;
