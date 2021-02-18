@@ -44,13 +44,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 {
                     Logger.LogInformation("Transformatie : {0}", file);
                     string requestUri = GetProcessingUrl(ApplicationSettings.XslWebServerName, ApplicationSettings.XslWebServerPort, System.Net.WebUtility.UrlEncode(file));
-                    try
-                    {
-                        WebRequest request = WebRequest.Create(requestUri);
-                        using (WebResponse response = request.GetResponseAsync().Result)
-                        {
-                            XDocument xDoc = XDocument.Load(response.GetResponseStream());
 
+                    WebRequest request = WebRequest.Create(requestUri);
+                    using (HttpWebResponse response =(HttpWebResponse) request.GetResponseAsync().Result)
+                    {                 
+                        if (response.StatusCode != HttpStatusCode.OK)
+                            throw new Exception("Failed to request data!");
+
+                        XDocument xDoc = XDocument.Load(response.GetResponseStream());
+                        try
+                        {                            
                             if (xDoc.Root.Name.Equals("message"))
                             {
                                 transformation.Add(new TransformationItem { IsTranformed = false, MetadataFilename = file, RequestUri = requestUri, ErrorMessage = new string[] { String.Format("XIP transformatie niet gelukt voor '{0}'. Antwoord: {1}", requestUri, xDoc.ToString()) } });
@@ -60,7 +63,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                                 //bye bye old xip (to be sure)
                                 if (File.Exists(String.Concat(file, ".xip")))
                                     File.Delete(String.Concat(file, ".xip"));
-                                
+
                                 //hello xip
                                 xDoc.Save(String.Concat(file, ".xip"));
 
@@ -74,24 +77,24 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                                 transformation.Add(new TransformationItem { IsTranformed = true, MetadataFilename = file, RequestUri = requestUri, ErrorMessage = new string[0] });
                             }
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        var errorMessages = new List<String>();
-                        Logger.LogError(e, String.Format("Exception occured in XIP transformation with request '{0}' for metadata file '{1}'!", requestUri, file));
-                        
-                        errorMessages.Add(String.Format("Exception occured in XIP transformation with request '{0}' for metadata file '{1}'!", requestUri, file));
-                        errorMessages.Add(e.Message);
-                        errorMessages.Add(e.StackTrace);
-
-                        //error
-                        transformation.Add(new TransformationItem
+                        catch (Exception e)
                         {
-                            IsTranformed = false,
-                            ErrorMessage = errorMessages.ToArray(),
-                            MetadataFilename = file,
-                            RequestUri = requestUri
-                        });
+                            var errorMessages = new List<String>();
+                            Logger.LogError(e, String.Format("Exception occured in XIP transformation with request '{0}' for metadata file '{1}'!", requestUri, file));
+
+                            errorMessages.Add(String.Format("Exception occured in XIP transformation with request '{0}' for metadata file '{1}'!", requestUri, file));
+                            errorMessages.Add(e.Message);
+                            errorMessages.Add(e.StackTrace);
+
+                            //error
+                            transformation.Add(new TransformationItem
+                            {
+                                IsTranformed = false,
+                                ErrorMessage = errorMessages.ToArray(),
+                                MetadataFilename = file,
+                                RequestUri = requestUri
+                            });
+                        }
                     }
 
                     OnTrigger(new PreingestEventArgs { Description = String.Format("Processing file '{0}'", file), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
@@ -112,14 +115,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             catch(Exception e)
             {
                 isSucces = false;
-
                 Logger.LogError(e, "An exception occured in metadata transformation!");
                 anyMessages.Clear();
                 anyMessages.Add("An exception occured in metadata transformation!");
                 anyMessages.Add(e.Message);
                 anyMessages.Add(e.StackTrace);
 
-                //eventModel.Summary.Processed = -1;
+                //eventModel.Summary.Processed = 0;
                 eventModel.Summary.Accepted = 0;
                 eventModel.Summary.Rejected = eventModel.Summary.Processed;
 

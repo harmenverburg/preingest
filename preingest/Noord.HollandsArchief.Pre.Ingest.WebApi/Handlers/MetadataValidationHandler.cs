@@ -51,25 +51,24 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
                     string requestUri = GetProcessingUrl(ApplicationSettings.XslWebServerName, ApplicationSettings.XslWebServerPort, file);
                     var errorMessages = new List<String>();
-                    
-                    try
+
+                    using (HttpClient client = new HttpClient())
                     {
-                        using (HttpClient client = new HttpClient())
+                        var httpResponse = client.GetAsync(requestUri).Result;
+
+                        if (!httpResponse.IsSuccessStatusCode)
+                            throw new Exception("Failed to request data! Status code not equals 200.");
+
+                        var rootError = JsonConvert.DeserializeObject<Root>(httpResponse.Content.ReadAsStringAsync().Result);
+                        if (rootError == null)
+                            throw new ApplicationException("Metadata validation request failed!");
+
+                        try
                         {
-                            var httpResponse = client.GetAsync(requestUri).Result;
-
-                            if (!httpResponse.IsSuccessStatusCode)
-                                throw new Exception("Failed to request data!");
-
-                            var rootError = JsonConvert.DeserializeObject<Root>(httpResponse.Content.ReadAsStringAsync().Result);
-
-                            if (rootError == null)
-                                throw new ApplicationException("Metadata validation request failed!");
-                           
                             //schema+ validation
                             if (rootError.SchematronValidationReport != null && rootError.SchematronValidationReport.errors != null
                                 && rootError.SchematronValidationReport.errors.Count > 0)
-                            {                                
+                            {
                                 var messages = rootError.SchematronValidationReport.errors.Select(item => String.Concat(item.message, ", ", item.FailedAssertLocation, ", ", item.FiredRuleContext, ", ", item.FailedAssertTest)).ToArray();
                                 errorMessages.AddRange(messages);
                             }
@@ -106,24 +105,24 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                                 });
                             }
                         }
-                    }
-                    catch (Exception e)
-                    {  
-                        Logger.LogError(e, String.Format("Exception occured in metadata validation with request '{0}' for metadata file '{1}'!", requestUri, file));
-                        errorMessages.Clear();
-                        errorMessages.Add(String.Format("Exception occured in metadata validation with request '{0}' for metadata file '{1}'!", requestUri, file));
-                        errorMessages.Add(e.Message);
-                        errorMessages.Add(e.StackTrace);
-
-                        //error
-                        validation.Add(new MetadataValidationItem
+                        catch (Exception e)
                         {
-                            IsValidated = true,
-                            IsConfirmSchema = false,
-                            ErrorMessages = errorMessages.ToArray(),
-                            MetadataFilename = file,
-                            RequestUri = requestUri
-                        });
+                            Logger.LogError(e, String.Format("Exception occured in metadata validation with request '{0}' for metadata file '{1}'!", requestUri, file));
+                            errorMessages.Clear();
+                            errorMessages.Add(String.Format("Exception occured in metadata validation with request '{0}' for metadata file '{1}'!", requestUri, file));
+                            errorMessages.Add(e.Message);
+                            errorMessages.Add(e.StackTrace);
+
+                            //error
+                            validation.Add(new MetadataValidationItem
+                            {
+                                IsValidated = true,
+                                IsConfirmSchema = false,
+                                ErrorMessages = errorMessages.ToArray(),
+                                MetadataFilename = file,
+                                RequestUri = requestUri
+                            });
+                        }
                     }
 
                     OnTrigger(new PreingestEventArgs { Description = String.Format("Processing file '{0}'", file), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
@@ -150,7 +149,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 anyMessages.Add(e.Message);
                 anyMessages.Add(e.StackTrace);
 
-                //eventModel.Summary.Processed = -1;
+                //eventModel.Summary.Processed = 0;
                 eventModel.Summary.Accepted = 0;
                 eventModel.Summary.Rejected = eventModel.Summary.Processed;
 
