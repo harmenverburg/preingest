@@ -26,8 +26,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         private String GetProcessingUrl(string servername, string port, string pad)
         {
-            string reluri = pad.Remove(0, "/data/".Length);
-            return String.Format(@"http://{0}:{1}/topxvalidation/{2}", servername, port, System.Net.WebUtility.UrlEncode(reluri));
+            string data = this.ApplicationSettings.DataFolderName.EndsWith("/") ? this.ApplicationSettings.DataFolderName : this.ApplicationSettings.DataFolderName + "/";
+            string reluri = pad.Remove(0, data.Length);
+            string newUri = String.Join("/", reluri.Split("/", StringSplitOptions.None).Select(item => System.Net.WebUtility.UrlEncode(item)));
+            return String.Format(@"http://{0}:{1}/topxvalidation/{2}", servername, port, newUri);
         }
 
         public override void Execute()
@@ -51,7 +53,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
                     string requestUri = GetProcessingUrl(ApplicationSettings.XslWebServerName, ApplicationSettings.XslWebServerPort, file);
                     var errorMessages = new List<String>();
-                    Logger.LogInformation("Voor Pieter" + requestUri);
+
                     using (HttpClient client = new HttpClient())
                     {
                         var httpResponse = client.GetAsync(requestUri).Result;

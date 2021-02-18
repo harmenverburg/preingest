@@ -42,6 +42,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
                         => ((ContainerStatus)Enum.Parse(typeof(ContainerStatus), item.ActionStatus))).ThenBy(item
                             => item.Creation).ToList();
 
+
+                if (currentScheduledPlanWithActionList.Count == 0)
+                    return onStartError = true;
+
                 var highestStatusResult = currentScheduledPlanWithActionList.First();
 
                 var statusEnum = ((ContainerStatus)Enum.Parse(typeof(ContainerStatus), highestStatusResult.ActionStatus));
