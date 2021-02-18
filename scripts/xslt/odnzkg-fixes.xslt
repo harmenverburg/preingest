@@ -3,6 +3,8 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:nha="http://noord-hollandsarchief.nl/namespaces/1.0"
     xpath-default-namespace="http://www.nationaalarchief.nl/ToPX/v2.3"
+    xmlns:urldecoder="java:java.net.URLDecoder"
+    exclude-result-prefixes="#all"
     xmlns="http://www.nationaalarchief.nl/ToPX/v2.3" version="3.0" expand-text="yes">
 
     <xsl:mode on-no-match="shallow-copy"/>
@@ -133,11 +135,12 @@
     <xsl:template match="bestandsnaam">
         <xsl:copy>
             <xsl:apply-templates select="@*"/>
-            <xsl:if test="not(naam)">
-                <xsl:comment>TODO bestandsnaam, uri-encoding?</xsl:comment>
-                <naam>{base-uri() => replace('^(.*/)*([^/]+)\.[^.]+\.metadata$', '$2')}</naam>
-            </xsl:if>
-            <xsl:apply-templates/>
+            <xsl:choose>
+                <xsl:when test="naam"><xsl:comment>Oorsponkelijke naam vervangen (bepaald op basis van de naam van het metadatabestand), oorspronkelijk stond er "{naam}"</xsl:comment></xsl:when>
+                <xsl:otherwise><xsl:comment>Veld naam ontbrak, aangevuld op basis van de naam van het metadatabestand</xsl:comment></xsl:otherwise>
+            </xsl:choose>
+            <naam>{base-uri() => replace('^(.*/)*([^/]+\.[^.]+)\.metadata$', '$2')=>urldecoder:decode("UTF-8")}</naam>
+            <xsl:apply-templates select="* except naam"/>
         </xsl:copy>
     </xsl:template>
     
