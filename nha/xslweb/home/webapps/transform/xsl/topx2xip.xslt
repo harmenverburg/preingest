@@ -17,7 +17,7 @@
     <xsl:mode on-no-match="shallow-copy"/>
     
     <!-- The maximum size of a Title in XIP (currently, we don't know the real maximum): -->
-    <xsl:param name="max-length-of-title" as="xs:integer" select="200"/>
+    <xsl:param name="max-length-of-title" as="xs:integer" select="255"/>
     
     <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute('data-uri-prefix')"/>
     
