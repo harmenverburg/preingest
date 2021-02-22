@@ -20,5 +20,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Context
         public bool ContinueOnFailed { get; set; }
         [Column("StartOnError")]
         public bool StartOnError { get; set; }
+        [Column("Sequence")]
+        public Int32 Sequence { get; set; }        
     }    
 }

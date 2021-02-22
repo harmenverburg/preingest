@@ -132,7 +132,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
                             try
                             {
                                 //save the new plan
-                                var newPlan = workflow.Workflow.Select(item => new Entities.Context.ExecutionPlan { ActionName = item.ActionName.ToString(), SessionId = guid, ContinueOnError = item.ContinueOnError, ContinueOnFailed = item.ContinueOnFailed, StartOnError = item.StartOnError });
+                                var newPlan = workflow.Workflow.Select((item, index) => new Entities.Context.ExecutionPlan { ActionName = item.ActionName.ToString(), SessionId = guid, ContinueOnError = item.ContinueOnError, ContinueOnFailed = item.ContinueOnFailed, StartOnError = item.StartOnError, Sequence = index });
                                 if (newPlan.Count() > 0)
                                 {
                                     context.ExecutionPlanCollection.AddRange(newPlan);

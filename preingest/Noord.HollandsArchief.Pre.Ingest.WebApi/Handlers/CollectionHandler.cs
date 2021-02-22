@@ -56,8 +56,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 if (query != null && query.Count > 0)
                     currentActions.AddRange(query);
 
-                var plans = context.ExecutionPlanCollection.Where(item => tarArchives.Select(tar
-                   => ChecksumHelper.GeneratePreingestGuid(tar.Name)).ToList().Contains(item.SessionId)).ToArray();
+                var plans = context.ExecutionPlanCollection.Where(item => tarArchives.Select(tar => ChecksumHelper.GeneratePreingestGuid(tar.Name)).ToList().Contains(item.SessionId)).OrderBy(item => item.Sequence).ToArray();
 
                 if (plans != null && plans.Length > 0)
                     executionPlan.AddRange(plans);
@@ -167,7 +166,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 if (query != null && query.Count > 0)
                     currentActions.AddRange(query);
 
-                var plans = context.ExecutionPlanCollection.Where(item => item.SessionId == guid).ToArray();
+                var plans = context.ExecutionPlanCollection.Where(item => item.SessionId == guid).OrderBy(item => item.Sequence).ToArray();
 
                 if (plans != null && plans.Length > 0)
                     executionPlan.AddRange(plans);
