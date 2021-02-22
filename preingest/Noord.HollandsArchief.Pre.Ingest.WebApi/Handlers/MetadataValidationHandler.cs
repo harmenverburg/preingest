@@ -28,7 +28,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
         {
             string data = this.ApplicationSettings.DataFolderName.EndsWith("/") ? this.ApplicationSettings.DataFolderName : this.ApplicationSettings.DataFolderName + "/";
             string reluri = pad.Remove(0, data.Length);
-            string newUri = String.Join("/", reluri.Split("/", StringSplitOptions.None).Select(item => Uri.EscapeUriString(item)));
+            string newUri = String.Join("/", reluri.Split("/", StringSplitOptions.None).Select(item => Uri.EscapeDataString(item)));
             return String.Format(@"http://{0}:{1}/topxvalidation/{2}", servername, port, newUri);
         }
 

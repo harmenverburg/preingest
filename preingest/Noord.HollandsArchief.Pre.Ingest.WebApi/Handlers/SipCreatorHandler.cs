@@ -18,7 +18,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
         private String GetProcessingUrl(string servername, string port, Guid folderSessionId, string folder)
         {
-            return String.Format(@"http://{0}:{1}/sipcreator/{2}/{3}", servername, port, folderSessionId, Uri.EscapeUriString(folder));
+            return String.Format(@"http://{0}:{1}/sipcreator/{2}/{3}", servername, port, folderSessionId, Uri.EscapeDataString(folder));
         }
 
         public override void Execute()
@@ -46,8 +46,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 throw new ApplicationException(String.Format("XSLWeb SIP Creator request '{0}' didn't return HTTP status code OK/200!", requestUri));
         }
 
-        public void Dispose()
-        {           
-        }
+        public void Dispose() { }
     }
 }
