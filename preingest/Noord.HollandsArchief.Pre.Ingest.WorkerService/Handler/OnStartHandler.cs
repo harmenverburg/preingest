@@ -33,7 +33,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
             bool onStartError = false;
             
             if (next != null && plans != null && actions != null)
-            {              
+            {
                 var currentScheduledPlanThatsDoneList = plans.Where(item => item.Status == ExecutionStatus.Done).ToArray();
                 var currentScheduledPlanWithActionList = actions.Join(currentScheduledPlanThatsDoneList,
                     a => a.Name,
@@ -42,7 +42,10 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
                         => ((ContainerStatus)Enum.Parse(typeof(ContainerStatus), item.ActionStatus))).ThenBy(item
                             => item.Creation).ToList();
 
-
+                logger.LogInformation("OnStartHandler :: Previous action : {0}.", previous == null ? "None" : previous.ActionName);
+                logger.LogInformation("OnStartHandler :: Next action : {0}.", next == null ? "None" : next.ActionName);
+                logger.LogInformation("OnStartHandler :: Current plan : {0}.", plans == null ? "None" : String.Join(",", plans.Select(item => item.ActionName).ToArray()));
+                               
                 if (currentScheduledPlanWithActionList.Count == 0)
                     return onStartError = true;
 

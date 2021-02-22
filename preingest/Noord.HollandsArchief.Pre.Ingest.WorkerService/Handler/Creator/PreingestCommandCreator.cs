@@ -38,7 +38,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
             _executionCommand.Add(new DefaultKey(ValidationActionType.SipCreatorHandler), new SipCreateCommand(logger, webapiUrl));
             _executionCommand.Add(new DefaultKey(ValidationActionType.TransformationHandler), new XipCreateCommand(logger, webapiUrl));
             _executionCommand.Add(new DefaultKey(ValidationActionType.SipZipMetadataValidationHandler), new SipZipValidationCommand(logger, webapiUrl));
-            _executionCommand.Add(new DefaultKey(ValidationActionType.SipZipCopyHandler), new SipZipCopyCommand(logger, webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.SipZipCopyHandler), new SipZipCopyCommand(logger, webapiUrl));   
         }
 
         public override IPreingestCommand FactoryMethod(Guid guid, dynamic data)
@@ -116,7 +116,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
                 if (!isNextOverallStatusOk2Run)
                 {
                     Logger.LogInformation("FactoryMethod :: {1} : Overall status tell us not to continue {0}.", key, guid);
-                    return null;
+                    return new FailCommand(next.ActionName, Logger, _webapiUrl);
                 }
 
                 IPreingestCommand command = this._executionCommand[key];
@@ -171,15 +171,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
                 }
 
                 bool isNextOverallStatusOk2Run = OnStartError(previous, next, plans, actions);
-                if (isPreviousOk2Run && isNextOverallStatusOk2Run)
+                if (isPreviousOk2Run)
                 {
+                    if (!isNextOverallStatusOk2Run)
+                    {
+                        Logger.LogInformation("FactoryMethod :: {1} : Overall status tell us not to continue {0}.", key, guid);
+                        return new FailCommand(next.ActionName, Logger, _webapiUrl);
+                    }
                     IPreingestCommand command = this._executionCommand[key];
                     return command;
                 }
-
-                if(!isNextOverallStatusOk2Run)
-                    Logger.LogInformation("FactoryMethod :: {1} : Overall status tell us not to continue {0}.", key, guid);
-
                 Logger.LogInformation("FactoryMethod :: {1} : Not OK to run {0}.", key, guid);
             }
             return null;
