@@ -127,6 +127,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.Summary.Processed = 1;
                 eventModel.Summary.Accepted = 0;
                 eventModel.Summary.Rejected = 1;
+                eventModel.Properties.Messages = anyMessages.ToArray();
 
                 OnTrigger(new PreingestEventArgs { Description = "An exception occured while preparing sip.zip for a container!", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
             }
