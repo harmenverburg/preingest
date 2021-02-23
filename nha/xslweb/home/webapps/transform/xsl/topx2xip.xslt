@@ -53,35 +53,46 @@
         <xsl:param name="absuri" as="xs:string" required="yes"/>
         
         <xsl:variable name="topxDoc" as="document-node()" select="nha:discard-document(doc($absuri))"/>
-        <xsl:variable name="aggregatieniveau" as="xs:string" select="$topxDoc/*/*[self::topx:aggregatie | self::topx:bestand]/topx:aggregatieniveau"/>
+        
+        <!-- Check if this is a ToPX document; if not, we assume it has already been converted to XIP earlier. In the last case, we just copy the document. -->
+        <xsl:variable name="isToPX" as="xs:boolean" select="exists($topxDoc/topx:ToPX)"/>
         
         <xsl:choose>
-            <xsl:when test="$aggregatieniveau eq 'Archief'">
-                <xsl:call-template name="create-xip-aggregatie-archief">
-                    <xsl:with-param name="topxDoc" select="$topxDoc"/>
-                </xsl:call-template>
+            <xsl:when test="not($isToPX)">
+                <xsl:copy-of select="$topxDoc"/>
             </xsl:when>
-            <xsl:when test="$aggregatieniveau eq 'Dossier'">
-                <xsl:call-template name="create-xip-aggregatie-serie-dossier-record">
-                    <xsl:with-param name="topxDoc" select="$topxDoc"/>
-                </xsl:call-template>
-            </xsl:when>
-            <xsl:when test="$aggregatieniveau eq 'Serie'">
-                <!-- TODO wacht op voorbeeld -->
-                <xsl:call-template name="create-xip-aggregatie-serie-dossier-record">
-                    <xsl:with-param name="topxDoc" select="$topxDoc"/>
-                </xsl:call-template>
-            </xsl:when>
-            <xsl:when test="$aggregatieniveau eq 'Record'">
-                <xsl:call-template name="create-xip-aggregatie-serie-dossier-record">
-                    <xsl:with-param name="topxDoc" select="$topxDoc"/>
-                </xsl:call-template>
-            </xsl:when>
-            <xsl:when test="$aggregatieniveau eq 'Bestand'">
-                <xsl:call-template name="create-xip-aggregatie-bestand">
-                    <xsl:with-param name="topxDoc" select="$topxDoc"/>
-                </xsl:call-template>
-            </xsl:when>
+            <xsl:otherwise>
+                <xsl:variable name="aggregatieniveau" as="xs:string" select="$topxDoc/*/*[self::topx:aggregatie | self::topx:bestand]/topx:aggregatieniveau"/>
+                
+                <xsl:choose>
+                    <xsl:when test="$aggregatieniveau eq 'Archief'">
+                        <xsl:call-template name="create-xip-aggregatie-archief">
+                            <xsl:with-param name="topxDoc" select="$topxDoc"/>
+                        </xsl:call-template>
+                    </xsl:when>
+                    <xsl:when test="$aggregatieniveau eq 'Dossier'">
+                        <xsl:call-template name="create-xip-aggregatie-serie-dossier-record">
+                            <xsl:with-param name="topxDoc" select="$topxDoc"/>
+                        </xsl:call-template>
+                    </xsl:when>
+                    <xsl:when test="$aggregatieniveau eq 'Serie'">
+                        <!-- TODO wacht op voorbeeld -->
+                        <xsl:call-template name="create-xip-aggregatie-serie-dossier-record">
+                            <xsl:with-param name="topxDoc" select="$topxDoc"/>
+                        </xsl:call-template>
+                    </xsl:when>
+                    <xsl:when test="$aggregatieniveau eq 'Record'">
+                        <xsl:call-template name="create-xip-aggregatie-serie-dossier-record">
+                            <xsl:with-param name="topxDoc" select="$topxDoc"/>
+                        </xsl:call-template>
+                    </xsl:when>
+                    <xsl:when test="$aggregatieniveau eq 'Bestand'">
+                        <xsl:call-template name="create-xip-aggregatie-bestand">
+                            <xsl:with-param name="topxDoc" select="$topxDoc"/>
+                        </xsl:call-template>
+                    </xsl:when>
+                </xsl:choose>
+            </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
     
