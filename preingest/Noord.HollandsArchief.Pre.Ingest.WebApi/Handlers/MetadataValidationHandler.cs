@@ -71,7 +71,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                             if (rootError.SchematronValidationReport != null && rootError.SchematronValidationReport.errors != null
                                 && rootError.SchematronValidationReport.errors.Count > 0)
                             {
-                                var messages = rootError.SchematronValidationReport.errors.Select(item => String.Concat(item.message, ", ", item.FailedAssertLocation, ", ", item.FiredRuleContext, ", ", item.FailedAssertTest)).ToArray();
+                                var messages = rootError.SchematronValidationReport.errors.Select(item => item.message).ToArray();
                                 errorMessages.AddRange(messages);
                             }
                             //default schema validation
