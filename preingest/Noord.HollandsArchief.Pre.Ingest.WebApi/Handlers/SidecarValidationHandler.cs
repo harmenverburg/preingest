@@ -95,7 +95,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             var dataFile = collection.GetFiles(archiveMetadataFileName).FirstOrDefault();
             
             ISidecar archiefSidecar = new Archief(archiveName, CollectionTitlePath(collection.FullName));
-            archiefSidecar.MetadataFileLocation = !String.IsNullOrEmpty(dataFile.FullName) ? dataFile.FullName : null;
+            archiefSidecar.MetadataFileLocation = dataFile == null ? String.Empty : !String.IsNullOrEmpty(dataFile.FullName) ? dataFile.FullName : String.Empty;
             if (!String.IsNullOrEmpty(archiefSidecar.MetadataFileLocation))
                 archiefSidecar.MetadataEncoding = GetEncoding(archiefSidecar.MetadataFileLocation);
             archiefSidecar.PrepareMetadata();
@@ -251,7 +251,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     var dataFile = di.GetFiles(recordMetadataFileName).FirstOrDefault();
                     ISidecar recordSidecar = new Record(recordName, CollectionTitlePath(di.FullName), (sidecarTreeNode.Data as Dossier));
                     
-                    recordSidecar.MetadataFileLocation = !String.IsNullOrEmpty(dataFile.FullName) ? dataFile.FullName : null;
+                    recordSidecar.MetadataFileLocation = dataFile == null? String.Empty : !String.IsNullOrEmpty(dataFile.FullName) ? dataFile.FullName : String.Empty;
                     if (!String.IsNullOrEmpty(recordSidecar.MetadataFileLocation))
                         recordSidecar.MetadataEncoding = GetEncoding(recordSidecar.MetadataFileLocation);
                     recordSidecar.PrepareMetadata();                                                     
@@ -266,7 +266,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                         Bestand bestandSidecar = new Bestand(binary.Name, CollectionTitlePath(binary.FullName), binary.FullName, (childSidecarTreeNode.Data as Record));
                         var binaryDataFile = di.GetFiles(binaryMetadataFilename).FirstOrDefault();
                         
-                        bestandSidecar.MetadataFileLocation = (binaryDataFile != null) ? binaryDataFile.FullName : null;
+                        bestandSidecar.MetadataFileLocation = (binaryDataFile != null) ? binaryDataFile.FullName : string.Empty;
                         if (!String.IsNullOrEmpty(bestandSidecar.MetadataFileLocation))
                             bestandSidecar.MetadataEncoding = GetEncoding(bestandSidecar.MetadataFileLocation);
 
@@ -290,7 +290,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     else                    
                         serieSidecar = new Series(serieName, CollectionTitlePath(di.FullName), (sidecarTreeNode.Data as Series));
 
-                    serieSidecar.MetadataFileLocation = !String.IsNullOrEmpty(dataFile.FullName) ? dataFile.FullName : null;
+                    serieSidecar.MetadataFileLocation = dataFile == null ? string.Empty : !String.IsNullOrEmpty(dataFile.FullName) ? dataFile.FullName : string.Empty;
                     if (!String.IsNullOrEmpty(serieSidecar.MetadataFileLocation))
                         serieSidecar.MetadataEncoding = GetEncoding(serieSidecar.MetadataFileLocation);
                     serieSidecar.PrepareMetadata();                    
@@ -313,7 +313,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     var dataFile = di.GetFiles(recordMetadataFileName).FirstOrDefault();
                     ISidecar recordSidecar = new Record(recordName, CollectionTitlePath(di.FullName), (sidecarTreeNode.Data as Dossier));
 
-                    recordSidecar.MetadataFileLocation = !String.IsNullOrEmpty(dataFile.FullName) ? dataFile.FullName : null;
+                    recordSidecar.MetadataFileLocation = dataFile == null ? String.Empty : !String.IsNullOrEmpty(dataFile.FullName) ? dataFile.FullName : null;
                     if (!String.IsNullOrEmpty(recordSidecar.MetadataFileLocation))
                         recordSidecar.MetadataEncoding = GetEncoding(recordSidecar.MetadataFileLocation);
                     recordSidecar.PrepareMetadata();
@@ -336,7 +336,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     else
                         serieSidecar = new Series(serieName, CollectionTitlePath(di.FullName), (sidecarTreeNode.Data as Series));
 
-                    serieSidecar.MetadataFileLocation = !String.IsNullOrEmpty(dataFile.FullName) ? dataFile.FullName : null;
+                    serieSidecar.MetadataFileLocation = dataFile == null ? String.Empty : !String.IsNullOrEmpty(dataFile.FullName) ? dataFile.FullName : string.Empty;
                     if (!String.IsNullOrEmpty(serieSidecar.MetadataFileLocation))
                         serieSidecar.MetadataEncoding = GetEncoding(serieSidecar.MetadataFileLocation);
                     serieSidecar.PrepareMetadata();
@@ -351,7 +351,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
                         ISidecar unknownSidecar = new NotDefined(unknownName, CollectionTitlePath(di.FullName), sidecarTreeNode.Data);
 
-                        unknownSidecar.MetadataFileLocation = !String.IsNullOrEmpty(unknownFile.FullName) ? unknownFile.FullName : null;
+                        unknownSidecar.MetadataFileLocation = unknownFile == null ? String.Empty : !String.IsNullOrEmpty(unknownFile.FullName) ? unknownFile.FullName : String.Empty;
                         if (!String.IsNullOrEmpty(unknownSidecar.MetadataFileLocation))
                             unknownSidecar.MetadataEncoding = GetEncoding(unknownSidecar.MetadataFileLocation);
                         unknownSidecar.PrepareMetadata();

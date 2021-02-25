@@ -15,6 +15,7 @@ using System.Net.Http;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Output;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 {
@@ -43,6 +44,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
 
             try
             {
+
                 if (!Directory.Exists(ApplicationSettings.TransferAgentTestFolder))
                     throw new DirectoryNotFoundException(String.Format("Directory not found {0}!", ApplicationSettings.TransferAgentTestFolder));
                 if (!Directory.Exists(ApplicationSettings.TransferAgentProdFolder))
@@ -52,18 +54,29 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 if (sipZipFile == null)
                     throw new FileNotFoundException("File with extension *.sip.zip not found!");
 
+                BodySettings settings = new SettingsReader(ApplicationSettings.DataFolderName, SessionGuid).GetSettings();
+                if (settings == null)
+                    throw new NullReferenceException("Settings is null! Is settings configuration saved?");
+
+                if (string.IsNullOrEmpty(settings.Environment))
+                    throw new ApplicationException("Environment is empty!");
+                               
                 //start copy file from x to y
-                string prod = Path.Combine(ApplicationSettings.TransferAgentProdFolder, sipZipFile.Name);
-                string test = Path.Combine(ApplicationSettings.TransferAgentTestFolder, sipZipFile.Name);
+                string prodPath = Path.Combine(ApplicationSettings.TransferAgentProdFolder, sipZipFile.Name);
+                string testPath = Path.Combine(ApplicationSettings.TransferAgentTestFolder, sipZipFile.Name);
 
-                OnTrigger(new PreingestEventArgs { Description = String.Format("Start copy *.sip.zip from {0} to {1}", sipZipFile.FullName, test), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
-
-                var taskTest = CopyFile(sipZipFile.FullName, test);
-                var taskProd = CopyFile(sipZipFile.FullName, prod);
-
+                OnTrigger(new PreingestEventArgs { Description = String.Format("Start copy *.sip.zip from {0} to {1}", sipZipFile.FullName, testPath), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+ 
+                Task task = null;
                 OnTrigger(new PreingestEventArgs { Description = String.Format("Start copy *.sip.zip from x to y"), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
+                                
+                if (settings.Environment.Equals("test", StringComparison.InvariantCultureIgnoreCase))                
+                    task = CopyFile(sipZipFile.FullName, testPath);                
 
-                var whenall = Task.WhenAll(taskTest, taskProd);
+                if (settings.Environment.Equals("prod", StringComparison.InvariantCultureIgnoreCase))                
+                    task = CopyFile(sipZipFile.FullName, prodPath);
+
+                Task whenall = Task.WhenAll(task);
 
                 OnTrigger(new PreingestEventArgs { Description = String.Format("Done copy *.sip.zip from x to y"), Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Executing, PreingestAction = eventModel });
 
@@ -84,14 +97,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 }
                 else
                 {
-                    anyMessages.Add(String.Format("{0} copied to {1}", sipZipFile.FullName, test));
-                    anyMessages.Add(String.Format("{0} copied to {1}", sipZipFile.FullName, prod));
+                    if (settings.Environment.Equals("test", StringComparison.InvariantCultureIgnoreCase))
+                        anyMessages.Add(String.Format("{0} copied to {1}", sipZipFile.FullName, testPath));
+
+                    if (settings.Environment.Equals("prod", StringComparison.InvariantCultureIgnoreCase))
+                        anyMessages.Add(String.Format("{0} copied to {1}", sipZipFile.FullName, prodPath));
 
                     eventModel.Summary.Processed = 1;
                     eventModel.Summary.Accepted = 1;
                     eventModel.Summary.Rejected = 0;
-                }
-                
+                }                
 
                 eventModel.Properties.Messages = anyMessages.ToArray();
                 //succes here means i'm completed this function without exception, finally may commit to db
@@ -112,6 +127,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                 eventModel.Summary.Processed = 1;
                 eventModel.Summary.Accepted = 0;
                 eventModel.Summary.Rejected = 1;
+                eventModel.Properties.Messages = anyMessages.ToArray();
 
                 OnTrigger(new PreingestEventArgs { Description = "An exception occured while preparing sip.zip for a container!", Initiate = DateTimeOffset.Now, ActionType = PreingestActionStates.Failed, PreingestAction = eventModel });
             }

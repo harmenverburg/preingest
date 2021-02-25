@@ -106,7 +106,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     this.AddCompleteState(this.ActionProcessId);
                 if (e.ActionType == PreingestActionStates.Failed)
                 {
-                    string message = String.Concat(e.PreingestAction.Properties.Messages);
+                    string message = e.PreingestAction.Properties == null ? String.Empty : e.PreingestAction.Properties.Messages == null ? String.Empty : String.Concat(e.PreingestAction.Properties.Messages);
                     this.AddFailedState(this.ActionProcessId, message);
                 }
                 if (e.ActionType == PreingestActionStates.Failed || e.ActionType == PreingestActionStates.Completed)
