@@ -2,22 +2,24 @@
 <schema xmlns="http://purl.oclc.org/dsdl/schematron" queryBinding="xslt2">
     <ns uri="http://www.nationaalarchief.nl/ToPX/v2.3" prefix="topx"/>
     
+    <let name="max-naam-length" value="xs:integer(255)"/>
+    
     <pattern id="topx-pattern-1">
         <rule context="topx:aggregatie | topx:bestand">
             <p>Controleer of er precies één element "naam" is (dus niet 0 of meer dan 1)</p>
-            <assert test="count(topx:naam) eq 1"
-                >Het aantal naam-elementen in de ToPX-metadata is niet 1 maar <value-of select="count(topx:naam)"/></assert>
+            <report test="count(topx:naam) eq 0">Het "naam"-gegeven ontbreekt in de ToPX-metadata</report>
+            <report test="count(topx:naam) gt 1">Er is meer dan één "naam"-gegeven in de ToPX-metadata</report>
             
-            <assert test="string-length(topx:naam) le 255"
-                >De lengte van het naam-veld (voor de titel) is te groot: <value-of select="string-length(topx:naam)"/>. De inhoud van het naam-veld is: "<value-of select="topx:naam"/>".</assert>
-            
+            <assert test="string-length(topx:naam) le $max-naam-length"
+                >De lengte van het "naam"-gegeven (voor de titel) is groter dan <value-of select="$max-naam-length"/> tekens.</assert>
+           
             <p>Controleer of er precies één element "omschrijving" is (dus niet 0 of meer dan 1)</p>
-            <assert test="count(topx:classificatie/topx:omschrijving) eq 1"
-                >Het aantal classificatie-elementen met een omschrijving-element in de ToPX-metadata is niet 1 maar <value-of select="count(topx:classificatie/topx:omschrijving)"/></assert>
+            <report test="count(topx:classificatie/topx:omschrijving) eq 0">Het "classificatie/omschrijving"-gegeven  ontbreekt in de ToPX-metadata</report>
+            <report test="count(topx:classificatie/topx:omschrijving) gt 1">Er is meer dan één "classificatie/omschrijving"-gegeven in de ToPX-metadata</report>
             
             <p>Controleer of er precies één element "omschrijvingBeperkingen" is (dus niet 0 of meer dan 1)</p>
-            <assert test="count(topx:openbaarheid/topx:omschrijvingBeperkingen) eq 1"
-                >Het aantal openbaarheid-elementen met een omschrijvingBeperkingen-element in de ToPX-metadata is niet 1 maar <value-of select="count(topx:openbaarheid/topx:omschrijvingBeperkingen)"/></assert>
+            <report test="count(topx:openbaarheid/topx:omschrijvingBeperkingen) eq 0">Het "openbaarheid/omschrijvingBeperkingen"-gegeven ontbreekt in de ToPX-metadata</report>
+            <report test="count(topx:openbaarheid/topx:omschrijvingBeperkingen) gt 1">Er is meer dan één "openbaarheid/omschrijvingBeperkingen"-gegeven in de ToPX-metadata</report>
         </rule>
     </pattern>
     
@@ -26,19 +28,19 @@
             <!-- TODO dit moet nog beter worden uitgewerkt. -->
             <p>Controleer de tekstuele inhoud van element "omschrijvingBeperkingen"</p>
             <assert test="matches(., '^(Openbaar|Beperkt openbaar [ABC])$')"
-                >De waarden van omschrijvingBeperkingen in de ToPX-metadata is niet Openbaar,of Beperkt openbaar A/B/C maar "<value-of select="."/>"</assert>
+                >De waarden van het "omschrijvingBeperkingen"-gegeven in de ToPX-metadata is niet Openbaar, of Beperkt openbaar A/B/C</assert>
         </rule>
     </pattern>
     
     <pattern id="topx-pattern-3">
         <rule context="topx:bestand">
             <p>Controleer of er precies één element "algoritme" is (dus niet 0 of meer dan 1)</p>
-            <assert test="count(topx:formaat/topx:fysiekeIntegriteit/topx:algoritme) eq 1"
-                >Het aantalformaat/fysiekeIntegriteit-elementen met een algoritme-element in de ToPX-metadata binnen formaat/ is niet 1 maar <value-of select="count(topx:formaat/topx:fysiekeIntegriteit/topx:algoritme)"/></assert>
+            <report test="count(topx:formaat/topx:fysiekeIntegriteit/topx:algoritme) eq 0">Het "formaat/fysiekeIntegriteit/algoritme"-gegeven ontbreekt in de ToPX-metadata</report>
+            <report test="count(topx:formaat/topx:fysiekeIntegriteit/topx:algoritme) gt 1">Er is meer dan één "formaat/fysiekeIntegriteit/algoritme"-gegeven in de ToPX-metadata</report>
             
             <p>Controleer of er precies één element "waarde" (behorend bij "algoritme") is (dus niet 0 of meer dan 1)</p>
-            <assert test="count(topx:formaat/topx:fysiekeIntegriteit/topx:waarde) eq 1"
-                >Het aantalformaat/fysiekeIntegriteit-elementen met een waarde-element in de ToPX-metadata binnen formaat/ is niet 1 maar <value-of select="count(topx:formaat/topx:fysiekeIntegriteit/topx:waarde)"/></assert>
+            <report test="count(topx:formaat/topx:fysiekeIntegriteit/topx:waarde) eq 0">Het "formaat/fysiekeIntegriteit/waarde"-gegeven ontbreekt in de ToPX-metadata</report>
+            <report test="count(topx:formaat/topx:fysiekeIntegriteit/topx:waarde) gt 1">Er is meer dan één "formaat/fysiekeIntegriteit/waarde"-gegeven in de ToPX-metadata</report>
         </rule>
     </pattern>
     
@@ -46,7 +48,7 @@
         <rule context="topx:algoritme">
             <p>Controleer de tekstuele inhoud van element "algoritme"</p>
            <assert test="matches(., '^(MD5|SHA1|SHA256|SHA512)$')"
-               >De waarden van algoritme in de ToPX-metadata is niet MD5, SHA1, SHA256, of SHA512 maar "<value-of select="."/>"</assert>
+               >De waarde van het "algoritme"-gegeven in de ToPX-metadata is niet MD5, SHA1, SHA256, of SHA512</assert>
         </rule>
     </pattern>
 </schema>
