@@ -90,18 +90,47 @@
     
     <xsl:function name="nha:worksheet-jsonmap" as="element(row)*">
         <xsl:param name="excel-rownum" as="xs:integer"/>
-        <xsl:param name="json-rownum" as="xs:integer"/>
         <xsl:param name="jsonMap" as="map(*)"/>
         <xsl:param name="columnKeys" as="xs:string*"/>
         
-        <xsl:variable name="columnValues" as="xs:string*">
-            <xsl:for-each select="$columnKeys">
-                <xsl:variable name="value" as="item()*" select="$jsonMap => map:get(.)"/>
-                <xsl:value-of select="nha:cellValue($value)"/>
-            </xsl:for-each>
-        </xsl:variable>
-        <!--<xsl:sequence select="log:log('INFO', 'column values: ' || string-join($columnValues, ', '))"/>-->
-        <xsl:sequence select="nha:row($excel-rownum + $json-rownum, $columnValues)"/>
+        <xsl:variable name="arrayKeys" as="xs:string*" select="for $k in $columnKeys return if ($jsonMap => map:get($k) instance of array(*)) then $k else ()"/>
+        
+        <xsl:choose>
+            <xsl:when test="count($arrayKeys) eq 1">
+                <!-- If there is just one array (probably, messages), generate distinct Excel rows for it. If there is no array, or more than one,
+                     just create one Excel line. If there are arrays, they will be sent to one cell, newline separated.
+                -->
+                <xsl:variable name="theArrayKey" as="xs:string" select="$arrayKeys"/>
+                <xsl:variable name="jsonArray" as="item()" select="$jsonMap => map:get($theArrayKey)"/>
+                <xsl:for-each select="1 to array:size($jsonArray)">
+                    <xsl:variable name="offset" as="xs:integer" select="."/>
+                    <xsl:variable name="offsetValue" as="xs:string" select="$jsonArray($offset)"/>
+                    <xsl:variable name="columnValues" as="xs:string*">
+                        <xsl:for-each select="$columnKeys">
+                            <xsl:choose>
+                                <xsl:when test=". eq $theArrayKey">
+                                    <xsl:value-of select="$offsetValue"/>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:variable name="value" as="item()*" select="$jsonMap => map:get(.)"/>
+                                    <xsl:value-of select="nha:cellValue($value)"/>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </xsl:for-each>
+                    </xsl:variable>
+                    <xsl:sequence select="nha:row($excel-rownum + ($offset - 1), ($columnValues, $offsetValue))"/>                  
+                </xsl:for-each>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:variable name="columnValues" as="xs:string*">
+                    <xsl:for-each select="$columnKeys">
+                        <xsl:variable name="value" as="item()*" select="$jsonMap => map:get(.)"/>
+                        <xsl:value-of select="nha:cellValue($value)"/>
+                    </xsl:for-each>
+                </xsl:variable>
+                <xsl:sequence select="nha:row($excel-rownum, $columnValues)"/>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:function>
     
     <xsl:function name="nha:worksheet-jsonstringarray" as="element(row)*">
@@ -139,12 +168,19 @@
                 <xsl:sequence select="nha:row($excel-rownum + 0, ($TEXT_EMPTY))"/>
             </xsl:when>
             <xsl:otherwise>
-                <xsl:for-each select="1 to array:size($jsonArray)">
+                <xsl:iterate select="1 to array:size($jsonArray)">
+                    <xsl:param name="next-excel-rownum" as="xs:integer" select="$excel-rownum"/>
+                    
                     <xsl:variable name="json-rownum" as="xs:integer" select="."/>
                     <xsl:variable name="jsonMap" as="map(*)" select="$jsonArray => array:get($json-rownum)"/>
                     
-                    <xsl:sequence select="nha:worksheet-jsonmap($excel-rownum, $json-rownum - 1, $jsonMap, $columnKeys)"/>
-                </xsl:for-each>
+                    <xsl:variable name="rows" as="element(row)*" select="nha:worksheet-jsonmap($next-excel-rownum, $jsonMap, $columnKeys)"/>
+                    <xsl:sequence select="($rows)"/>
+                    
+                    <xsl:next-iteration>
+                        <xsl:with-param name="next-excel-rownum" select="$next-excel-rownum + count($rows)"/>
+                    </xsl:next-iteration>
+                </xsl:iterate>
                 
             </xsl:otherwise>
         </xsl:choose>        
