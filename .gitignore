@@ -13,9 +13,9 @@ nha/xslwebfrontend/home/webapps/examples/
 
 nha/xslwebfrontend/home/.cache/
 
-nha/xslweb/home/.cache/
+xslweb-jdk8-webservices-docker/home/.cache/
 
-nha/xslweb/home/webapps/excelreport/static/excel/excelreport.orig.xlsx
+xslweb-jdk8-webservices-docker/home/webapps/excelreport/static/excel/excelreport.orig.xlsx
 
 docker-compose-poort.yml
 

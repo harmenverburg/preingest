@@ -12,6 +12,7 @@ services:
     # entrypoint: ["echo", "Service clamav disabled"]
   xslweb:
     # image: "noordhollandsarchief/xslweb:development"
+    build: xslweb-jdk8-webservices-docker
   droid:
     # image: "noordhollandsarchief/droidvalidationwebapi:development"
     build: droid-validation
