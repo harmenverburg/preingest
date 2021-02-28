@@ -3,19 +3,17 @@
 #docker run development: docker run -it -p 8080:8080 -v "D:\data:/data" -v "D:\01_Noord-Hollands Archief\Source\Repos\noord-hollandsarchief\preingest\droid-validation:/usr/src/droid" noordhollandsarchief/droidvalidationwebapi:development
 #docker run non-development: docker run -it -p 8080:8080 -v "D:\data:/data" noordhollandsarchief/droidvalidationwebapi:development
 
-# Temporary build image
-FROM openjdk:11 as build
+# Temporary (cached) build image with Maven support. We could also rely on the project's mvnw
+# wrapper, but that may need dos2unix when building on Windows if cloned with DOS line endings.
+FROM maven:3.6-openjdk-11 as build
 WORKDIR /workspace
 
-COPY mvnw .
-COPY .mvn .mvn
-
-# Optimize build image; download dependencies and cache results until pom.xml is changed
+# Optimize build image: download dependencies and cache results until pom.xml is changed
 COPY pom.xml .
-RUN ./mvnw dependency:go-offline
+RUN mvn dependency:go-offline
 
 COPY src src
-RUN ./mvnw package -DskipTests
+RUN mvn package -DskipTests
 
 # Final target image
 FROM openjdk:11
