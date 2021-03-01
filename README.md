@@ -59,6 +59,9 @@ on the Docker host.
 
   Alternatively, copy that example `docker-compose.dev.yml` into a file `docker-compose.override.yml`, which will be
   used automatically when `docker-compose up` is used.
+  
+  When images already exist (like after running `docker-compose pull` or when built earlier), add `--build` to force a
+  new build.
 
 ### OpenAPI (formerly Swagger)
 
