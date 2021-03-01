@@ -1,4 +1,4 @@
-# See the project's README about setting DATAFOLDER, SIPCREATORFOLDER and TOMCATLOGFOLDER.
+# See the project's README about setting DATAFOLDER, SIPCREATORFOLDER, TOMCATLOGFOLDER and some more.
 
 version: "3.8"
 
