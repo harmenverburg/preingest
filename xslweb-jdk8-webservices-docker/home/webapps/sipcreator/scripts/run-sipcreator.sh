@@ -2,7 +2,8 @@
 if [ -z "$3" ]
 then
     # Impossible to call moanAndDie: output directory has not yet been defined.
-    echo "$0 requires 1. the path to the Preservica-supplied SIP Creator folder 2. an input folder with an archival structure, 3. a guid (corresponding with the session folder), 4. an optional Preservica reference". >&2
+    echo "$0 requires 1. the path to the Preservica-supplied SIP Creator folder 2. the input folder with an archival structure, 3. the guid (corresponding with the session folder)" >&2
+    echo "4. the security-tag 5. the collection title 6. the collection code 7. an optional Preservica reference". >&2
     exit 1
 fi
 
@@ -12,7 +13,10 @@ INPUTFOLDER_BASE=$(basename "$INPUTFOLDER")
 OUTPUTFOLDER_BASE=sipresult
 OUTPUTFOLDER=$INPUTFOLDER/../$OUTPUTFOLDER_BASE
 GUID=$3
-PRESERVICA_REFERENCE=$4
+SECURITYTAG=$4
+COLTITLE=$5
+COLCODE=$6
+COLLECTIONREF=$7
 
 if [ -d "$OUTPUTFOLDER" ]
 then
@@ -142,13 +146,15 @@ function doIt {
 
     echo "Creating zip file $OUTPUTZIP"
 
-    if [ -z "$PRESERVICA_REFERENCE" ]
+    if [ -z "$COLLECTIONREF" ]
     then
         "$WHEREAMI/nha-createsip" \
             "$SIPCREATOR_FOLDER" \
             -input "$INPUTFOLDER" \
+            -coltitle "$COLTITLE" \
+            -colcode "$COLCODE" \
             -status NEW \
-            -securitytag open \
+            -securitytag "$SECURITYTAG" \
             -sha512 \
             -export \
             -output "$OUTPUTFOLDER"
@@ -157,8 +163,8 @@ function doIt {
             "$SIPCREATOR_FOLDER" \
             -input "$INPUTFOLDER" \
             -status SAME \
-            -colref "$PRESERVICA_REFERENCE" \
-            -securitytag open \
+            -colref "$COLLECTIONREF" \
+            -securitytag "$SECURITYTAG" \
             -sha512 \
             -export \
             -output "$OUTPUTFOLDER"

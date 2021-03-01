@@ -19,11 +19,12 @@
     <!-- The maximum size of a Title in XIP (currently, we don't know the real maximum): -->
     <xsl:param name="max-length-of-title" as="xs:integer" select="255"/>
     
+    <xsl:variable name="zorgdrager-geautoriseerde-naam" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'Owner']/req:value)"/>
+    <xsl:variable name="collection-status" as="xs:string" select="lower-case(/*/req:parameters/req:parameter[@name eq 'CollectionStatus']/req:value)"/>
+    <xsl:variable name="CollectionRef" as="xs:string" select="lower-case(/*/req:parameters/req:parameter[@name eq 'CollectionRef']/req:value)"/>
+    
     <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute('data-uri-prefix')"/>
-    
-    <!-- TODO variabele zorgdrager-geautoriseerde-naam kan misschien ook opgehaald worden uit de metadata op aggregatieniveau Archief. Nu o.b.v. request-parameter zorgdrager=... -->
-    <xsl:variable name="zorgdrager-geautoriseerde-naam" as="xs:string?" select="string(/*/req:parameters/req:parameter[@name eq 'zorgdrager']/req:value)"/>  
-    
+        
     <!-- Wrapper function for non-standard call to discard-document() -->
     <xsl:function name="nha:discard-document" as="document-node()">
         <xsl:param name="doc" as="document-node()"/>
@@ -103,7 +104,9 @@
         <xsl:variable name="naam" as="element(topx:naam)" select="$topxDoc/*/topx:aggregatie/topx:naam"/>
         <xsl:variable name="omschrijvingBeperkingen" as="element(topx:omschrijvingBeperkingen)" select="$topxDoc/*/topx:aggregatie/topx:openbaarheid/topx:omschrijvingBeperkingen"/>
         
-        <Collection status="new">
+        <!-- Possible values for status attribute (according to XIP-V4.xsd): new, same, changed, deleted, restored. Of course, in our case, only new and same apply. -->
+        <Collection status="{$collection-status}">
+            <xsl:if test="$collection-status ne 'new'"><CollectionRef><xsl:value-of select="$CollectionRef"/></CollectionRef></xsl:if>
             <CollectionCode><xsl:apply-templates select="$identificatiekenmerk"/></CollectionCode>
             <Title><xsl:apply-templates select="$naam" mode="title"/></Title>
             <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
@@ -133,7 +136,6 @@
     <xsl:template name="create-xip-aggregatie-bestand">
         <xsl:param name="topxDoc" as="document-node()" required="yes"/>
         
-        <xsl:variable name="identificatiekenmerk" as="element(topx:identificatiekenmerk)" select="$topxDoc/*/topx:bestand/topx:identificatiekenmerk"/>
         <xsl:variable name="naam" as="element(topx:naam)" select="$topxDoc/*/topx:bestand/topx:naam"/>
         <xsl:variable name="bestandsverwijzing" as="element(topx:bestandsverwijzing)?" select="()"/> <!-- TODO -->
         <xsl:variable name="algoritme" as="element(topx:algoritme)?" select="$topxDoc/*/topx:bestand/topx:formaat/topx:fysiekeIntegriteit/topx:algoritme"/>
