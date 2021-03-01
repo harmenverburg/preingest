@@ -13,6 +13,12 @@ services:
   xslweb:
     # image: "noordhollandsarchief/xslweb:development"
     build: xslweb-jdk8-webservices-docker
+    # To use Docker as the Tomcat/XSLWeb container, but override with the local sources for quick development
+    volumes:
+      - "${DATAFOLDER}:/data"
+      - "${SIPCREATORFOLDER}:/nha/SIP_Creator"
+      - "${TOMCATLOGFOLDER}:/nha/tomcat-logs"
+      - "./xslweb-jdk8-webservices-docker/home:/nha/xslweb/home"
   droid:
     # image: "noordhollandsarchief/droidvalidationwebapi:development"
     build: droid-validation
