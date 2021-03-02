@@ -121,7 +121,7 @@
         <xsl:variable name="naam" as="element(topx:naam)" select="$topxDoc/*/topx:aggregatie/topx:naam"/>
         <xsl:variable name="omschrijvingBeperkingen" as="element(topx:omschrijvingBeperkingen)" select="$topxDoc/*/topx:aggregatie/topx:openbaarheid/topx:omschrijvingBeperkingen"/>        
         <xsl:variable name="DigitalSurrogate" as="xs:string" select="'false'"/>
-        <xsl:variable name="omschrijving" as="element(topx:omschrijving)?" select="()"/> <!-- TODO -->
+        <xsl:variable name="omschrijving" as="element(topx:omschrijving)?" select="$topxDoc/*/topx:aggregatie/topx:omschrijving"/>
         
         <DeliverableUnit status="new">
             <DigitalSurrogate>{$DigitalSurrogate}</DigitalSurrogate>
@@ -137,15 +137,12 @@
         <xsl:param name="topxDoc" as="document-node()" required="yes"/>
         
         <xsl:variable name="naam" as="element(topx:naam)" select="$topxDoc/*/topx:bestand/topx:naam"/>
-        <xsl:variable name="bestandsverwijzing" as="element(topx:bestandsverwijzing)?" select="()"/> <!-- TODO -->
         <xsl:variable name="algoritme" as="element(topx:algoritme)?" select="$topxDoc/*/topx:bestand/topx:formaat/topx:fysiekeIntegriteit/topx:algoritme"/>
         <xsl:variable name="algoritme-waarde" as="element(topx:waarde)?" select="$topxDoc/*/topx:bestand/topx:formaat/topx:fysiekeIntegriteit/topx:waarde"/>
         <!-- Tijdelijk fix vanwege foutieve levering als <omvang>123456 bytes</omvang>: neem alleen het getal over. -->
         <xsl:variable name="omvang" as="xs:string" select="$topxDoc/*/topx:bestand/topx:formaat/topx:omvang => string() => replace('^\D*(\d+)\D*$', '$1')"/>
         
         <File status="new">
-            <!-- TODO <FileRef> is in meerdere XML-conteksten toegestaan. Is dit wel de juiste plaats? Ook onder Manifestation/ManifestationFile kan het bijvoorbeeld. -->
-            <xsl:if test="exists($bestandsverwijzing)"><FileRef><xsl:apply-templates select="$bestandsverwijzing"/></FileRef></xsl:if>
             <Metadata schemaURI="http://www.nationaalarchief.nl/ToPX/v2.3"><xsl:copy-of select="$topxDoc"/></Metadata>
             <FileSize><xsl:value-of select="$omvang"/></FileSize>
             <FixityInfo>
