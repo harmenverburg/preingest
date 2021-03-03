@@ -22,7 +22,7 @@ The following validation and transformation actions are currently implemented:
   automatically. It also scans compressed archives, OLE2 documents and email files.
 - [Validate the file names](preingest/Noord.HollandsArchief.Pre.Ingest.WebApi/Handlers/NamingValidationHandler.cs), to
   not contain invalid characters, and not be Windows/DOS-reserved names such as `PRN` or `AUX`.
-- Validate the TMLO/ToPX sidecar structure.
+- [Validate the TMLO/ToPX sidecar structure](preingest/Noord.HollandsArchief.Pre.Ingest.WebApi/Handlers/SidecarValidationHandler.cs).
 - Classify the file types, to determine PRONOM IDs and to see if the extension matches the actual content. This 
   [uses DROID](droid-validation/README.md) and does NOT currently automatically update its file database.
 - Export the DROID results to CSV, XML or PDF. The results are also included in the final Excel report.
@@ -51,6 +51,17 @@ Multiple files can be handled in parallel, but for each file the API simply exec
 The frontend will enforce a specific order and take care of scheduling dependencies. The frontend will also allow some
 actions to be re-scheduled any time, but most actions cannot be run again once they succeeded.
 
+## Overall status
+
+Overall result while processing an archive (collection):
+
+- `Running` if any action is currently running, else:
+- `Failed` if any of the actions reported a fatal error, else:
+- `Error` if any of the actions reported an error, else:
+- `Success` if any action was executed and all returned Success, else:
+- `New` if nothing happened for an archive yet.
+
+As saving the settings is basically an action too, doing so will change the overall state from `New` to `Success`.
 
 ## Requirements
 
@@ -188,8 +199,11 @@ on the Docker host.
 
 Database file will be stored (default) in `/data/preingest.db`. Location can be changed by supplying a `environment` parameter in de docker-compose.yml under the preingest service. 
 Example:
-`environment:`
-        `- "ConnectionStrings:Sqlite=Data Source=/{folder}/{name}"`
+
+```yaml
+environment:
+   - "ConnectionStrings:Sqlite=Data Source=/{folder}/{name}"
+```
 
 ## Development
 
