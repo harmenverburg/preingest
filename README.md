@@ -69,12 +69,12 @@ As saving the settings is basically an action too, doing so will change the over
   definitions, this may need at least 3 GB of memory.
 
 - Preservica [SIP Creator 5.11](https://usergroup.preservica.com/downloads/view.php?resource=SIP+Creator&version=5.11).
-  Its command line interface will be invoked using Java 8 from a Linux Docker container. This has been tested using the
-  Linux 64 bit version ZIP download, but Windows installations may work on Linux too. A bug in the SIP Creator CLI
-  requires installation in a folder without spaces. Beware that Client Installer 5.10 and 5.11 do not include the SIP
-  Creator command line interface. Also note that the original Linux `createsip` script is not used; instead
-  [a custom version](xslweb-jdk8-webservices-docker/home/webapps/sipcreator/scripts/nha-createsip) is included in the
-  Docker image. And beware that 5.10 [does not suffice](https://eu.preservica.com/sdb/help/documentation):
+  Its command line interface will be invoked using 64 bits Java 8 from a Linux Docker container. This was tested using
+  the Linux 64 bits ZIP download, but the 64 bits Windows download may work for Docker too. A bug in the SIP Creator CLI
+  requires installation in a folder without spaces, at least during its first run. Beware that Client Installer 5.10 and
+  5.11 do not include the SIP Creator command line interface. Also note that the original Linux `createsip` script is
+  not used; instead [a custom version](xslweb-jdk8-webservices-docker/home/webapps/sipcreator/scripts/nha-createsip) is
+  included in the Docker image. Beware that 5.10 [does not suffice](https://eu.preservica.com/sdb/help/documentation):
   
   > #### 7.6. XIP Metadata Fragments
   > 
@@ -91,6 +91,8 @@ As saving the settings is basically an action too, doing so will change the over
   only supported on Windows, and only for Cloud Edition, not for on-premise installations.
   
   To support both test and production environments, this needs to be running twice:
+
+  - :warning: [this is yet untested](https://github.com/noord-hollandsarchief/preingest/issues/99).
   
   - Install it using the Client Installer 5.10 wizard. You'll need a URL like `https://eu.preservica.com/sdb` and can
     likely ignore a warning saying _"Connection to Preservica has been re-directed. Please check the URL and re-try.
@@ -99,22 +101,25 @@ As saving the settings is basically an action too, doing so will change the over
   - After installing it once, duplicate the result folder in `C:\Preservica\Local\Transfer Agent` to, say,
     `C:\Preservica\Local\Transfer Agent Production`.
     
-  - In the copy, adjust `installService.bat` to use different names for:
-  
-    ```text
-    set SERVICE_NAME=TransferAgent
-    set PR_DISPLAYNAME=Preservica Transfer Agent
-    ```
-  
-  - In the copy, adjust the configuration file `C:\Preservica\Local\Transfer Agent Production\conf\upload.properties`
-    and create a dedicated upload folder:
+  - In the copy, adjust the configuration file `C:\Preservica\Local\Transfer Agent Production\conf\upload.properties`,
+    to use a different upload folder (make sure it exists), use different credentials, and make the ActiveMQ broker use
+    another dummy port (this is used by SIP Creator GUI to monitor progress of uploads, but is not used in our case):
 
     ```text
     upload.root=C:/Preservica/Local/UploadArea-Production
-   
+    ...
     preservica.username=prod-user@example.com
     preservica.password=prod-password
     preservica.url=https://eu.preservica.com/sdb
+    ...
+    amq.broker.url=tcp://docker01:61613
+    ```
+
+  - In the copy, adjust `installService.bat` and run that file to use different names, like:
+
+    ```text
+    set SERVICE_NAME=TransferAgentProduction
+    set PR_DISPLAYNAME=Preservica Transfer Agent Production
     ```
 
   - Aside, [note](https://usergroup.preservica.com/documentation/ce/6.2.1/html/SIPCreatorSUG.html):
