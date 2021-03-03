@@ -65,8 +65,9 @@ As saving the settings is basically an action too, doing so will change the over
 
 ## Requirements
 
-- A recent version of Docker. Given [the large number](https://github.com/mko-x/docker-clamav#memory) of virus signature
-  definitions, this may need at least 3 GB of memory.
+- A recent version of Docker, supporting Linux containers. (On Windows, you may need to enable Hyper-V for that.) Given
+  [the large number](https://github.com/mko-x/docker-clamav#memory) of virus signature definitions, this may need at
+  least 3 GB of memory.
 
 - Preservica [SIP Creator 5.11](https://usergroup.preservica.com/downloads/view.php?resource=SIP+Creator&version=5.11).
   Its command line interface will be invoked using 64 bits Java 8 from a Linux Docker container. This was tested using
@@ -134,7 +135,7 @@ As saving the settings is basically an action too, doing so will change the over
     > be granted to the Windows group "Authenticated Users"
 
 - The [frontend web application](https://github.com/noord-hollandsarchief/preingest-frontend). Alternatively, without
-  building anything yourself, you can use the included [docker-compose](docker-compose.yml) like described below.
+  building anything yourself, you can use the included [docker-compose file](docker-compose.yml) like described below.
 
 Some intermediate results are stored in a SQLite database. This database will be rebuilt automatically when starting
 afresh. To avoid database errors you may want to exclude its working folder from any virus scanning.
@@ -142,10 +143,11 @@ afresh. To avoid database errors you may want to exclude its working folder from
 
 ## Docker
 
-Some Docker images expect folders like `/data`, `/nha/SIP_Creator` and `/nha/tomcat-logs` to be mapped to some folder
-on the Docker host.
+The Docker images require a Docker runtime that supports Linux containers. (On Windows, you may need Hyper-V for that.)
 
-:warning: Docker does not support symbolic links (unless they're supposed to map to folders inside the containers).
+Some Docker images expect folders like `/data`, `/nha/SIP_Creator` and `/nha/tomcat-logs` to be mapped to some folder
+on the Docker host. (Note that Docker does not support symbolic links, unless they're supposed to map to folders inside
+the containers.) When using the [docker-compose file](docker-compose.yml), this needs some environment variables:
 
 - Make the settings known in environment variables. For example:
   
