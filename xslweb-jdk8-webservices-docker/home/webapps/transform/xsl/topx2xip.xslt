@@ -16,6 +16,8 @@
     
     <xsl:mode on-no-match="shallow-copy"/>
     
+    <xsl:param name="data-uri-prefix" as="xs:string" required="yes"/>
+    
     <!-- The maximum size of a Title in XIP (currently, we don't know the real maximum): -->
     <xsl:param name="max-length-of-title" as="xs:integer" select="255"/>
     
@@ -23,8 +25,6 @@
     <xsl:variable name="collection-status" as="xs:string" select="lower-case(/*/req:parameters/req:parameter[@name eq 'CollectionStatus']/req:value)"/>
     <xsl:variable name="CollectionRef" as="xs:string" select="lower-case(/*/req:parameters/req:parameter[@name eq 'CollectionRef']/req:value)"/>
     
-    <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute('data-uri-prefix')"/>
-        
     <!-- Wrapper function for non-standard call to discard-document() -->
     <xsl:function name="nha:discard-document" as="document-node()">
         <xsl:param name="doc" as="document-node()"/>
@@ -171,18 +171,18 @@
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
-
+    
     <xsl:template match="topx:omschrijvingBeperkingen">
         <xsl:variable name="zorgdrager" as="xs:string" select="if ($zorgdrager-geautoriseerde-naam ne '') then $zorgdrager-geautoriseerde-naam else '*zorgdrager-ontbreekt*'"/>
         <xsl:choose>
-            <xsl:when test="text() eq 'Openbaar'">open</xsl:when>
-            <xsl:when test="text() eq 'Beperkt openbaar A'">{$zorgdrager}_Niet_Openbaar_A</xsl:when>
-            <xsl:when test="text() eq 'Beperkt openbaar B'">{$zorgdrager}_Niet_Openbaar_B</xsl:when>
-            <xsl:when test="text() eq 'Beperkt openbaar C'">{$zorgdrager}_Niet_Openbaar_C</xsl:when>
-            <xsl:when test="matches(text(), 'Beperkt openbaar .*')">{$zorgdrager}_Niet_Openbaar_{replace(text(), 'Beperkt openbaar (.*)', '$1')}</xsl:when> <!-- TODO is deze interpretatie juist? naam mappen, bijv. Zorgdrager=Gemeente_Haarlem -->
-            
-            <!-- TODO wat bij onbekend? -->
-            <xsl:otherwise>{.}</xsl:otherwise>
+            <xsl:when test="matches(., '^toegang_publiek$', 'i')"><xsl:text>Tag_{$zorgdrager}_Publiek</xsl:text></xsl:when>
+            <xsl:when test="matches(., '^toegang_publiek_metadata$', 'i')"><xsl:text>Tag_{$zorgdrager}_Publiek_Metadata</xsl:text></xsl:when>
+            <xsl:when test="matches(., '^toegang_intern$', 'i')"><xsl:text>Tag_{$zorgdrager}_Intern</xsl:text></xsl:when>
+            <xsl:when test="matches(., '^toegang_intern(_\S+)$', 'i')"><xsl:text>Tag_{$zorgdrager}_Intern{replace(., '^.+(_[^_]+)$', '$1')}</xsl:text></xsl:when>
+            <xsl:otherwise>
+                <!-- Error, just copy -->
+                <xsl:value-of select="."/>
+            </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
     

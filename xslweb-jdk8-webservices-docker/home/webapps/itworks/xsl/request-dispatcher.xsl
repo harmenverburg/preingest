@@ -8,8 +8,6 @@
   exclude-result-prefixes="#all"
   version="3.0">
   
-  <xsl:param name="config:development-mode" as="xs:boolean"/>
-  
   <xsl:template match="/req:request[req:path = '/']">    
     <pipeline:pipeline>
       <pipeline:transformer name="itworks" xsl-path="itworks.xsl"/>

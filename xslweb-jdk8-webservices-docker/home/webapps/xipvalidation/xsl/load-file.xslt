@@ -12,7 +12,7 @@
     
     <xsl:param name="metadatafile" as="xs:string" required="yes"/>
     
-    <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute('data-uri-prefix')"/>
+    <xsl:param name="data-uri-prefix" as="xs:string" required="yes"/>
     
     <xsl:template match="/">
         <xsl:variable name="guid" as="xs:string" select="tokenize(/*/req:path, '/')[2]"/>

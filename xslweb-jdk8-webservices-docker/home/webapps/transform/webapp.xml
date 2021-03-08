@@ -24,9 +24,6 @@
     <parameter name="data-uri-prefix" type="xs:string">
       <value>file:/data/</value>
     </parameter>
-    <parameter name="data-uri-prefix-devmode" type="xs:string">
-      <value>file:/home/pieter/noord-hollandsarchief/data/</value>
-    </parameter>
     <parameter name="result-extension" type="xs:string">
       <value>.xip</value>
     </parameter>
