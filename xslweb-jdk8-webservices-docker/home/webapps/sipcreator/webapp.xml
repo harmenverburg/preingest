@@ -24,12 +24,6 @@
     <parameter name="data-uri-prefix" type="xs:string">
       <value>file:/data/</value>
     </parameter>
-    <parameter name="data-uri-prefix-devmode" type="xs:string">
-      <value>file:/home/pieter/noord-hollandsarchief/data/</value>
-    </parameter>
-    <parameter name="sipcreator-folder-devmode" type="xs:string">
-      <value>/home/pieter/noord-hollandsarchief/nha-develop/nhapreingest/nha/SIP_Creator/</value>
-    </parameter>
     <parameter name="sipcreator-folder" type="xs:string">
       <value>/nha/SIP_Creator</value>
     </parameter>

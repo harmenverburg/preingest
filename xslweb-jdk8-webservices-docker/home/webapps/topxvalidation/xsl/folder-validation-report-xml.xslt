@@ -13,8 +13,9 @@
     default-mode="topx2xip-folder"
     version="3.0">
     
+    <xsl:param name="data-uri-prefix" as="xs:string" required="yes"/>
+    
     <xsl:variable name="context-path" select="/*/req:context-path || /*/req:webapp-path" as="xs:string"/>
-    <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute('data-uri-prefix')"/>
     
     <!-- Wrapper function for non-standard call to discard-document() -->
     <xsl:function name="nha:discard-document" as="document-node()">
