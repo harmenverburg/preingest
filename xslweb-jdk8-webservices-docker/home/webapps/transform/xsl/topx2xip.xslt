@@ -16,6 +16,8 @@
     
     <xsl:mode on-no-match="shallow-copy"/>
     
+    <xsl:param name="data-uri-prefix" as="xs:string" required="yes"/>
+    
     <!-- The maximum size of a Title in XIP (currently, we don't know the real maximum): -->
     <xsl:param name="max-length-of-title" as="xs:integer" select="255"/>
     
@@ -23,8 +25,6 @@
     <xsl:variable name="collection-status" as="xs:string" select="lower-case(/*/req:parameters/req:parameter[@name eq 'CollectionStatus']/req:value)"/>
     <xsl:variable name="CollectionRef" as="xs:string" select="lower-case(/*/req:parameters/req:parameter[@name eq 'CollectionRef']/req:value)"/>
     
-    <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute('data-uri-prefix')"/>
-        
     <!-- Wrapper function for non-standard call to discard-document() -->
     <xsl:function name="nha:discard-document" as="document-node()">
         <xsl:param name="doc" as="document-node()"/>
