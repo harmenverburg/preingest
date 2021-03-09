@@ -95,7 +95,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                                 FormatName = item.FORMAT_NAME,
                                 FormatVersion = item.FORMAT_VERSION,
                                 Puid = item.PUID,
-                                IsExtensionMisMatch = item.EXTENSION_MISMATCH
+                                IsExtensionMismatch = item.EXTENSION_MISMATCH
                             }).ToList();
                                                 
                         var actionDataList = new List<DataItem>();
@@ -116,7 +116,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                             
                             //extension mismatch
                             bool parseOutput = false;
-                            Boolean.TryParse(file.IsExtensionMisMatch, out parseOutput);                            
+                            Boolean.TryParse(file.IsExtensionMismatch, out parseOutput);                            
                             if (parseOutput)
                             {
                                 actionDataList.Add(new DataItem { Puid = file.Puid, Name = file.Name, Location = file.Location, FormatVersion = file.FormatVersion, FormatName = file.FormatName, Extension = file.Extension, InGreenList = false, Message = "Verkeerde extensie combinatie gevonden." });
