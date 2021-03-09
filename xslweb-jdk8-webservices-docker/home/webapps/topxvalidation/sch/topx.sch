@@ -25,10 +25,9 @@
     
     <pattern id="topx-pattern-2">
         <rule context="topx:omschrijvingBeperkingen">
-            <!-- TODO dit moet nog beter worden uitgewerkt. -->
             <p>Controleer de tekstuele inhoud van element "omschrijvingBeperkingen"</p>
-            <assert test="matches(., '^(Openbaar|Beperkt openbaar [ABC])$')"
-                >De waarden van het "omschrijvingBeperkingen"-gegeven in de ToPX-metadata is niet Openbaar, of Beperkt openbaar A/B/C</assert>
+            <assert test="matches(., '^(toegang_publiek(_metadata)?|toegang_intern(_\S+)?)$', 'i')"
+                >De inhoud van het gegeven "omschrijvingBeperkingen" voldoet niet aan het vereiste patroon</assert>
         </rule>
     </pattern>
     

@@ -10,7 +10,7 @@
     expand-text="yes"
     version="3.0">
     
-    <xsl:variable name="data-uri-prefix" as="xs:string" select="req:get-attribute('data-uri-prefix')"/>
+    <xsl:param name="data-uri-prefix" as="xs:string" required="yes"/>
     
     <xsl:template match="/">
         <xsl:variable name="reluri" as="xs:string" select="substring-after(/*/req:path, '/')"/>

@@ -7,9 +7,6 @@
   xmlns:err="http://expath.org/ns/error"
   exclude-result-prefixes="#all" version="3.0" expand-text="yes">
   
-  <xsl:param name="config:development-mode"/>
-  <xsl:param name="data-uri-prefix" as="xs:string" required="yes"/>
-  <xsl:param name="data-uri-prefix-devmode" as="xs:string" required="yes"/>
   <xsl:param name="default-output-format" as="xs:string" select="'json'"/>
   
   <xsl:variable name="DUMP_REQUEST" as="xs:boolean" static="yes" select="false()"/>
@@ -17,8 +14,6 @@
   <xsl:template match="/">
     <xsl:sequence select="file:write('/tmp/request.xml', /)" xmlns:file="http://expath.org/ns/file" use-when="$DUMP_REQUEST"/>
     
-    <!-- Dit request-attribuut voorkomt dat we deze logica telkens moeten herhalen: -->
-    <xsl:sequence select="req:set-attribute('data-uri-prefix', if ($config:development-mode) then $data-uri-prefix-devmode else $data-uri-prefix)"/>
     <xsl:apply-templates/>
   </xsl:template>
 
