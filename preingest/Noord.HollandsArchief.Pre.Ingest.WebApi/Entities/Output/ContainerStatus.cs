@@ -62,7 +62,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Output
                         break;
                 }
 
-                if (_status != ContainerStatus.Failed && plans.Count(item => item.Status == ExecutionStatus.Pending) > 0)
+                var isPending = plans.FirstOrDefault(item => item.Status == ExecutionStatus.Pending);
+                if (_status != ContainerStatus.Failed && (isPending != null && isPending.StartOnError))
                     _status = ContainerStatus.Running;
             }
         }
