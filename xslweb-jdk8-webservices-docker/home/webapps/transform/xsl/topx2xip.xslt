@@ -175,10 +175,10 @@
     <xsl:template match="topx:omschrijvingBeperkingen">
         <xsl:variable name="zorgdrager" as="xs:string" select="if ($zorgdrager-geautoriseerde-naam ne '') then $zorgdrager-geautoriseerde-naam else '*zorgdrager-ontbreekt*'"/>
         <xsl:choose>
-            <xsl:when test="matches(., '^toegang_publiek$', 'i')"><xsl:text>Tag_{$zorgdrager}_Publiek</xsl:text></xsl:when>
-            <xsl:when test="matches(., '^toegang_publiek_metadata$', 'i')"><xsl:text>Tag_{$zorgdrager}_Publiek_Metadata</xsl:text></xsl:when>
-            <xsl:when test="matches(., '^toegang_intern$', 'i')"><xsl:text>Tag_{$zorgdrager}_Intern</xsl:text></xsl:when>
-            <xsl:when test="matches(., '^toegang_intern(_\S+)$', 'i')"><xsl:text>Tag_{$zorgdrager}_Intern{replace(., '^.+(_[^_]+)$', '$1')}</xsl:text></xsl:when>
+            <xsl:when test="matches(., '^publiek$', 'i')"><xsl:text>tag_{$zorgdrager}_publiek</xsl:text></xsl:when>
+            <xsl:when test="matches(., '^publiek_metadata$', 'i')"><xsl:text>tag_{$zorgdrager}_publiek_metadata</xsl:text></xsl:when>
+            <xsl:when test="matches(., '^intern$', 'i')"><xsl:text>tag_{$zorgdrager}_Intern</xsl:text></xsl:when>
+            <xsl:when test="matches(., '^intern(_\S+)$', 'i')"><xsl:text>tag_{$zorgdrager}_intern{replace(., '^.+(_[^_]+)$', '$1')=>lower-case()}</xsl:text></xsl:when>
             <xsl:otherwise>
                 <!-- Error, just copy -->
                 <xsl:value-of select="."/>

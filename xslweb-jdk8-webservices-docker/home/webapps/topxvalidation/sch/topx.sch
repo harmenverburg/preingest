@@ -31,7 +31,7 @@
         -->
         <rule context="topx:omschrijvingBeperkingen">
             <p>Controleer de tekstuele inhoud van element "omschrijvingBeperkingen"</p>
-            <assert test="matches(., '^(toegang_publiek(_metadata)?|toegang_intern(_\S+)?)$', 'i')"
+            <assert test="matches(., '^(publiek(_metadata)?|intern(_\S+)?)$', 'i')"
                 >De inhoud van het gegeven "omschrijvingBeperkingen" voldoet niet aan het vereiste patroon</assert>
         </rule>
     </pattern>
