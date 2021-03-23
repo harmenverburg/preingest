@@ -85,7 +85,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                     using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
                     {
                         var records = csv.GetRecords<dynamic>().ToList();
-
                         var filesByDroid = records.Where(item
                             => item.TYPE == "File" && item.EXT != "metadata").Select(item => new DataItem
                             {
@@ -95,7 +94,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                                 FormatName = item.FORMAT_NAME,
                                 FormatVersion = item.FORMAT_VERSION,
                                 Puid = item.PUID,
-                                IsExtensionMismatch = item.EXTENSION_MISMATCH
+                                IsExtensionMismatch = Boolean.Parse(item.EXTENSION_MISMATCH)  
                             }).ToList();
                                                 
                         var actionDataList = new List<DataItem>();
@@ -114,10 +113,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                                 return;
                             }
                             
-                            //extension mismatch
-                            bool parseOutput = false;
-                            Boolean.TryParse(file.IsExtensionMismatch, out parseOutput);                            
-                            if (parseOutput)
+                            //extension mismatch                                                       
+                            if (file.IsExtensionMismatch)
                             {
                                 actionDataList.Add(new DataItem { Puid = file.Puid, Name = file.Name, Location = file.Location, FormatVersion = file.FormatVersion, FormatName = file.FormatName, Extension = file.Extension, InGreenList = false, Message = "Verkeerde extensie combinatie gevonden." });
                                 eventModel.Summary.Rejected = eventModel.Summary.Rejected + 1;
@@ -129,7 +126,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                             if (existsPuidInNhaList)
                             {
                                 file.InGreenList = true;
-                                file.Message = "Pronom ID gevonden in NHA groene lijst.";
+                                file.Message = "Pronom ID gevonden in NHA voorkeurslijst.";
                                 actionDataList.Add(file);
                                 eventModel.Summary.Accepted = eventModel.Summary.Accepted + 1;
                                 return;
@@ -139,13 +136,13 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
                             bool existsExtInNhaList = extensionData.Exists(item => item.Extension.Equals(file.Extension, StringComparison.InvariantCultureIgnoreCase));
                             if (!existsExtInNhaList)
                             {
-                                actionDataList.Add(new DataItem { Puid = file.Puid, Name = file.Name, Location = file.Location, FormatVersion = file.FormatVersion, FormatName = file.FormatName, Extension = file.Extension, InGreenList = false, Message = "Extensie en/of Pronom ID niet gevonden in NHA groene lijst." });
+                                actionDataList.Add(new DataItem { Puid = file.Puid, Name = file.Name, Location = file.Location, FormatVersion = file.FormatVersion, FormatName = file.FormatName, Extension = file.Extension, InGreenList = false, Message = "Extensie en/of Pronom ID niet gevonden in NHA voorkeurslijst." });
                                 eventModel.Summary.Rejected = eventModel.Summary.Rejected + 1;
                             }                               
                             else
                             {
                                 file.InGreenList = true;
-                                file.Message = String.Format ("Extensie gevonden in NHA groene lijst maar wel met een andere Pronom ID. Droid Pronom = {0}, NHA groene lijst = {1}.", file.Puid, extensionData.FirstOrDefault(item => item.Extension.Equals(file.Extension, StringComparison.InvariantCultureIgnoreCase)).Puid);
+                                file.Message = String.Format ("Extensie gevonden in NHA voorkeurslijst maar wel met een andere Pronom ID. Droid Pronom = {0}, NHA voorkeurslijst = {1}.", file.Puid, extensionData.FirstOrDefault(item => item.Extension.Equals(file.Extension, StringComparison.InvariantCultureIgnoreCase)).Puid);
                                 actionDataList.Add(file);
                                 eventModel.Summary.Accepted = eventModel.Summary.Accepted + 1;
                             }
@@ -200,7 +197,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers
             public string FormatName { get; set; }
             public string FormatVersion { get; set; }
             public string Puid { get; set; }
-            public string IsExtensionMismatch { get; set; }
+            public bool IsExtensionMismatch { get; set; }
             public string Message { get; set; }
             public bool InGreenList { get; set; }
         }
