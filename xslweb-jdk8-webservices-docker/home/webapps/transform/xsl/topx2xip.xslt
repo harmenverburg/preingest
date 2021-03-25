@@ -28,7 +28,9 @@
     <!-- Wrapper function for non-standard call to discard-document() -->
     <xsl:function name="nha:discard-document" as="document-node()">
         <xsl:param name="doc" as="document-node()"/>
-        <!-- Functie saxon:discard-document() is niet beschikbaar in de Saxon Home-editie. Het kan enorm op geheugen besparen als er heel veel XML-files zijn.
+        <!-- Functie saxon:discard-document() is niet beschikbaar in de Saxon Home-editie. Het kan enorm op geheugen besparen als er heel veel XML-files zijn
+            (en dit script vanuit een aanroepend script wordt gebruikt om hele directory-trees te verwerken).
+            
              N.B. bij de home-editie geeft function-avaible toch true() terug, dus onderstaande werkt niet:
              
              <xsl:sequence select="if (function-available('saxon:discard-document')) then saxon:discard-document($doc) else $doc"/>
