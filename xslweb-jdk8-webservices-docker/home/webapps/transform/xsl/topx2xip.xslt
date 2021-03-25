@@ -8,6 +8,7 @@
     xmlns:nha="http://noord-hollandsarchief.nl/namespaces/1.0"
     xmlns:topx="http://www.nationaalarchief.nl/ToPX/v2.3"
     xmlns:saxon="http://saxon.sf.net/"
+    xmlns:xip="http://www.tessella.com/XIP/v4"
     xmlns="http://www.tessella.com/XIP/v4"
     exclude-result-prefixes="#all"
     default-mode="topx2xip"
@@ -24,6 +25,7 @@
     <xsl:variable name="zorgdrager-geautoriseerde-naam" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'Owner']/req:value)"/>
     <xsl:variable name="collection-status" as="xs:string" select="lower-case(/*/req:parameters/req:parameter[@name eq 'CollectionStatus']/req:value)"/>
     <xsl:variable name="CollectionRef" as="xs:string" select="lower-case(/*/req:parameters/req:parameter[@name eq 'CollectionRef']/req:value)"/>
+    <xsl:variable name="SecurityTagFromSettings" as="xs:string" select="lower-case(/*/req:parameters/req:parameter[@name eq 'SecurityTag']/req:value)"/>
     
     <!-- Wrapper function for non-standard call to discard-document() -->
     <xsl:function name="nha:discard-document" as="document-node()">
@@ -39,6 +41,39 @@
         -->
         <xsl:sequence select="util:discard-document($doc)" xmlns:util="http://www.armatiek.com/xslweb/functions/util"/>
     </xsl:function>
+    
+    <xsl:function name="nha:defineSecurityTag" as="element(xip:SecurityTag)?">
+        <xsl:param name="omschrijvingBeperkingen" as="element(topx:omschrijvingBeperkingen)?"/>
+        <!-- Make sure not to generate an empty value for SecurityTag. The SIP Creator would then supply the value of "open" regardless of its parameter settings. -->
+        <xsl:choose>
+            <xsl:when test="normalize-space($omschrijvingBeperkingen) ne ''">
+                <SecurityTag><xsl:value-of select="nha:convertOmschrijvingBeperkingen($omschrijvingBeperkingen)"/></SecurityTag>
+            </xsl:when>
+            <xsl:when test="normalize-space($SecurityTagFromSettings) ne ''">
+                <SecurityTag><xsl:value-of select="nha:convertOmschrijvingBeperkingen($SecurityTagFromSettings)"/></SecurityTag>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:sequence select="()"></xsl:sequence>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:function>
+    
+    <xsl:function name="nha:convertOmschrijvingBeperkingen" as="xs:string">
+        <xsl:param name="omschrijvingBeperkingen" as="xs:string"/>
+        <xsl:variable name="zorgdrager" as="xs:string" select="if ($zorgdrager-geautoriseerde-naam ne '') then $zorgdrager-geautoriseerde-naam else '*zorgdrager-ontbreekt*'"/>
+        <xsl:choose>
+            <xsl:when test="matches($omschrijvingBeperkingen, '^publiek$', 'i')"><xsl:text>tag_{$zorgdrager}_publiek</xsl:text></xsl:when>
+            <xsl:when test="matches($omschrijvingBeperkingen, '^publiek_metadata$', 'i')"><xsl:text>tag_{$zorgdrager}_publiek_metadata</xsl:text></xsl:when>
+            <xsl:when test="matches($omschrijvingBeperkingen, '^intern$', 'i')"><xsl:text>tag_{$zorgdrager}_Intern</xsl:text></xsl:when>
+            <xsl:when test="matches($omschrijvingBeperkingen, '^intern(_\S+)$', 'i')"><xsl:text>tag_{$zorgdrager}_intern{replace($omschrijvingBeperkingen, '^.+(_[^_]+)$', '$1')=>lower-case()}</xsl:text></xsl:when>
+            <xsl:otherwise>
+                <!-- Error, just copy -->
+                <xsl:value-of select="$omschrijvingBeperkingen"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:function>
+    
+    
     
     <xsl:template match="/" mode="topx2xip">
         <xsl:try>
@@ -111,10 +146,7 @@
             <xsl:if test="$collection-status ne 'new'"><CollectionRef><xsl:value-of select="$CollectionRef"/></CollectionRef></xsl:if>
             <CollectionCode><xsl:apply-templates select="$identificatiekenmerk"/></CollectionCode>
             <Title><xsl:apply-templates select="$naam" mode="title"/></Title>
-            <xsl:if test="normalize-space($omschrijvingBeperkingen) ne ''">
-                <!-- Do not generate an empty value for SecurityTag. The SIP Creator will supply the value of "open" regardless of its parameter settings. -->
-                <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
-            </xsl:if>
+            <xsl:copy-of select="nha:defineSecurityTag($omschrijvingBeperkingen)"/>
             <Metadata schemaURI="http://www.nationaalarchief.nl/ToPX/v2.3"><xsl:copy-of select="$topxDoc"/></Metadata>
         </Collection>
     </xsl:template>
@@ -133,10 +165,7 @@
             <CatalogueReference><xsl:apply-templates select="$identificatiekenmerk"/></CatalogueReference>
             <ScopeAndContent><xsl:apply-templates select="$omschrijving"/></ScopeAndContent>
             <Title><xsl:apply-templates select="$naam" mode="title"/></Title>
-            <xsl:if test="normalize-space($omschrijvingBeperkingen) ne ''">
-                <!-- Do not generate an empty value for SecurityTag. The SIP Creator will supply the value of "open" regardless of its parameter settings. -->
-                <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
-            </xsl:if>
+            <xsl:copy-of select="nha:defineSecurityTag($omschrijvingBeperkingen)"/>
             <Metadata schemaURI="http://www.nationaalarchief.nl/ToPX/v2.3"><xsl:copy-of select="$topxDoc"/></Metadata>
         </DeliverableUnit>
     </xsl:template>
@@ -176,20 +205,6 @@
                 <xsl:variable name="part2" as="xs:string" select="substring($text, $part2-start-offset)"/>
                 <xsl:comment>Title truncated; original title:&#10;{$text}</xsl:comment>
                 <xsl:value-of select="$part1 || $ellipsisstring || $part2"/>                
-            </xsl:otherwise>
-        </xsl:choose>
-    </xsl:template>
-    
-    <xsl:template match="topx:omschrijvingBeperkingen">
-        <xsl:variable name="zorgdrager" as="xs:string" select="if ($zorgdrager-geautoriseerde-naam ne '') then $zorgdrager-geautoriseerde-naam else '*zorgdrager-ontbreekt*'"/>
-        <xsl:choose>
-            <xsl:when test="matches(., '^publiek$', 'i')"><xsl:text>tag_{$zorgdrager}_publiek</xsl:text></xsl:when>
-            <xsl:when test="matches(., '^publiek_metadata$', 'i')"><xsl:text>tag_{$zorgdrager}_publiek_metadata</xsl:text></xsl:when>
-            <xsl:when test="matches(., '^intern$', 'i')"><xsl:text>tag_{$zorgdrager}_Intern</xsl:text></xsl:when>
-            <xsl:when test="matches(., '^intern(_\S+)$', 'i')"><xsl:text>tag_{$zorgdrager}_intern{replace(., '^.+(_[^_]+)$', '$1')=>lower-case()}</xsl:text></xsl:when>
-            <xsl:otherwise>
-                <!-- Error, just copy -->
-                <xsl:value-of select="."/>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
