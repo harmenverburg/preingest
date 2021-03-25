@@ -102,14 +102,17 @@
         
         <xsl:variable name="identificatiekenmerk" as="element(topx:identificatiekenmerk)" select="$topxDoc/*/topx:aggregatie/topx:identificatiekenmerk"/>
         <xsl:variable name="naam" as="element(topx:naam)" select="$topxDoc/*/topx:aggregatie/topx:naam"/>
-        <xsl:variable name="omschrijvingBeperkingen" as="element(topx:omschrijvingBeperkingen)" select="$topxDoc/*/topx:aggregatie/topx:openbaarheid/topx:omschrijvingBeperkingen"/>
+        <xsl:variable name="omschrijvingBeperkingen" as="element(topx:omschrijvingBeperkingen)?" select="$topxDoc/*/topx:aggregatie/topx:openbaarheid/topx:omschrijvingBeperkingen"/>
         
         <!-- Possible values for status attribute (according to XIP-V4.xsd): new, same, changed, deleted, restored. Of course, in our case, only new and same apply. -->
         <Collection status="{$collection-status}">
             <xsl:if test="$collection-status ne 'new'"><CollectionRef><xsl:value-of select="$CollectionRef"/></CollectionRef></xsl:if>
             <CollectionCode><xsl:apply-templates select="$identificatiekenmerk"/></CollectionCode>
             <Title><xsl:apply-templates select="$naam" mode="title"/></Title>
-            <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
+            <xsl:if test="normalize-space($omschrijvingBeperkingen) ne ''">
+                <!-- Do not generate an empty value for SecurityTag. The SIP Creator will supply the value of "open" regardless of its parameter settings. -->
+                <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
+            </xsl:if>
             <Metadata schemaURI="http://www.nationaalarchief.nl/ToPX/v2.3"><xsl:copy-of select="$topxDoc"/></Metadata>
         </Collection>
     </xsl:template>
@@ -119,7 +122,7 @@
         
         <xsl:variable name="identificatiekenmerk" as="element(topx:identificatiekenmerk)" select="$topxDoc/*/topx:aggregatie/topx:identificatiekenmerk"/>
         <xsl:variable name="naam" as="element(topx:naam)" select="$topxDoc/*/topx:aggregatie/topx:naam"/>
-        <xsl:variable name="omschrijvingBeperkingen" as="element(topx:omschrijvingBeperkingen)" select="$topxDoc/*/topx:aggregatie/topx:openbaarheid/topx:omschrijvingBeperkingen"/>        
+        <xsl:variable name="omschrijvingBeperkingen" as="element(topx:omschrijvingBeperkingen)?" select="$topxDoc/*/topx:aggregatie/topx:openbaarheid/topx:omschrijvingBeperkingen"/>        
         <xsl:variable name="DigitalSurrogate" as="xs:string" select="'false'"/>
         <xsl:variable name="omschrijving" as="element(topx:omschrijving)?" select="$topxDoc/*/topx:aggregatie/topx:omschrijving"/>
         
@@ -128,7 +131,10 @@
             <CatalogueReference><xsl:apply-templates select="$identificatiekenmerk"/></CatalogueReference>
             <ScopeAndContent><xsl:apply-templates select="$omschrijving"/></ScopeAndContent>
             <Title><xsl:apply-templates select="$naam" mode="title"/></Title>
-            <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
+            <xsl:if test="normalize-space($omschrijvingBeperkingen) ne ''">
+                <!-- Do not generate an empty value for SecurityTag. The SIP Creator will supply the value of "open" regardless of its parameter settings. -->
+                <SecurityTag><xsl:apply-templates select="$omschrijvingBeperkingen"/></SecurityTag>
+            </xsl:if>
             <Metadata schemaURI="http://www.nationaalarchief.nl/ToPX/v2.3"><xsl:copy-of select="$topxDoc"/></Metadata>
         </DeliverableUnit>
     </xsl:template>
