@@ -45,14 +45,20 @@
     <xsl:function name="nha:defineSecurityTag" as="element(xip:SecurityTag)?">
         <xsl:param name="omschrijvingBeperkingen" as="element(topx:omschrijvingBeperkingen)?"/>
         <!-- Make sure not to generate an empty value for SecurityTag. The SIP Creator would then supply the value of "open" regardless of its parameter settings. -->
+        <xsl:variable name="settingsValue" as="xs:string" select="normalize-space($SecurityTagFromSettings)"/>
+        <xsl:variable name="sidecarValue" as="xs:string" select="normalize-space($omschrijvingBeperkingen)"/>
         <xsl:choose>
-            <xsl:when test="normalize-space($omschrijvingBeperkingen) ne ''">
+            <xsl:when test="$settingsValue = ('open', 'closed')">
+                <SecurityTag><xsl:value-of select="$settingsValue"/></SecurityTag>
+            </xsl:when>
+            <xsl:when test="$sidecarValue ne ''">
                 <SecurityTag><xsl:value-of select="nha:convertOmschrijvingBeperkingen($omschrijvingBeperkingen)"/></SecurityTag>
             </xsl:when>
-            <xsl:when test="normalize-space($SecurityTagFromSettings) ne ''">
+            <xsl:when test="$settingsValue ne ''">
                 <SecurityTag><xsl:value-of select="nha:convertOmschrijvingBeperkingen($SecurityTagFromSettings)"/></SecurityTag>
             </xsl:when>
             <xsl:otherwise>
+                <xsl:message>No omschrijvingBeperkingen found in sidecar file and also no value for setting; the effect will be that the security setting is "open"</xsl:message>
                 <xsl:sequence select="()"></xsl:sequence>
             </xsl:otherwise>
         </xsl:choose>
@@ -71,9 +77,7 @@
                 <xsl:value-of select="$omschrijvingBeperkingen"/>
             </xsl:otherwise>
         </xsl:choose>
-    </xsl:function>
-    
-    
+    </xsl:function>    
     
     <xsl:template match="/" mode="topx2xip">
         <xsl:try>
