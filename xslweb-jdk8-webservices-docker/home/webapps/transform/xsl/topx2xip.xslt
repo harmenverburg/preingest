@@ -33,7 +33,7 @@
         <!-- Functie saxon:discard-document() is niet beschikbaar in de Saxon Home-editie. Het kan enorm op geheugen besparen als er heel veel XML-files zijn
             (en dit script vanuit een aanroepend script wordt gebruikt om hele directory-trees te verwerken).
             
-             N.B. bij de home-editie geeft function-avaible toch true() terug, dus onderstaande werkt niet:
+             N.B. bij de home-editie geeft function-available toch true() terug, dus onderstaande werkt niet:
              
              <xsl:sequence select="if (function-available('saxon:discard-document')) then saxon:discard-document($doc) else $doc"/>
              
@@ -58,8 +58,8 @@
                 <SecurityTag><xsl:value-of select="nha:convertOmschrijvingBeperkingen($SecurityTagFromSettings)"/></SecurityTag>
             </xsl:when>
             <xsl:otherwise>
-                <xsl:message>No omschrijvingBeperkingen found in sidecar file and also no value for setting; the effect will be that the security setting is "open"</xsl:message>
-                <xsl:sequence select="()"></xsl:sequence>
+                <xsl:message>No omschrijvingBeperkingen found in sidecar file and also no value for setting; security tag is set to "closed"</xsl:message>
+                <SecurityTag>closed</SecurityTag>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:function>

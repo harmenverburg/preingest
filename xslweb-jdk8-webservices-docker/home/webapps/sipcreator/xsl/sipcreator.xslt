@@ -23,14 +23,13 @@
         <xsl:variable name="guid" as="xs:string" select="tokenize(/*/req:path, '/')[2]"/>
         <xsl:variable name="archive-folder-raw" as="xs:string" select="tokenize(/*/req:path, '/')[3]"/>
         <xsl:variable name="CollectionRef" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'CollectionRef']/req:value)"/>
-        <xsl:variable name="SecurityTag" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'SecurityTag']/req:value)"/>
         <xsl:variable name="CollectionTitle" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'CollectionTitle']/req:value)"/>
         <xsl:variable name="CollectionCode" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'CollectionCode']/req:value)"/>        
 
         <xsl:variable name="sipcreator-script" as="xs:string" select="$config:webapp-dir || '/' || $sipcreator-shellscript"/>
         <xsl:variable name="archive-folder" as="xs:string" select="encode-for-uri($archive-folder-raw)"/>
         <xsl:variable name="inputdir" as="xs:string" select="file:path-to-native($data-uri-prefix || $guid || '/' || $archive-folder)"/>
-        <xsl:variable name="scriptargs" as="xs:string+" select="($sipcreator-folder, $inputdir, $guid, $SecurityTag, $CollectionTitle, $CollectionCode, $CollectionRef)"/>
+        <xsl:variable name="scriptargs" as="xs:string+" select="($sipcreator-folder, $inputdir, $guid, $CollectionTitle, $CollectionCode, $CollectionRef)"/>
         
         <result>
             <exit-status><xsl:sequence select="external:exec-external( $sipcreator-script, $scriptargs, xs:long(-1), false(), (), false())"/></exit-status>
