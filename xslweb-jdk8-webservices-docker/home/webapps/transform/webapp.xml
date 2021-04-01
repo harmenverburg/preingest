@@ -27,5 +27,15 @@
     <parameter name="result-extension" type="xs:string">
       <value>.xip</value>
     </parameter>
+    <parameter name="prewash-stylesheets-dir" type="xs:string">
+      <!-- The subfolder of the xsl folder where prewash-specific stylesheets are stored. In a Docker enviroment,
+           this folder may have been mapped to a location outside docker.
+      -->
+      <value>prewash</value>
+    </parameter>
+    <parameter name="basename-prewash-default-stylesheet" type="xs:string">
+      <!-- Stylesheel to be used if a specific prewash stylesheet is not found or not well-formed. --> 
+      <value>prewash-identity-transform</value>
+    </parameter>
   </parameters>
 </webapp>
