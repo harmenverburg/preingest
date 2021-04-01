@@ -93,8 +93,6 @@ As saving the settings is basically an action too, doing so will change the over
   
   To support both test and production environments, this needs to be running twice:
 
-  - :warning: [this is yet untested](https://github.com/noord-hollandsarchief/preingest/issues/99).
-  
   - Install it using the Client Installer 5.10 wizard. You'll need a URL like `https://eu.preservica.com/sdb` and can
     likely ignore a warning saying _"Connection to Preservica has been re-directed. Please check the URL and re-try.
     This often happens if http is used instead of https"_.
