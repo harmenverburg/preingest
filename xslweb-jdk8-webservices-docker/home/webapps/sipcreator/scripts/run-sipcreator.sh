@@ -13,10 +13,9 @@ INPUTFOLDER_BASE=$(basename "$INPUTFOLDER")
 OUTPUTFOLDER_BASE=sipresult
 OUTPUTFOLDER=$INPUTFOLDER/../$OUTPUTFOLDER_BASE
 GUID=$3
-SECURITYTAG=$4
-COLTITLE=$5
-COLCODE=$6
-COLLECTIONREF=$7
+COLTITLE=$4
+COLCODE=$5
+COLLECTIONREF=$6
 
 if [ -d "$OUTPUTFOLDER" ]
 then
@@ -154,7 +153,7 @@ function doIt {
             -coltitle "$COLTITLE" \
             -colcode "$COLCODE" \
             -status NEW \
-            -securitytag "$SECURITYTAG" \
+            -securitytag closed \
             -sha512 \
             -export \
             -output "$OUTPUTFOLDER"
@@ -164,7 +163,7 @@ function doIt {
             -input "$INPUTFOLDER" \
             -status SAME \
             -colref "$COLLECTIONREF" \
-            -securitytag "$SECURITYTAG" \
+            -securitytag closed \
             -sha512 \
             -export \
             -output "$OUTPUTFOLDER"
