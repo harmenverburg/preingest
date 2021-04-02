@@ -19,7 +19,7 @@
          Anything else is nothing more than defining normal XSLT processing in order to apply the prewash fixes.
     -->
     
-    <xsl:import href="prewash-identity-transform.xslt"/>
+    <xsl:import href="../prewash-identity-transform.xslt"/>
     
     <!-- This rule changes the erroneous archive name "Provincie Noord Holland" into the correct name "Provincie Noord-Holland".
          It applies the rule only if the incorrect string is found, and only on the Archief aggregatieniveau.
