@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-    xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:err="http://www.w3.org/2005/xqt-errors"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:err="http://www.w3.org/2005/xqt-errors"
     xmlns:req="http://www.armatiek.com/xslweb/request"
-    xmlns:config="http://www.armatiek.com/xslweb/configuration"
     xmlns:nha="http://noord-hollandsarchief.nl/namespaces/1.0"
     exclude-result-prefixes="#all"
     expand-text="yes"
@@ -11,6 +11,7 @@
     <xsl:mode on-no-match="shallow-copy"/>
     
     <xsl:param name="data-uri-prefix" as="xs:string" required="yes"/>
+    <xsl:param name="prewash-stylesheet" as="xs:string" select="''"/>
     
     <xsl:template match="/">
         <xsl:try>
@@ -29,6 +30,7 @@
         
         <xsl:variable name="topxDoc" as="document-node()" select="doc($absuri)"/>
         
+        <xsl:comment>Document converted by prewash stylesheet "{$prewash-stylesheet}" on {current-dateTime()}</xsl:comment>
         <xsl:apply-templates select="$topxDoc/*"/>
     </xsl:template>
 </xsl:stylesheet>

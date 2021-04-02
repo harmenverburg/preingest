@@ -26,24 +26,24 @@
   <xsl:variable name="reluri" as="xs:string" select="replace(/*/req:path, '^/[^/]+/(.*)$', '$1')"/>
   
   <xsl:function name="nha:get-prewash-path" as="xs:string">
+    <xsl:param name="optional-dir" as="xs:string?"/>
     <xsl:param name="basename" as="xs:string"/>
-    <xsl:value-of select="$prewash-stylesheets-dir || '/' || $basename || '.xslt'"/>
+    
+    <xsl:variable name="path" as="xs:string" select="if ($optional-dir) then $optional-dir || '/' || $basename else $basename"/>
+    <xsl:value-of select="$path || '.xslt'"/>
   </xsl:function>
   
   <xsl:function name="nha:get-prewash-stylesheet" as="xs:string">
-    <xsl:param name="reluri" as="xs:string"/>
-    <!-- $reluri is something like "c4e043af-307f-497d-72b9-f1518ef771aa/ProvincieNoordHolland/path/to/somefile.docx.metadata". We isolate the path after the first uuid
-         and check if there is an XSLT file with that name.
-    -->
-    <xsl:variable name="basefilename" as="xs:string" select="tokenize($reluri, '/')[2]"/>
-    <xsl:variable name="xsltpath" as="xs:string" select="nha:get-prewash-path($basefilename)"/>
-
+    <xsl:param name="prewash-from-request" as="xs:string"/>
+    
+    <xsl:variable name="xsltpath" as="xs:string" select="nha:get-prewash-path(encode-for-uri($prewash-stylesheets-dir), encode-for-uri($prewash-from-request))"/>
     <xsl:choose>
       <xsl:when test="doc-available($xsltpath)">
         <xsl:value-of select="$xsltpath"/>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:variable name="defaultpath" as="xs:string" select="nha:get-prewash-path($basename-prewash-default-stylesheet)"/>
+        <xsl:variable name="defaultpath" as="xs:string" select="nha:get-prewash-path((), $basename-prewash-default-stylesheet)"/>
+        <xsl:sequence select="log:log('ERROR', 'Could not parse stylesheet &quot;' || $xsltpath || '&quot; - using &quot;' || $defaultpath || '&quot; instead')"/>  
         <xsl:value-of select="$defaultpath"/>
       </xsl:otherwise>
     </xsl:choose>
@@ -58,10 +58,17 @@
   </xsl:template>
   
   <xsl:template match="/req:request[starts-with(req:path, $PREWASH)]">
-    <xsl:variable name="prewash-stylesheet" as="xs:string" select="nha:get-prewash-stylesheet($reluri)"/>
-    <xsl:sequence select="log:log('INFO', 'Applying prewash stylesheet ' || $prewash-stylesheet)"/>
+    <xsl:variable name="prewash-from-request" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'prewash']/req:value)"/>
+    <xsl:variable name="prewash-stylesheet" as="xs:string" select="nha:get-prewash-stylesheet($prewash-from-request)"/>
+    
+    <xsl:sequence select="log:log('INFO', 'Applying prewash stylesheet &quot;' || $prewash-stylesheet || '&quot;')"/>
+    
     <pipeline:pipeline>
-      <pipeline:transformer name="topx2xip" xsl-path="{$prewash-stylesheet}"/>
+      <pipeline:transformer name="topx2xip" xsl-path="{$prewash-stylesheet}">
+        <pipeline:parameter name="prewash-stylesheet" type="xs:string">
+          <pipeline:value>{$prewash-stylesheet}</pipeline:value>
+        </pipeline:parameter>
+      </pipeline:transformer>
       <pipeline:transformer name="xml-response" xsl-path="xml-response.xslt"/>
     </pipeline:pipeline>
   </xsl:template>
