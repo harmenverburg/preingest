@@ -33,3 +33,5 @@ docker-compose-pieter.yml
 docker-compose.override.yml
 
 docker-compose.dev.yml
+
+xslweb-jdk8-webservices-docker/home/webapps/transform/xsl/prewash/sample-prewash-stylesheet.xslt
