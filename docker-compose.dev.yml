@@ -19,6 +19,7 @@ services:
       - "${SIPCREATORFOLDER}:/nha/SIP_Creator"
       - "${TOMCATLOGFOLDER}:/nha/tomcat-logs"
       - "./xslweb-jdk8-webservices-docker/home:/nha/xslweb/home"
+      - "${XSLWEBPREWASHFOLDER}:/nha/xslweb/home/webapps/transform/xsl/prewash"
   droid:
     # image: "noordhollandsarchief/droidvalidationwebapi:development"
     build: droid-validation

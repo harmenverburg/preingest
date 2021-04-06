@@ -19,6 +19,7 @@ services:
         - "${DATAFOLDER}:/data"
         - "${SIPCREATORFOLDER}:/nha/SIP_Creator"
         - "${TOMCATLOGFOLDER}:/nha/tomcat-logs"
+        - "${XSLWEBPREWASHFOLDER}:/nha/xslweb/home/webapps/transform/xsl/prewash"
     expose:
         - "8080" 
     environment:
