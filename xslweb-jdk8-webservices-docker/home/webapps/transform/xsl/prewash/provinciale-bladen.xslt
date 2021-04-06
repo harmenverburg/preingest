@@ -16,7 +16,7 @@
          On the archive level, the name may have a spelling error, which is corrected  here.
     -->
     
-    <xsl:import href="../prewash-identity-transform.xslt"/>
+    <xsl:import href="_prewash-identity-transform.xslt"/>
     
     <xsl:template match="aggregatie/naam[../aggregatieniveau eq 'Archief' and . eq 'Provincie Noord Holland']/text()">
         <xsl:text>Provincie Noord-Holland</xsl:text>
