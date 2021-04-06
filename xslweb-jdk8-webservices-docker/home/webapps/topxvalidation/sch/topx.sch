@@ -55,7 +55,7 @@
         <rule context="topx:algoritme">
             <p>Controleer de tekstuele inhoud van element "algoritme"</p>
            <assert test="matches(., '^(MD5|SHA1|SHA256|SHA512)$')"
-               >De waarde van het "algoritme"-gegeven in de ToPX-metadata is niet MD5, SHA1, SHA256, of SHA512</assert>
+               >De waarde van het "algoritme"-gegeven in de ToPX-metadata is niet MD5, SHA1, SHA256, of SHA512 maar "<value-of select="."/>"</assert>
         </rule>
     </pattern>
 </schema>
