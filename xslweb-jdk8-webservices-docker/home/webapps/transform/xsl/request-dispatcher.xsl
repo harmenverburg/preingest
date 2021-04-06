@@ -5,8 +5,8 @@
   xmlns:config="http://www.armatiek.com/xslweb/configuration"
   xmlns:req="http://www.armatiek.com/xslweb/request"
   xmlns:log="http://www.armatiek.com/xslweb/functions/log"
-  xmlns:err="http://expath.org/ns/error"
   xmlns:nha="http://noord-hollandsarchief.nl/namespaces/1.0"
+  xmlns:err="http://www.w3.org/2005/xqt-errors"
   exclude-result-prefixes="#all" version="3.0" expand-text="yes">
   
   <xsl:param name="config:webapp-dir" required="yes"/>
@@ -43,8 +43,9 @@
       </xsl:when>
       <xsl:otherwise>
         <xsl:variable name="defaultpath" as="xs:string" select="nha:get-prewash-path((), $basename-prewash-default-stylesheet)"/>
-        <xsl:sequence select="log:log('ERROR', 'Could not parse stylesheet &quot;' || $xsltpath || '&quot; - using &quot;' || $defaultpath || '&quot; instead')"/>  
-        <xsl:value-of select="$defaultpath"/>
+        <xsl:variable name="errormessage" as="xs:string" select="'Could not open or parse prewash stylesheet &quot;' || $xsltpath || '&quot;'"/>
+        <xsl:sequence select="log:log('ERROR', $errormessage)"/>
+        <xsl:sequence select="error(xs:QName('nha:invalide-prewash-stylesheet'), $errormessage)"/> 
       </xsl:otherwise>
     </xsl:choose>
   </xsl:function>
@@ -58,18 +59,32 @@
   </xsl:template>
   
   <xsl:template match="/req:request[starts-with(req:path, $PREWASH)]">
-    <xsl:variable name="prewash-from-request" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'prewash']/req:value)"/>
-    <xsl:variable name="prewash-stylesheet" as="xs:string" select="nha:get-prewash-stylesheet($prewash-from-request)"/>
-    
-    <xsl:sequence select="log:log('INFO', 'Applying prewash stylesheet &quot;' || $prewash-stylesheet || '&quot;')"/>
-    
     <pipeline:pipeline>
-      <pipeline:transformer name="topx2xip" xsl-path="{$prewash-stylesheet}">
-        <pipeline:parameter name="prewash-stylesheet" type="xs:string">
-          <pipeline:value>{$prewash-stylesheet}</pipeline:value>
-        </pipeline:parameter>
-      </pipeline:transformer>
-      <pipeline:transformer name="xml-response" xsl-path="xml-response.xslt"/>
+      <xsl:try>
+        <xsl:variable name="prewash-from-request" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'prewash']/req:value)"/>
+        <xsl:variable name="prewash-stylesheet" as="xs:string" select="nha:get-prewash-stylesheet($prewash-from-request)"/>
+        
+        <xsl:sequence select="log:log('INFO', 'Applying prewash stylesheet &quot;' || $prewash-stylesheet || '&quot;')"/>
+        
+        <pipeline:transformer name="prewash" xsl-path="{$prewash-stylesheet}">
+          <pipeline:parameter name="prewash-stylesheet" type="xs:string">
+            <pipeline:value>{$prewash-stylesheet}</pipeline:value>
+          </pipeline:parameter>
+        </pipeline:transformer>
+        <pipeline:transformer name="xml-response" xsl-path="xml-response.xslt"/>
+
+        <xsl:catch>
+          <xsl:sequence select="log:log('INFO', 'An error occurred while trying to apply the prewash stylesheet')"/>
+          <pipeline:transformer name="prewash-error" xsl-path="error.xslt">
+            <pipeline:parameter name="message" type="xs:string">
+              <pipeline:value>{$err:description}</pipeline:value>
+            </pipeline:parameter>
+            <pipeline:parameter name="error-code" type="xs:string">
+              <pipeline:value>{$err:code}</pipeline:value>
+            </pipeline:parameter>
+          </pipeline:transformer>
+        </xsl:catch>
+      </xsl:try>
     </pipeline:pipeline>
   </xsl:template>
   
