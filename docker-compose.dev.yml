@@ -1,0 +1,39 @@
+# Adjust as needed to build the images locally, and use with:
+#   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Or copy into a file named docker-compose.override.yml to use automatically with just:
+#   docker-compose up
+# When images already exist (like after running `docker-compose pull` or when built earlier),
+# add `--build` to force a new build.
+
+version: "3.8"
+
+services:
+  clamav:
+    # entrypoint: ["echo", "Service clamav disabled"]
+  xslweb:
+    # image: "noordhollandsarchief/xslweb:development"
+    build: xslweb-jdk8-webservices-docker
+    # To use Docker as the Tomcat/XSLWeb container, but override with the local sources for quick development
+    volumes:
+      - "${DATAFOLDER}:/data"
+      - "${SIPCREATORFOLDER}:/nha/SIP_Creator"
+      - "${TOMCATLOGFOLDER}:/nha/tomcat-logs"
+      - "./xslweb-jdk8-webservices-docker/home:/nha/xslweb/home"
+  droid:
+    # image: "noordhollandsarchief/droidvalidationwebapi:development"
+    build: droid-validation
+  preingest:
+    # image: "noordhollandsarchief/preingestwebapi:development"
+    build:
+      context: ./preingest
+      dockerfile: Noord.HollandsArchief.Pre.Ingest.WebApi/Dockerfile
+  workerservice:
+    # image: "nhapreingest/noordhollandsarchiefpreingestworkerservice:development"
+    build:
+      context: ./preingest
+      dockerfile: Noord.HollandsArchief.Pre.Ingest.WorkerService/Dockerfile      
+  frontend:
+    # image: "noordhollandsarchief/preingest-frontend:development"
+    build:
+      # Assume the Git repository was cloned in this folder:
+      context: ../preingest-frontend
