@@ -19,7 +19,7 @@
     
     <xsl:param name="data-uri-prefix" as="xs:string" required="yes"/>
     
-    <!-- The maximum size of a Title in XIP (currently, we don't know the real maximum): -->
+    <!-- The maximum size of a Title in XIP: -->
     <xsl:param name="max-length-of-title" as="xs:integer" select="255"/>
     
     <xsl:variable name="zorgdrager-geautoriseerde-naam" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'Owner']/req:value)"/>
