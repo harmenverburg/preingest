@@ -61,7 +61,7 @@
   <xsl:template match="/req:request[starts-with(req:path, $PREWASH)]">
     <pipeline:pipeline>
       <xsl:try>
-        <xsl:variable name="prewash-from-request" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'prewash']/req:value)"/>
+        <xsl:variable name="prewash-from-request" as="xs:string" select="string(/*/req:parameters/req:parameter[@name eq 'Prewash']/req:value)"/>
         <xsl:variable name="prewash-stylesheet" as="xs:string" select="nha:get-prewash-stylesheet($prewash-from-request)"/>
         
         <xsl:sequence select="log:log('INFO', 'Applying prewash stylesheet &quot;' || $prewash-stylesheet || '&quot;')"/>
