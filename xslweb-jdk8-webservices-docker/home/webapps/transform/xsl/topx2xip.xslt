@@ -149,7 +149,7 @@
         <Collection status="{$collection-status}">
             <xsl:if test="$collection-status ne 'new'"><CollectionRef><xsl:value-of select="$CollectionRef"/></CollectionRef></xsl:if>
             <CollectionCode><xsl:apply-templates select="$identificatiekenmerk"/></CollectionCode>
-            <Title><xsl:apply-templates select="$naam" mode="title"/></Title>
+            <xsl:apply-templates select="$naam" mode="title"/>
             <xsl:copy-of select="nha:defineSecurityTag($omschrijvingBeperkingen)"/>
             <Metadata schemaURI="http://www.nationaalarchief.nl/ToPX/v2.3"><xsl:copy-of select="$topxDoc"/></Metadata>
         </Collection>
@@ -168,7 +168,7 @@
             <DigitalSurrogate>{$DigitalSurrogate}</DigitalSurrogate>
             <CatalogueReference><xsl:apply-templates select="$identificatiekenmerk"/></CatalogueReference>
             <ScopeAndContent><xsl:apply-templates select="$omschrijving"/></ScopeAndContent>
-            <Title><xsl:apply-templates select="$naam" mode="title"/></Title>
+            <xsl:apply-templates select="$naam" mode="title"/>
             <xsl:copy-of select="nha:defineSecurityTag($omschrijvingBeperkingen)"/>
             <Metadata schemaURI="http://www.nationaalarchief.nl/ToPX/v2.3"><xsl:copy-of select="$topxDoc"/></Metadata>
         </DeliverableUnit>
@@ -190,14 +190,16 @@
                 <FixityAlgorithmRef><xsl:apply-templates select="$algoritme"/></FixityAlgorithmRef>
                 <FixityValue><xsl:apply-templates select="$algoritme-waarde"/></FixityValue>
             </FixityInfo>
-            <Title><xsl:apply-templates select="$naam" mode="title"/></Title>
+            <xsl:apply-templates select="$naam" mode="title"/>
         </File>
     </xsl:template>
 
     <xsl:template match="topx:naam" mode="title">
         <xsl:variable name="text" select="." as="xs:string"/>
         <xsl:choose>
-            <xsl:when test="string-length($text) le $max-length-of-title"><xsl:value-of select="$text"/></xsl:when>
+            <xsl:when test="string-length($text) le $max-length-of-title">
+                <Title><xsl:value-of select="$text"/></Title>
+            </xsl:when>
             <xsl:otherwise>
                 <!-- Shorten the title by taking the first and the last part and inserting " ... " in between. -->
                 <xsl:variable name="ellipsisstring" as="xs:string" select="' ... '"/>
@@ -207,8 +209,9 @@
                 
                 <xsl:variable name="part1" as="xs:string" select="substring($text, 1, $part1-end-offst)"/>
                 <xsl:variable name="part2" as="xs:string" select="substring($text, $part2-start-offset)"/>
-                <xsl:comment>Title truncated; original title:&#10;{$text}</xsl:comment>
-                <xsl:value-of select="$part1 || $ellipsisstring || $part2"/>                
+                
+                <xsl:comment>Title truncated; original title: {$text}</xsl:comment>
+                <Title><xsl:value-of select="$part1 || $ellipsisstring || $part2"/> </Title>               
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
