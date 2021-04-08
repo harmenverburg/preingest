@@ -111,6 +111,19 @@
         }
       }
     },
+    "/api/Output/prewashlist": {
+      "get": {
+        "tags": [
+          "Output"
+        ],
+        "operationId": "Get a list of files from prewash folder.",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/Preingest/check": {
       "get": {
         "tags": [
@@ -573,6 +586,30 @@
           "Preingest"
         ],
         "operationId": "Transfer *.sip.zip for transfer agent",
+        "parameters": [
+          {
+            "name": "guid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Preingest/prewash/{guid}": {
+      "post": {
+        "tags": [
+          "Preingest"
+        ],
+        "operationId": "Prewash .metadata files.",
         "parameters": [
           {
             "name": "guid",
@@ -1133,6 +1170,10 @@
           "collectionRef": {
             "type": "string",
             "nullable": true
+          },
+          "prewash": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1170,7 +1211,9 @@
           "SidecarValidationHandler",
           "SipCreatorHandler",
           "TransformationHandler",
-          "SipZipHandler"
+          "SipZipMetadataValidationHandler",
+          "SipZipCopyHandler",
+          "PrewashHandler"
         ],
         "type": "string"
       }

@@ -38,7 +38,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.OpenAPIService
             });
         }
 
-        public async Task ProcessResponseAsync(System.Net.Http.HttpClient httpClient, System.Net.Http.HttpResponseMessage response)
+        public async Task ProcessResponseAsync(System.Net.Http.HttpClient httpClient, System.Net.Http.HttpResponseMessage response, System.Threading.CancellationToken token)
         {
             OnTrigger(new CallEvents { ResponseMessage = await response.Content.ReadAsStringAsync() });
         }

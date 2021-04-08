@@ -26,7 +26,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Service
         SipCreatorHandler,
         TransformationHandler,
         SipZipMetadataValidationHandler,
-        SipZipCopyHandler
+        SipZipCopyHandler,
+        PrewashHandler
     }
 
 

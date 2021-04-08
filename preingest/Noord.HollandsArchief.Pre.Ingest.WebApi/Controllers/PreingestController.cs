@@ -13,6 +13,7 @@ using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.EventHub;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Handlers;
 using Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler;
+using Noord.HollandsArchief.Pre.Ingest.WebApi.Utilities;
 
 namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
 {
@@ -40,8 +41,16 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             using (HealthCheckHandler handler = new HealthCheckHandler(_settings, _eventHub, _preingestCollection))
             {
                 handler.Execute();
+
+                System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                System.Diagnostics.FileVersionInfo fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+                DateTime buildDate =  LinkerHelper.GetLinkerTimestampUtc(assembly);
+
                 result = new JsonResult(new
                 {
+                    ProductName = fvi.ProductName,
+                    ProductVersion = fvi.ProductVersion,
+                    BuildDateTime = DateTimeOffset.FromFileTime (buildDate.ToFileTime()),
                     Title = "Underlying services health check.",
                     CreationTimestamp = DateTimeOffset.Now,
                     ActionName = typeof(HealthCheckHandler).Name,
@@ -682,5 +691,39 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             _logger.LogInformation("Exit SipZipTransfer.");
             return new JsonResult(new { Message = String.Format("Preparation is started."), SessionId = guid, ActionId = processId });
         }
+
+        [HttpPost("prewash/{guid}", Name = "Prewash .metadata files.", Order = 19)]
+        public IActionResult PreWashMetadata(Guid guid)
+        {
+            if (guid == Guid.Empty)
+                return Problem("Empty GUID is invalid.");
+
+            _logger.LogInformation("Enter PreWashMetadata.");
+
+            //database process id
+            Guid processId = Guid.NewGuid();
+            try
+            {
+                Task.Run(() =>
+                {
+                    using (PrewashHandler handler = new PrewashHandler(_settings, _eventHub, _preingestCollection))
+                    {
+                        handler.Logger = _logger;
+                        handler.SetSessionGuid(guid);
+                        processId = handler.AddProcessAction(processId, typeof(PrewashHandler).Name, String.Format("Prewash metadata files: folder {0}", guid), String.Concat(typeof(PrewashHandler).Name, ".json"));
+                        _logger.LogInformation("Execute handler ({0}) with GUID {1}.", typeof(PrewashHandler).Name, guid.ToString());
+                        handler.Execute();
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "An exception was thrown in {0}: '{1}'.", typeof(PrewashHandler).Name, e.Message);
+                return ValidationProblem(e.Message, typeof(PrewashHandler).Name);
+            }
+            _logger.LogInformation("Exit PreWashMetadata.");
+            return new JsonResult(new { Message = String.Format("Prewash started."), SessionId = guid, ActionId = processId });
+        }
+
     }
 }

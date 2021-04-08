@@ -152,5 +152,19 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Controllers
             return new PhysicalFileResult(fileinfo.FullName, contentType);
         }
 
+        [HttpGet("prewashlist", Name = "Get a list of files from prewash folder.", Order = 4)]
+        public IActionResult GetPreWash()
+        {
+            if (String.IsNullOrEmpty(_settings.PreWashFolder))
+                return Problem("Prewash folder is not set in appsettings.");
+
+            if (!Directory.Exists(_settings.PreWashFolder))
+                return Problem(String.Format("Prewash folder not found (folder '{0}')!", _settings.PreWashFolder));
+
+            var prewashFiles = new DirectoryInfo(_settings.PreWashFolder).GetFiles().Select(item => new { Filename = item.Name, Name = item.Name.Remove(item.Name.Length - item.Extension.Length, item.Extension.Length) }).ToArray();
+
+            return new JsonResult(prewashFiles);
+        }
+
     }
 }

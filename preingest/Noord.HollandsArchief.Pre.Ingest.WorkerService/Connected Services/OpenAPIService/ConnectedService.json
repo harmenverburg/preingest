@@ -1,6 +1,6 @@
 ﻿{
   "ProviderId": "Unchase.OpenAPI.ConnectedService",
-  "Version": "1.5.15.0",
+  "Version": "1.5.17.0",
   "GettingStartedDocument": {
     "Uri": "https://github.com/unchase/Unchase.OpenAPI.Connectedservice/"
   },
@@ -73,6 +73,7 @@
       "ArrayBaseType": "System.Collections.ObjectModel.Collection",
       "DictionaryBaseType": "System.Collections.Generic.Dictionary",
       "ClassStyle": 0,
+      "JsonLibrary": 0,
       "GenerateDefaultValues": true,
       "GenerateDataAnnotations": true,
       "ExcludedTypeNames": [],

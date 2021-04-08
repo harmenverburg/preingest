@@ -17,5 +17,6 @@ namespace Noord.HollandsArchief.Pre.Ingest.WebApi.Entities.Handler
         public string CollectionCode { get; set; }
         public string CollectionTitle { get; set; }
         public string CollectionRef { get; set; }
+        public string Prewash { get; set; }
     }
 }

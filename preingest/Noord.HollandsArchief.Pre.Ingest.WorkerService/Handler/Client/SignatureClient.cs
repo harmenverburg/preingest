@@ -25,7 +25,7 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.OpenAPIService
             await Task.Run(() => { });
         }
 
-        public async Task ProcessResponseAsync(System.Net.Http.HttpClient httpClient, System.Net.Http.HttpResponseMessage response)
+        public async Task ProcessResponseAsync(System.Net.Http.HttpClient httpClient, System.Net.Http.HttpResponseMessage response, System.Threading.CancellationToken token)
         {
             await Task.Run(() => { });
         }

@@ -25,7 +25,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Entities.CommandKey
         SipCreatorHandler,
         TransformationHandler,
         SipZipMetadataValidationHandler,
-        SipZipCopyHandler
+        SipZipCopyHandler,
+        PrewashHandler
     }
     public interface IKey : IEquatable<IKey>
     {

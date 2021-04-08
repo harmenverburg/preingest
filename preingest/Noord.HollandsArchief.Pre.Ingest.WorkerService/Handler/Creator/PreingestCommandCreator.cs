@@ -38,7 +38,8 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler.Creator
             _executionCommand.Add(new DefaultKey(ValidationActionType.SipCreatorHandler), new SipCreateCommand(logger, webapiUrl));
             _executionCommand.Add(new DefaultKey(ValidationActionType.TransformationHandler), new XipCreateCommand(logger, webapiUrl));
             _executionCommand.Add(new DefaultKey(ValidationActionType.SipZipMetadataValidationHandler), new SipZipValidationCommand(logger, webapiUrl));
-            _executionCommand.Add(new DefaultKey(ValidationActionType.SipZipCopyHandler), new SipZipCopyCommand(logger, webapiUrl));   
+            _executionCommand.Add(new DefaultKey(ValidationActionType.SipZipCopyHandler), new SipZipCopyCommand(logger, webapiUrl));
+            _executionCommand.Add(new DefaultKey(ValidationActionType.PrewashHandler), new PrewashCommand(logger, webapiUrl));
         }
 
         public override IPreingestCommand FactoryMethod(Guid guid, dynamic data)

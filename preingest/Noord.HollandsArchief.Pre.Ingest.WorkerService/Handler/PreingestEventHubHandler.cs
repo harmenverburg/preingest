@@ -105,6 +105,11 @@ namespace Noord.HollandsArchief.Pre.Ingest.WorkerService.Handler
 
             while (true)
             {
+                System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                System.Diagnostics.FileVersionInfo fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+                DateTime buildDate = LinkerHelper.GetLinkerTimestampUtc(assembly);
+
+                CurrentLogger.LogInformation(String.Format("{0} version {1}. Build date and time {2}.", fvi.ProductName, fvi.ProductVersion, DateTimeOffset.FromFileTime(buildDate.ToFileTime())));
                 CurrentLogger.LogInformation("Hub connection state - Method(Connect) - {0}", Connection.State);
                 if (Connection.State == HubConnectionState.Connected)
                 {
