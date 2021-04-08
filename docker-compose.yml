@@ -46,6 +46,7 @@ services:
         - "${DATAFOLDER}:/data"
         - "${TRANSFERAGENTTESTFOLDER}:/tatf"
         - "${TRANSFERAGENTPRODFOLDER}:/tapf"
+        - "${XSLWEBPREWASHFOLDER}:/prewash"
     expose:
         - "80"
     # Only (temporarily) mapped here for direct debugging access to the API's HTTP endpoints
@@ -61,6 +62,7 @@ services:
       - AppSettings:DroidServerPort=8080
       - AppSettings:TransferAgentTestFolder=/tatf
       - AppSettings:TransferAgentProdFolder=/tapf
+      - AppSettings:PreWashFolder=/prewash
     networks:
       - preingest-network
     depends_on:
