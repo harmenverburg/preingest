@@ -3,7 +3,7 @@
 A collection of tools for validation and transformation, to support transferring TMLO/ToPX archives to
 [the NHA Preservica e-Depot](https://noord-hollandsarchief.nl/informatiebeheer/e-depot).
 
-:warning: THIS IS VERY MUCH WORK IN PROGRESS. For details, [contact us](mailto:arjan.van.bentem@noord-hollandsarchief.nl).
+For details, [please contact us](mailto:arjan.van.bentem@noord-hollandsarchief.nl).
 
 This expects `.tar` or `.tar.gz` archives confirming to the Dutch National Archives TMLO/ToPX sidecar format. Once put
 into the configured input folder, the API [or frontend](https://github.com/noord-hollandsarchief/preingest-frontend) can
@@ -20,6 +20,8 @@ The following validation and transformation actions are currently implemented:
 - Extract the `.tar` or `.tar.gz` archive.
 - Check for viruses. This [uses ClamAV](https://hub.docker.com/r/mkodockx/docker-clamav) and updates its definitions
   automatically. It also scans compressed archives, OLE2 documents and email files.
+- [Perform "pre-wash" custom XSLT transformations](prewash) to fix errors or enrich the incoming ToPX data, especially
+  during testing.  
 - [Validate the file names](preingest/Noord.HollandsArchief.Pre.Ingest.WebApi/Handlers/NamingValidationHandler.cs), to
   not contain invalid characters, and not be Windows/DOS-reserved names such as `PRN` or `AUX`.
 - [Validate the TMLO/ToPX sidecar structure](preingest/Noord.HollandsArchief.Pre.Ingest.WebApi/Handlers/SidecarValidationHandler.cs).
@@ -36,12 +38,12 @@ The following validation and transformation actions are currently implemented:
 - [Transform the ToPX metadata](xslweb-jdk8-webservices-docker/home/webapps/transform/xsl/topx2xip.xslt) files to
   Preservica XIP v4, also mapping ToPX `<omschrijvingBeperkingen>` to Preservica security tags, specific to the
   requirements of the Noord-Hollands Archief.
-- Run SIP Creator to transform XIP v4 to SIP.
+- Run SIP Creator to transform XIP v4 to Preservica SIP.
 - [Validate the SIP Creator result](xslweb-jdk8-webservices-docker/home/webapps/xipvalidation/xsl/request-dispatcher.xsl)
   against `XIP-V4.xsd`.
+- [Create an overall Excel report](xslweb-jdk8-webservices-docker/home/webapps/excelreport/xsl/request-dispatcher.xsl).
 - [Copy the SIP Creator result](preingest/Noord.HollandsArchief.Pre.Ingest.WebApi/Handlers/SipZipCopyHandler.cs) to the
   Transfer Agent.
-- [Create an overall Excel report](xslweb-jdk8-webservices-docker/home/webapps/excelreport/xsl/request-dispatcher.xsl).
 
 Whenever a validation fails, its result is set to Error, regardless the severity. If any error occurred in the currently
 scheduled actions, then the action to copy the SIP to the Transfer Agent area will not be started but marked as Failed.
@@ -157,6 +159,7 @@ the containers.) When using the [docker-compose file](docker-compose.yml), this 
     TOMCATLOGFOLDER=/path/to/tomcat-logs
     TRANSFERAGENTTESTFOLDER=/path/to/transfer-agent-test-folder
     TRANSFERAGENTPRODFOLDER=/path/to/transfer-agent-production-folder
+    XSLWEBPREWASHFOLDER=/path/to/prewash-xml-stylesheets-folder
     ```
 
   - Or, `export` the values in your Linux environment:
@@ -167,6 +170,7 @@ the containers.) When using the [docker-compose file](docker-compose.yml), this 
     export TOMCATLOGFOLDER=/path/to/tomcat-logs
     export TRANSFERAGENTTESTFOLDER=/path/to/transfer-agent-test-folder
     export TRANSFERAGENTPRODFOLDER=/path/to/transfer-agent-production-folder
+    export XSLWEBPREWASHFOLDER=/path/to/prewash-xml-stylesheets-folder
     ```
 
   - Or, `set` the values in your Windows environment:
@@ -177,6 +181,7 @@ the containers.) When using the [docker-compose file](docker-compose.yml), this 
     set TOMCATLOGFOLDER=D:\path\to\tomcat-logs
     set TRANSFERAGENTTESTFOLDER=D:\path\to\transfer-agent-test-folder
     set TRANSFERAGENTPRODFOLDER=D:\path\to\transfer-agent-production-folder
+    set XSLWEBPREWASHFOLDER=D:\path\to\prewash-xml-stylesheets-folder
     ```
 
 - To run all Docker containers, pulling the development images if needed, run:

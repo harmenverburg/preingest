@@ -15,6 +15,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Force default security tag to closed (as set on SIP Creator command line)
 
+### New settings
+
+- `XSLWEBPREWASHFOLDER` to define the location of the custom XML stylesheets
 
 ## 1.0.0 - 2021-04-01
 
