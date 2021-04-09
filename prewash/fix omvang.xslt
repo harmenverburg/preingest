@@ -12,20 +12,18 @@
     expand-text="yes"
     version="3.0">
     
-    <!--
-      This stylesheet fixes errors in the sidecar metadata of the Provinciale Bladen of the Provincie Noord-Holland.
-    -->
-    
     <xsl:import href="_prewash-identity-transform.xslt"/>
 
-    <!-- Common fixes -->
-    <xsl:import href="fix%20algoritme.xslt"/>
-    <xsl:import href="fix%20maximale%20lengte%20naam.xslt"/>
-    <xsl:import href="fix%20omvang.xslt"/>
-    <xsl:import href="fix%20toegang.xslt"/>
+    <!--
+      Remove leading and trailing non-digits in ToPX `<omvang>`, such as a trailing ` bytes`. Note that the same fix is
+      silently applied in topx2xip.xslt as well, but running this pre-wash will suppress validation errors.
 
-    <!-- On the archive level, the name may have a spelling error -->
-    <xsl:template match="aggregatie/naam[../aggregatieniveau eq 'Archief' and . eq 'Provincie Noord Holland']/text()">
-        <xsl:text>Provincie Noord-Holland</xsl:text>
+      NOTE: one may want to be more specific, like to only expect/remove `bytes` but not units like `kB` or `MB`.
+    -->
+    <xsl:template match="bestand/formaat/omvang">
+        <omvang>
+            <xsl:value-of select="replace(., '^\D*(\d+)\D*$', '$1')"/>
+        </omvang>
     </xsl:template>
+
 </xsl:stylesheet>
