@@ -98,10 +98,13 @@
         <xsl:choose>
             <xsl:when test="count($arrayKeys) eq 1">
                 <!-- If there is just one array (probably, messages), generate distinct Excel rows for it. If there is no array, or more than one,
-                     just create one Excel line. If there are arrays, they will be sent to one cell, newline separated.
+                     just create one Excel line. If there are more than 1 arrays, they will be sent to one cell, newline separated.
                 -->
                 <xsl:variable name="theArrayKey" as="xs:string" select="$arrayKeys"/>
                 <xsl:variable name="jsonArray" as="item()" select="$jsonMap => map:get($theArrayKey)"/>
+                <!-- Make sure the array has at least one elements, otherwise there will be no output. -->
+                <xsl:variable name="jsonArray" as="item()" select="if (array:size($jsonArray) eq 0) then array:append($jsonArray, '') else $jsonArray"/>
+                
                 <xsl:for-each select="1 to array:size($jsonArray)">
                     <xsl:variable name="offset" as="xs:integer" select="."/>
                     <xsl:variable name="offsetValue" as="xs:string" select="$jsonArray($offset)"/>
@@ -256,18 +259,22 @@
     </xsl:function>
     
     <xsl:function name="nha:worksheet-4" as="element(row)*">
-        <xsl:sequence select="nha:worksheet-commontype('NamingValidationHandler.json', ('containsInvalidCharacters', 'containsDosNames', 'name', 'errorMessages'))"/>
+        <xsl:sequence select="nha:worksheet-commontype('PrewashHandler.json', ('isWashed', 'requestUri', 'metadataFilename', 'errorMessage'))"/>
     </xsl:function>
     
     <xsl:function name="nha:worksheet-5" as="element(row)*">
-        <xsl:sequence select="nha:worksheet-commontype('MetadataValidationHandler.json', ('isValidated', 'isConfirmSchema', 'errorMessages', 'metadataFilename', 'requestUri'))"/>
+        <xsl:sequence select="nha:worksheet-commontype('NamingValidationHandler.json', ('containsInvalidCharacters', 'containsDosNames', 'name', 'errorMessages'))"/>
     </xsl:function>
     
     <xsl:function name="nha:worksheet-6" as="element(row)*">
-        <xsl:sequence select="nha:worksheet-commontype('SidecarValidationHandler.json', ('level', 'isCorrect', 'titlePath', 'errorMessages'))"/>
+        <xsl:sequence select="nha:worksheet-commontype('MetadataValidationHandler.json', ('isValidated', 'isConfirmSchema', 'errorMessages', 'metadataFilename', 'requestUri'))"/>
     </xsl:function>
     
     <xsl:function name="nha:worksheet-7" as="element(row)*">
+        <xsl:sequence select="nha:worksheet-commontype('SidecarValidationHandler.json', ('level', 'isCorrect', 'titlePath', 'errorMessages'))"/>
+    </xsl:function>
+    
+    <xsl:function name="nha:worksheet-8" as="element(row)*">
         <xsl:try>
             <xsl:variable name="csv-file" as="xs:string" select="$report-uri-prefix || 'DroidValidationHandler.csv'"/>
             <xsl:sequence select="log:log('INFO', 'Accessing CSV-uri ' || $csv-file)"/>
@@ -292,13 +299,16 @@
         </xsl:try>
     </xsl:function>
     
-    <xsl:function name="nha:worksheet-8" as="element(row)*">
-        <!-- Wacht op issue #58 -->
+    <xsl:function name="nha:worksheet-9" as="element(row)*">
         <xsl:sequence select="nha:worksheet-commontype('GreenListHandler.json', ('inGreenList', 'location', 'name', 'extension', 'formatName', 'formatVersion', 'puid'))"/>
     </xsl:function>
     
-    <xsl:function name="nha:worksheet-9" as="element(row)*">
+    <xsl:function name="nha:worksheet-10" as="element(row)*">
         <xsl:sequence select="nha:worksheet-commontype('EncodingHandler.json', ('isUtf8', 'metadataFile', 'description'))"/>
+    </xsl:function>
+    
+    <xsl:function name="nha:worksheet-11" as="element(row)*">
+        <xsl:sequence select="nha:worksheet-commontype('TransformationHandler.json', ('isTranformed', 'requestUri', 'metadataFilename', 'errorMessage'))"/>
     </xsl:function>
     
     <xsl:template match="/req:request">
@@ -357,6 +367,9 @@
                 <xsl:when test="$sheetnum eq 7"><xsl:copy-of select="nha:worksheet-7()"/></xsl:when>
                 <xsl:when test="$sheetnum eq 8"><xsl:copy-of select="nha:worksheet-8()"/></xsl:when>
                 <xsl:when test="$sheetnum eq 9"><xsl:copy-of select="nha:worksheet-9()"/></xsl:when>
+                <xsl:when test="$sheetnum eq 10"><xsl:copy-of select="nha:worksheet-10()"/></xsl:when>
+                <xsl:when test="$sheetnum eq 11"><xsl:copy-of select="nha:worksheet-11()"/></xsl:when>
+                <!-- sheet 12 is a spurious worksheet, called Blad2 -->
                 <xsl:otherwise>
                     <xsl:copy-of select="row[position() gt 1]"/>
                 </xsl:otherwise>
