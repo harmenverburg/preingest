@@ -9,7 +9,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Support for pre-wash transformations
+- Support for "pre-wash" custom XSLT transformations that run before validations and standard
+  transformations
 
 ### Changed
 
