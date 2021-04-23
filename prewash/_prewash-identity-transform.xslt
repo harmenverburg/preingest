@@ -7,12 +7,18 @@
     exclude-result-prefixes="#all"
     expand-text="yes"
     version="3.0">
-    
+
+    <!--
+      This very file must be imported by any fix that can be selected for pre-wash transformations, to ensure that the
+      XSLWeb HTTP request parameters are handled, and to ensure that the source XML is copied as is before any fixes
+      are applied.
+    -->
+
     <xsl:mode on-no-match="shallow-copy"/>
-    
+
     <xsl:param name="data-uri-prefix" as="xs:string" required="yes"/>
     <xsl:param name="prewash-stylesheet" as="xs:string" select="''"/>
-    
+
     <xsl:template match="/">
         <xsl:try>
             <xsl:variable name="reluri" as="xs:string" select="replace(/*/req:path, '^/[^/]+/(.*)$', '$1')"/>
@@ -27,10 +33,10 @@
     
     <xsl:template name="nha:prewash">
         <xsl:param name="absuri" as="xs:string" required="yes"/>
-        
+
         <xsl:variable name="topxDoc" as="document-node()" select="doc($absuri)"/>
-        
-        <xsl:comment>Document converted by prewash stylesheet "{$prewash-stylesheet}" on {current-dateTime()}</xsl:comment>
+
+        <xsl:comment>Document converted by pre-wash stylesheet "{$prewash-stylesheet}" on {current-dateTime()}</xsl:comment>
         <xsl:apply-templates select="$topxDoc/*"/>
     </xsl:template>
 </xsl:stylesheet>

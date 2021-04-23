@@ -2,10 +2,10 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xpath-default-namespace="http://www.nationaalarchief.nl/ToPX/v2.3"
     xmlns="http://www.nationaalarchief.nl/ToPX/v2.3"
-    exclude-result-prefixes="#all" 
+    exclude-result-prefixes="#all"
     expand-text="yes"
     version="3.0">
-    
+
     <xsl:import href="_prewash-identity-transform.xslt"/>
 
     <!--

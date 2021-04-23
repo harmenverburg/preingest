@@ -4,15 +4,16 @@
     xmlns:topx="http://www.nationaalarchief.nl/ToPX/v2.3"
     xpath-default-namespace="http://www.nationaalarchief.nl/ToPX/v2.3"
     xmlns="http://www.nationaalarchief.nl/ToPX/v2.3"
-    exclude-result-prefixes="#all" 
+    exclude-result-prefixes="#all"
     expand-text="yes"
     version="3.0">
-    
+
     <xsl:import href="_prewash-identity-transform.xslt"/>
 
     <!--
       Ensure ToPX `<naam>` does not exceed the Preservica limit of 255 characters for XIP `title`. Note that the same
-      fix is silently applied in topx2xip.xslt as well, but running this pre-wash will suppress validation errors.
+      fix is silently applied in topx2xip.xslt as well, but running this pre-wash will suppress validation errors and
+      copy the sanitized value into the XIP's metadata.
     -->
 
     <!-- The maximum size of a Title in XIP: -->
